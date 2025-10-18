@@ -25,13 +25,26 @@ export default function Auth() {
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
+        
+        // Fetch user profile to determine redirect
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("user_type")
+          .eq("id", data.user.id)
+          .single();
+        
         toast({ title: "Welcome back!" });
-        navigate("/");
+        
+        if (profile?.user_type === "seller") {
+          navigate("/seller/dashboard");
+        } else {
+          navigate("/");
+        }
       } else {
         const { error } = await supabase.auth.signUp({
           email,
@@ -49,7 +62,13 @@ export default function Auth() {
           title: "Account created!",
           description: "You can now start using Rwanda Smart Market.",
         });
-        navigate("/");
+        
+        // Redirect based on user type
+        if (userType === "seller") {
+          navigate("/seller/dashboard");
+        } else {
+          navigate("/");
+        }
       }
     } catch (error: any) {
       toast({
