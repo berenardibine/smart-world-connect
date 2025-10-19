@@ -31,6 +31,20 @@ export default function Auth() {
         });
         if (error) throw error;
         
+        // Check if user is admin
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", data.user.id)
+          .eq("role", "admin")
+          .maybeSingle();
+        
+        if (roleData) {
+          toast({ title: "Welcome back, Admin!" });
+          navigate("/admin/dashboard");
+          return;
+        }
+
         // Fetch user profile to determine redirect
         const { data: profile } = await supabase
           .from("profiles")
