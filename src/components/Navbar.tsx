@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Search, ShoppingCart, User, Menu } from "lucide-react";
+import { Search, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -7,6 +7,7 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { UserMenu } from "@/components/UserMenu";
 
 export const Navbar = () => {
   return (
@@ -31,18 +32,10 @@ export const Navbar = () => {
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center space-x-4">
-          <Link to="/products">
+          <Link to="/">
             <Button variant="ghost">Products</Button>
           </Link>
-          <Link to="/auth">
-            <Button variant="outline">
-              <User className="mr-2 h-4 w-4" />
-              Sign In
-            </Button>
-          </Link>
-          <Link to="/dashboard">
-            <Button>Sell Now</Button>
-          </Link>
+          <UserMenu />
         </div>
 
         {/* Mobile Menu */}
@@ -54,20 +47,14 @@ export const Navbar = () => {
           </SheetTrigger>
           <SheetContent>
             <div className="flex flex-col space-y-4 mt-8">
-              <Link to="/products">
+              <Link to="/">
                 <Button variant="ghost" className="w-full justify-start">
                   Products
                 </Button>
               </Link>
-              <Link to="/auth">
-                <Button variant="outline" className="w-full justify-start">
-                  <User className="mr-2 h-4 w-4" />
-                  Sign In
-                </Button>
-              </Link>
-              <Link to="/dashboard">
-                <Button className="w-full">Sell Now</Button>
-              </Link>
+              <div className="px-2">
+                <UserMenu />
+              </div>
             </div>
           </SheetContent>
         </Sheet>

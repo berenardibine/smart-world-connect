@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -156,10 +156,12 @@ export default function AdminDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>Product Management</CardTitle>
-              <CardDescription>Approve or remove products</CardDescription>
+              <CardDescription>View and manage all products</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full">Manage Products</Button>
+              <Link to="/admin/products">
+                <Button className="w-full">Manage Products</Button>
+              </Link>
             </CardContent>
           </Card>
 

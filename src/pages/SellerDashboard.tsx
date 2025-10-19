@@ -262,14 +262,14 @@ function AddProductForm({ sellerId, onSuccess }: { sellerId: string; onSuccess: 
         category: formData.category,
         location: formData.location,
         images: [], // Will add image upload later
-        status: "pending",
+        status: "approved",
       });
 
       if (error) throw error;
 
       toast({
         title: "Success!",
-        description: "Product added successfully and pending approval",
+        description: "Product added successfully",
       });
 
       onSuccess();
