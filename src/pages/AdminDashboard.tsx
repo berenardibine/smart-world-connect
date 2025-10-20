@@ -149,7 +149,9 @@ export default function AdminDashboard() {
               <CardDescription>Manage all users and their roles</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full">Manage Users</Button>
+              <Link to="/admin/users">
+                <Button className="w-full">Manage Users</Button>
+              </Link>
             </CardContent>
           </Card>
 
@@ -167,21 +169,13 @@ export default function AdminDashboard() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Premium Plans</CardTitle>
-              <CardDescription>Manage subscription plans</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button className="w-full">Manage Plans</Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
               <CardTitle>Send Notifications</CardTitle>
               <CardDescription>Send messages to users</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full">Send Notification</Button>
+              <Link to="/admin/notifications">
+                <Button className="w-full">Send Notification</Button>
+              </Link>
             </CardContent>
           </Card>
 
@@ -191,7 +185,9 @@ export default function AdminDashboard() {
               <CardDescription>View detailed analytics</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full">View Analytics</Button>
+              <Link to="/admin/analytics">
+                <Button className="w-full">View Analytics</Button>
+              </Link>
             </CardContent>
           </Card>
 
@@ -201,7 +197,9 @@ export default function AdminDashboard() {
               <CardDescription>Configure platform settings</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full">Open Settings</Button>
+              <Link to="/admin/settings">
+                <Button className="w-full">Open Settings</Button>
+              </Link>
             </CardContent>
           </Card>
         </div>

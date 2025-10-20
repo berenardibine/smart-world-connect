@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { User, LogOut, Settings, HelpCircle, LayoutDashboard, ShieldCheck } from "lucide-react";
+import { User, LogOut, Settings, HelpCircle, LayoutDashboard, ShieldCheck, MessageCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export const UserMenu = () => {
@@ -111,6 +111,13 @@ export const UserMenu = () => {
             </Link>
           </DropdownMenuItem>
         )}
+        
+        <DropdownMenuItem asChild>
+          <Link to="/messages" className="cursor-pointer">
+            <MessageCircle className="mr-2 h-4 w-4" />
+            <span>Messages</span>
+          </Link>
+        </DropdownMenuItem>
         
         <DropdownMenuItem asChild>
           <Link to="/settings" className="cursor-pointer">

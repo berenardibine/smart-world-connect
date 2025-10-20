@@ -14,6 +14,106 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversations: {
+        Row: {
+          buyer_id: string
+          created_at: string | null
+          id: string
+          product_id: string | null
+          seller_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          buyer_id: string
+          created_at?: string | null
+          id?: string
+          product_id?: string | null
+          seller_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          buyer_id?: string
+          created_at?: string | null
+          id?: string
+          product_id?: string | null
+          seller_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          title: string
+          type: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          title: string
+          type?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          title?: string
+          type?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           category: string | null
@@ -29,6 +129,7 @@ export type Database = {
           status: string | null
           title: string
           updated_at: string | null
+          video_url: string | null
           views: number | null
         }
         Insert: {
@@ -45,6 +146,7 @@ export type Database = {
           status?: string | null
           title: string
           updated_at?: string | null
+          video_url?: string | null
           views?: number | null
         }
         Update: {
@@ -61,6 +163,7 @@ export type Database = {
           status?: string | null
           title?: string
           updated_at?: string | null
+          video_url?: string | null
           views?: number | null
         }
         Relationships: [
@@ -86,6 +189,7 @@ export type Database = {
           rating: number | null
           rating_count: number | null
           referral_code: string | null
+          status: string | null
           updated_at: string | null
           user_type: string
         }
@@ -101,6 +205,7 @@ export type Database = {
           rating?: number | null
           rating_count?: number | null
           referral_code?: string | null
+          status?: string | null
           updated_at?: string | null
           user_type: string
         }
@@ -116,8 +221,48 @@ export type Database = {
           rating?: number | null
           rating_count?: number | null
           referral_code?: string | null
+          status?: string | null
           updated_at?: string | null
           user_type?: string
+        }
+        Relationships: []
+      }
+      site_settings: {
+        Row: {
+          contact_email: string | null
+          contact_phone: string | null
+          facebook_url: string | null
+          id: string
+          instagram_url: string | null
+          site_description: string | null
+          site_name: string | null
+          twitter_url: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          facebook_url?: string | null
+          id?: string
+          instagram_url?: string | null
+          site_description?: string | null
+          site_name?: string | null
+          twitter_url?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          facebook_url?: string | null
+          id?: string
+          instagram_url?: string | null
+          site_description?: string | null
+          site_name?: string | null
+          twitter_url?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -157,6 +302,17 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      product_category:
+        | "Electronics"
+        | "Fashion"
+        | "Home & Garden"
+        | "Sports & Outdoors"
+        | "Toys & Games"
+        | "Books"
+        | "Automotive"
+        | "Health & Beauty"
+        | "Food & Beverages"
+        | "Other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -285,6 +441,18 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      product_category: [
+        "Electronics",
+        "Fashion",
+        "Home & Garden",
+        "Sports & Outdoors",
+        "Toys & Games",
+        "Books",
+        "Automotive",
+        "Health & Beauty",
+        "Food & Beverages",
+        "Other",
+      ],
     },
   },
 } as const

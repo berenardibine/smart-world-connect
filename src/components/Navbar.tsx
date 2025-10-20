@@ -8,6 +8,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { UserMenu } from "@/components/UserMenu";
+import { NotificationBell } from "@/components/NotificationBell";
 
 export const Navbar = () => {
   return (
@@ -31,10 +32,11 @@ export const Navbar = () => {
         </div>
 
         {/* Desktop Nav */}
-        <div className="hidden md:flex items-center space-x-4">
+        <div className="hidden md:flex items-center space-x-2">
           <Link to="/">
             <Button variant="ghost">Products</Button>
           </Link>
+          <NotificationBell />
           <UserMenu />
         </div>
 

@@ -9,10 +9,12 @@ import { Link } from "react-router-dom";
 
 export default function Home() {
   const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<any[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     checkAuth();
+    fetchProducts();
   }, []);
 
   const checkAuth = async () => {
@@ -26,45 +28,28 @@ export default function Home() {
     setLoading(false);
   };
 
+  const fetchProducts = async () => {
+    const { data, error } = await supabase
+      .from("products")
+      .select(`
+        *,
+        profiles:seller_id (
+          full_name,
+          business_name
+        )
+      `)
+      .eq("status", "approved")
+      .order("created_at", { ascending: false })
+      .limit(8);
+
+    if (!error && data) {
+      setProducts(data);
+    }
+  };
+
   if (loading) {
     return <div className="min-h-screen bg-background flex items-center justify-center">Loading...</div>;
   }
-
-  // Mock data - will be replaced with real data from Supabase
-  const featuredProducts = [
-    {
-      id: "1",
-      title: "Premium Wireless Headphones",
-      price: 45000,
-      image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500",
-      location: "Kigali",
-      sellerName: "Tech Store Rwanda",
-    },
-    {
-      id: "2",
-      title: "Smart Watch Pro",
-      price: 85000,
-      image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500",
-      location: "Kigali",
-      sellerName: "Electronics Hub",
-    },
-    {
-      id: "3",
-      title: "Designer Backpack",
-      price: 35000,
-      image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500",
-      location: "Kigali",
-      sellerName: "Fashion Store",
-    },
-    {
-      id: "4",
-      title: "Professional Camera",
-      price: 250000,
-      image: "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=500",
-      location: "Kigali",
-      sellerName: "Photo Pro",
-    },
-  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -161,9 +146,24 @@ export default function Home() {
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} {...product} />
-            ))}
+            {products.length > 0 ? (
+              products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  id={product.id}
+                  title={product.title}
+                  price={product.price}
+                  image={product.images?.[0] || ""}
+                  location={product.location}
+                  sellerName={product.profiles?.business_name || product.profiles?.full_name || "Seller"}
+                  likes={product.likes}
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12 text-muted-foreground">
+                No products available yet
+              </div>
+            )}
           </div>
         </div>
       </section>
