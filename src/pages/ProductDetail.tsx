@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Navbar } from "@/components/Navbar";
+import { BottomNav } from "@/components/BottomNav";
+import { NotificationBell } from "@/components/NotificationBell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Heart, Eye, MessageCircle, MapPin, ArrowLeft } from "lucide-react";
+import { Heart, Eye, MessageCircle, MapPin, ArrowLeft, Share2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -24,10 +25,12 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
 
   useEffect(() => {
-    fetchProduct();
     checkAuth();
+    fetchProduct();
   }, [id]);
 
   const checkAuth = async () => {
@@ -39,6 +42,16 @@ export default function ProductDetail() {
         .eq("id", session.user.id)
         .single();
       setCurrentUser(data);
+
+      // Check if user liked this product
+      const { data: likeData } = await supabase
+        .from("product_likes")
+        .select("id")
+        .eq("user_id", session.user.id)
+        .eq("product_id", id)
+        .single();
+
+      setIsLiked(!!likeData);
     }
   };
 
@@ -51,7 +64,9 @@ export default function ProductDetail() {
           full_name,
           business_name,
           email,
-          profile_image
+          profile_image,
+          rating,
+          rating_count
         )
       `)
       .eq("id", id)
@@ -68,7 +83,88 @@ export default function ProductDetail() {
     }
 
     setProduct(data);
+
+    // Get like count
+    const { count } = await supabase
+      .from("product_likes")
+      .select("*", { count: "exact", head: true })
+      .eq("product_id", id);
+
+    setLikeCount(count || 0);
+
+    // Increment view count
+    await supabase
+      .from("products")
+      .update({ views: (data.views || 0) + 1 })
+      .eq("id", id);
+
     setLoading(false);
+  };
+
+  const toggleLike = async () => {
+    if (!currentUser) {
+      toast({
+        title: "Error",
+        description: "Please sign in to like products",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+
+    if (isLiked) {
+      // Unlike
+      await supabase
+        .from("product_likes")
+        .delete()
+        .eq("user_id", currentUser.id)
+        .eq("product_id", id);
+
+      setIsLiked(false);
+      setLikeCount(likeCount - 1);
+    } else {
+      // Like
+      await supabase
+        .from("product_likes")
+        .insert({ user_id: currentUser.id, product_id: id });
+
+      setIsLiked(true);
+      setLikeCount(likeCount + 1);
+    }
+  };
+
+  const handleShare = async () => {
+    const url = window.location.href;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: product.title,
+          text: product.description,
+          url: url,
+        });
+
+        // Increment share count
+        await supabase
+          .from("products")
+          .update({ share_count: (product.share_count || 0) + 1 })
+          .eq("id", id);
+
+        toast({
+          title: "Success",
+          description: "Product shared!",
+        });
+      } catch (error) {
+        console.error("Error sharing:", error);
+      }
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(url);
+      toast({
+        title: "Link copied",
+        description: "Product link copied to clipboard",
+      });
+    }
   };
 
   const sendMessage = async () => {
@@ -154,16 +250,18 @@ export default function ProductDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <div className="min-h-screen bg-background pb-20">
+      <div className="sticky top-0 z-40 bg-background border-b border-border">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <NotificationBell />
+        </div>
+      </div>
 
-      <main className="container mx-auto px-4 py-8">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
-
-        <div className="grid md:grid-cols-2 gap-8">
+      <main className="container mx-auto px-4 py-6">
+        <div className="grid md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <div className="aspect-video bg-muted rounded-lg overflow-hidden">
               {product.images && product.images[0] && (
@@ -204,8 +302,23 @@ export default function ProductDetail() {
               </span>
               <span className="flex items-center gap-1">
                 <Heart className="h-4 w-4" />
-                {product.likes || 0} likes
+                {likeCount} likes
               </span>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                variant={isLiked ? "default" : "outline"}
+                size="lg"
+                onClick={toggleLike}
+                className="flex-1"
+              >
+                <Heart className={`h-5 w-5 mr-2 ${isLiked ? "fill-current" : ""}`} />
+                {isLiked ? "Liked" : "Like"}
+              </Button>
+              <Button variant="outline" size="lg" onClick={handleShare}>
+                <Share2 className="h-5 w-5" />
+              </Button>
             </div>
 
             <div className="space-y-2">
@@ -220,7 +333,10 @@ export default function ProductDetail() {
             <Card>
               <CardContent className="p-4">
                 <h3 className="font-semibold mb-2">Seller Information</h3>
-                <p className="text-sm">{product.profiles?.business_name || product.profiles?.full_name}</p>
+                <p className="text-sm mb-1">{product.profiles?.business_name || product.profiles?.full_name}</p>
+                <p className="text-sm text-muted-foreground">
+                  ⭐ {product.profiles?.rating || 0} ({product.profiles?.rating_count || 0} reviews)
+                </p>
               </CardContent>
             </Card>
 
@@ -254,6 +370,8 @@ export default function ProductDetail() {
           </div>
         </div>
       </main>
+
+      <BottomNav />
     </div>
   );
 }

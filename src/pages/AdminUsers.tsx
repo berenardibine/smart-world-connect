@@ -115,20 +115,38 @@ export default function AdminUsers() {
         title: "Success",
         description: `User status updated to ${status}`,
       });
+      
+      // Send notification to user about status change
+      await supabase.from("notifications").insert({
+        user_id: userId,
+        title: "Account Status Updated",
+        message: `Your account status has been changed to: ${status}`,
+        type: "info",
+      });
+      
       fetchUsers();
     }
   };
 
   const deleteUser = async (userId: string) => {
-    const { error } = await supabase
-      .from("profiles")
-      .delete()
-      .eq("id", userId);
+    // Delete from auth.users which will cascade delete profile
+    const { data: { user }, error: authError } = await supabase.auth.admin.getUserById(userId);
+    
+    if (authError || !user) {
+      toast({
+        title: "Error",
+        description: "Failed to find user",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { error } = await supabase.auth.admin.deleteUser(userId);
 
     if (error) {
       toast({
         title: "Error",
-        description: "Failed to delete user",
+        description: "Failed to delete user: " + error.message,
         variant: "destructive",
       });
     } else {

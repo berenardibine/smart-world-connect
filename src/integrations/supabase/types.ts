@@ -114,6 +114,35 @@ export type Database = {
         }
         Relationships: []
       }
+      product_likes: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_likes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category: string | null
@@ -126,6 +155,7 @@ export type Database = {
           price: number
           quantity: number
           seller_id: string
+          share_count: number | null
           status: string | null
           title: string
           updated_at: string | null
@@ -143,6 +173,7 @@ export type Database = {
           price: number
           quantity: number
           seller_id: string
+          share_count?: number | null
           status?: string | null
           title: string
           updated_at?: string | null
@@ -160,6 +191,7 @@ export type Database = {
           price?: number
           quantity?: number
           seller_id?: string
+          share_count?: number | null
           status?: string | null
           title?: string
           updated_at?: string | null

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Navbar } from "@/components/Navbar";
+import { BottomNav } from "@/components/BottomNav";
+import { NotificationBell } from "@/components/NotificationBell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,27 @@ export default function Messages() {
   useEffect(() => {
     if (selectedConversation) {
       fetchMessages();
+      
+      // Subscribe to new messages
+      const channel = supabase
+        .channel(`messages-${selectedConversation.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "messages",
+            filter: `conversation_id=eq.${selectedConversation.id}`,
+          },
+          () => {
+            fetchMessages();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [selectedConversation]);
 
@@ -111,11 +133,15 @@ export default function Messages() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <div className="min-h-screen bg-background pb-20">
+      <div className="sticky top-0 z-40 bg-background border-b border-border">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Messages</h1>
+          <NotificationBell />
+        </div>
+      </div>
 
-      <main className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">Messages</h1>
+      <main className="container mx-auto px-4 py-6">
 
         <div className="grid md:grid-cols-3 gap-6">
           <Card>
@@ -194,6 +220,8 @@ export default function Messages() {
           </Card>
         </div>
       </main>
+
+      <BottomNav />
     </div>
   );
 }

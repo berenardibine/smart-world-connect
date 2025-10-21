@@ -78,6 +78,7 @@ export default function AdminProducts() {
   };
 
   const handleDelete = async (productId: string) => {
+    // Delete the product - this will permanently remove it from database
     const { error } = await supabase
       .from("products")
       .delete()
@@ -86,13 +87,13 @@ export default function AdminProducts() {
     if (error) {
       toast({
         title: "Error",
-        description: "Failed to delete product",
+        description: "Failed to delete product: " + error.message,
         variant: "destructive",
       });
     } else {
       toast({
         title: "Success",
-        description: "Product deleted successfully",
+        description: "Product permanently deleted from database",
       });
       fetchProducts();
     }
