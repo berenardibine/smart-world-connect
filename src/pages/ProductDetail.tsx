@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { BottomNav } from "@/components/BottomNav";
 import { NotificationBell } from "@/components/NotificationBell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Heart, Eye, MessageCircle, MapPin, ArrowLeft, Share2 } from "lucide-react";
+import { Heart, Eye, MessageCircle, MapPin, ArrowLeft, Share2, Star } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -27,11 +27,41 @@ export default function ProductDetail() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
+  const [rating, setRating] = useState(0);
+  const [userRating, setUserRating] = useState(0);
+  const [showRatingDialog, setShowRatingDialog] = useState(false);
+  const productRef = useRef<HTMLDivElement>(null);
+  const hasTrackedView = useRef(false);
 
   useEffect(() => {
     checkAuth();
     fetchProduct();
+
+    // Track view with intersection observer
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasTrackedView.current) {
+          trackProductView();
+          hasTrackedView.current = true;
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (productRef.current) {
+      observer.observe(productRef.current);
+    }
+
+    return () => {
+      if (productRef.current) {
+        observer.unobserve(productRef.current);
+      }
+    };
   }, [id]);
+
+  const trackProductView = async () => {
+    await supabase.rpc('increment_product_view', { product_uuid: id });
+  };
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -49,9 +79,21 @@ export default function ProductDetail() {
         .select("id")
         .eq("user_id", session.user.id)
         .eq("product_id", id)
-        .single();
+        .maybeSingle();
 
       setIsLiked(!!likeData);
+
+      // Check if user rated the seller
+      const { data: ratingData } = await supabase
+        .from("product_ratings")
+        .select("rating")
+        .eq("user_id", session.user.id)
+        .eq("product_id", id)
+        .maybeSingle();
+
+      if (ratingData) {
+        setUserRating(ratingData.rating);
+      }
     }
   };
 
@@ -61,9 +103,9 @@ export default function ProductDetail() {
       .select(`
         *,
         profiles:seller_id (
+          id,
           full_name,
           business_name,
-          email,
           profile_image,
           rating,
           rating_count
@@ -91,12 +133,6 @@ export default function ProductDetail() {
       .eq("product_id", id);
 
     setLikeCount(count || 0);
-
-    // Increment view count
-    await supabase
-      .from("products")
-      .update({ views: (data.views || 0) + 1 })
-      .eq("id", id);
 
     setLoading(false);
   };
@@ -245,12 +281,61 @@ export default function ProductDetail() {
     setMessage("");
   };
 
+  const submitRating = async () => {
+    if (!currentUser) {
+      toast({
+        title: "Error",
+        description: "Please sign in to rate",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (rating === 0) {
+      toast({
+        title: "Error",
+        description: "Please select a rating",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("product_ratings")
+        .insert({
+          user_id: currentUser.id,
+          product_id: id,
+          seller_id: product.seller_id,
+          rating: rating,
+        });
+
+      if (error) throw error;
+
+      setUserRating(rating);
+      setShowRatingDialog(false);
+      toast({
+        title: "Success",
+        description: "Rating submitted successfully",
+      });
+      
+      // Refresh product to show updated rating
+      fetchProduct();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to submit rating",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return <div className="min-h-screen bg-background flex items-center justify-center">Loading...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-20" ref={productRef}>
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
@@ -332,11 +417,64 @@ export default function ProductDetail() {
 
             <Card>
               <CardContent className="p-4">
-                <h3 className="font-semibold mb-2">Seller Information</h3>
-                <p className="text-sm mb-1">{product.profiles?.business_name || product.profiles?.full_name}</p>
-                <p className="text-sm text-muted-foreground">
-                  ⭐ {product.profiles?.rating || 0} ({product.profiles?.rating_count || 0} reviews)
-                </p>
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <h3 className="font-semibold mb-2">Seller Information</h3>
+                    <Link to={`/seller-profile/${product.seller_id}`} className="hover:underline">
+                      <p className="text-sm mb-1">{product.profiles?.business_name || product.profiles?.full_name}</p>
+                    </Link>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      {product.profiles?.rating?.toFixed(1) || "0.0"} ({product.profiles?.rating_count || 0} reviews)
+                    </p>
+                  </div>
+                  {!userRating && currentUser?.id !== product.seller_id && (
+                    <Dialog open={showRatingDialog} onOpenChange={setShowRatingDialog}>
+                      <DialogTrigger asChild>
+                        <Button size="sm" variant="outline">
+                          Rate Seller
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Rate this Seller</DialogTitle>
+                          <DialogDescription>
+                            Share your experience with {product.profiles?.business_name || product.profiles?.full_name}
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div className="flex justify-center gap-2">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                onClick={() => setRating(star)}
+                                className="transition-transform hover:scale-110"
+                              >
+                                <Star
+                                  className={`h-8 w-8 ${
+                                    star <= rating
+                                      ? "fill-yellow-400 text-yellow-400"
+                                      : "text-muted-foreground"
+                                  }`}
+                                />
+                              </button>
+                            ))}
+                          </div>
+                          <Button onClick={submitRating} className="w-full">
+                            Submit Rating
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  )}
+                </div>
+                {userRating > 0 && (
+                  <div className="mt-2 text-sm text-muted-foreground">
+                    You rated: {[...Array(userRating)].map((_, i) => (
+                      <Star key={i} className="inline h-3 w-3 fill-yellow-400 text-yellow-400" />
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 

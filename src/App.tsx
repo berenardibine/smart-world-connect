@@ -5,8 +5,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
+import EmailVerification from "./pages/EmailVerification";
+import ForgotPassword from "./pages/ForgotPassword";
+import BlockedAccount from "./pages/BlockedAccount";
 import SellerDashboard from "./pages/SellerDashboard";
 import SellerProducts from "./pages/SellerProducts";
+import SellerProfile from "./pages/SellerProfile";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminProducts from "./pages/AdminProducts";
 import AdminUsers from "./pages/AdminUsers";
@@ -16,6 +20,8 @@ import AdminSettings from "./pages/AdminSettings";
 import ProductDetail from "./pages/ProductDetail";
 import Messages from "./pages/Messages";
 import Account from "./pages/Account";
+import AgricultureProducts from "./pages/AgricultureProducts";
+import EquipmentForLent from "./pages/EquipmentForLent";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,7 +35,13 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/verify-email" element={<EmailVerification />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/blocked" element={<BlockedAccount />} />
           <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/seller-profile/:id" element={<SellerProfile />} />
+          <Route path="/agriculture" element={<AgricultureProducts />} />
+          <Route path="/equipment" element={<EquipmentForLent />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/account" element={<Account />} />
           <Route path="/seller/dashboard" element={<SellerDashboard />} />

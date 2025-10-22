@@ -7,7 +7,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 
-export default function Home() {
+export default function AgricultureProducts() {
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -40,7 +40,7 @@ export default function Home() {
         )
       `)
       .eq("status", "approved")
-      .not("category", "in", '("Agriculture Product","Equipment for Lent")'); // Exclude special categories from home
+      .eq("category", "Agriculture Product");
 
     if (searchQuery.trim()) {
       query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
@@ -70,14 +70,14 @@ export default function Home() {
     <div className="min-h-screen bg-background pb-20">
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Products</h1>
+          <h1 className="text-2xl font-bold">Agriculture Products</h1>
           <NotificationBell />
         </div>
         <div className="container mx-auto px-4 pb-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search products..."
+              placeholder="Search agriculture products..."
               className="pl-10"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -89,7 +89,7 @@ export default function Home() {
       <main className="container mx-auto px-4 py-6">
         {products.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
-            {searchQuery ? "No products found matching your search" : "No products available yet"}
+            {searchQuery ? "No agriculture products found matching your search" : "No agriculture products available yet"}
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_messages: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           buyer_id: string
@@ -143,6 +167,48 @@ export type Database = {
           },
         ]
       }
+      product_ratings: {
+        Row: {
+          created_at: string | null
+          id: string
+          product_id: string
+          rating: number
+          seller_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          product_id: string
+          rating: number
+          seller_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          product_id?: string
+          rating?: number
+          seller_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_ratings_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_ratings_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category: string | null
@@ -211,12 +277,14 @@ export type Database = {
       profiles: {
         Row: {
           bio: string | null
+          blocking_reason: string | null
           business_name: string | null
           created_at: string | null
           email: string
           full_name: string
           id: string
           location: string | null
+          phone_number: string | null
           profile_image: string | null
           rating: number | null
           rating_count: number | null
@@ -227,12 +295,14 @@ export type Database = {
         }
         Insert: {
           bio?: string | null
+          blocking_reason?: string | null
           business_name?: string | null
           created_at?: string | null
           email: string
           full_name: string
           id: string
           location?: string | null
+          phone_number?: string | null
           profile_image?: string | null
           rating?: number | null
           rating_count?: number | null
@@ -243,12 +313,14 @@ export type Database = {
         }
         Update: {
           bio?: string | null
+          blocking_reason?: string | null
           business_name?: string | null
           created_at?: string | null
           email?: string
           full_name?: string
           id?: string
           location?: string | null
+          phone_number?: string | null
           profile_image?: string | null
           rating?: number | null
           rating_count?: number | null
@@ -331,6 +403,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_product_view: {
+        Args: { product_uuid: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
@@ -345,6 +421,8 @@ export type Database = {
         | "Health & Beauty"
         | "Food & Beverages"
         | "Other"
+        | "Agriculture Product"
+        | "Equipment for Lent"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -484,6 +562,8 @@ export const Constants = {
         "Health & Beauty",
         "Food & Beverages",
         "Other",
+        "Agriculture Product",
+        "Equipment for Lent",
       ],
     },
   },

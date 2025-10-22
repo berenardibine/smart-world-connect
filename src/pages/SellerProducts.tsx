@@ -47,6 +47,8 @@ const categories = [
   "Food & Beverage",
   "Health & Beauty",
   "Automotive",
+  "Agriculture Product",
+  "Equipment for Lent",
   "Other",
 ];
 
@@ -208,10 +210,50 @@ export default function SellerProducts() {
     }
   };
 
-  const addImage = () => {
-    const url = prompt("Enter image URL:");
-    if (url) {
-      setFormData({ ...formData, images: [...formData.images, url] });
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const uploadedUrls: string[] = [];
+    
+    for (let i = 0; i < files.length && i < (5 - formData.images.length); i++) {
+      const file = files[i];
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError, data } = await supabase.storage
+        .from('product-images')
+        .upload(filePath, file);
+
+      if (!uploadError && data) {
+        const { data: { publicUrl } } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(filePath);
+        uploadedUrls.push(publicUrl);
+      }
+    }
+
+    setFormData({ ...formData, images: [...formData.images, ...uploadedUrls] });
+  };
+
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    const { error: uploadError, data } = await supabase.storage
+      .from('product-videos')
+      .upload(filePath, file);
+
+    if (!uploadError && data) {
+      const { data: { publicUrl } } = supabase.storage
+        .from('product-videos')
+        .getPublicUrl(filePath);
+      setFormData({ ...formData, video_url: publicUrl });
     }
   };
 
@@ -352,37 +394,69 @@ export default function SellerProducts() {
                   <div className="space-y-2">
                     <Label>Images (up to 5)</Label>
                     <div className="space-y-2">
-                      {formData.images.map((img, idx) => (
-                        <div key={idx} className="flex gap-2">
-                          <Input value={img} disabled />
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => removeImage(idx)}
-                          >
-                            Remove
-                          </Button>
-                        </div>
-                      ))}
                       {formData.images.length < 5 && (
-                        <Button type="button" variant="outline" onClick={addImage}>
-                          Add Image URL
-                        </Button>
+                        <div>
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={handleImageUpload}
+                            className="cursor-pointer"
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Upload from gallery ({formData.images.length}/5)
+                          </p>
+                        </div>
+                      )}
+                      {formData.images.length > 0 && (
+                        <div className="grid grid-cols-3 gap-2">
+                          {formData.images.map((img, idx) => (
+                            <div key={idx} className="relative group">
+                              <img src={img} alt={`Product ${idx + 1}`} className="w-full h-20 object-cover rounded" />
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => removeImage(idx)}
+                              >
+                                ×
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
                       )}
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="video_url">Video URL (Optional)</Label>
-                    <Input
-                      id="video_url"
-                      value={formData.video_url}
-                      onChange={(e) =>
-                        setFormData({ ...formData, video_url: e.target.value })
-                      }
-                      placeholder="https://..."
-                    />
+                    <Label htmlFor="video_upload">Video (Optional)</Label>
+                    {!formData.video_url ? (
+                      <div>
+                        <Input
+                          id="video_upload"
+                          type="file"
+                          accept="video/*"
+                          onChange={handleVideoUpload}
+                          className="cursor-pointer"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Upload from gallery
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <video src={formData.video_url} controls className="w-full h-32 rounded" />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setFormData({ ...formData, video_url: "" })}
+                        >
+                          Remove Video
+                        </Button>
+                      </div>
+                    )}
                   </div>
 
                   <Button type="submit" className="w-full">

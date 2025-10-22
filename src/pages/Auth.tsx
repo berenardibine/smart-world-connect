@@ -7,15 +7,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { z } from "zod";
+
+const authSchema = z.object({
+  email: z.string().email("Invalid email address").max(255),
+  password: z.string().min(8, "Password must be at least 8 characters").max(100),
+  fullName: z.string().trim().min(2, "Name must be at least 2 characters").max(100).optional(),
+  phoneNumber: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number").optional(),
+});
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [userType, setUserType] = useState("buyer");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -24,12 +34,34 @@ export default function Auth() {
     setLoading(true);
 
     try {
+      // Validate input
+      const validationData: any = { email, password };
+      if (!isLogin) {
+        validationData.fullName = fullName;
+        validationData.phoneNumber = phoneNumber;
+      }
+      
+      const validated = authSchema.parse(validationData);
+
       if (isLogin) {
         const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
+          email: validated.email,
+          password: validated.password,
         });
         if (error) throw error;
+
+        // Check user status
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("user_type, status, blocking_reason")
+          .eq("id", data.user.id)
+          .single();
+
+        if (profile?.status === "banned" || profile?.status === "blocked") {
+          await supabase.auth.signOut();
+          navigate("/blocked", { state: { reason: profile.blocking_reason } });
+          return;
+        }
         
         // Check if user is admin
         const { data: roleData } = await supabase
@@ -45,13 +77,6 @@ export default function Auth() {
           return;
         }
 
-        // Fetch user profile to determine redirect
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("user_type")
-          .eq("id", data.user.id)
-          .single();
-        
         toast({ title: "Welcome back!" });
         
         if (profile?.user_type === "seller") {
@@ -60,36 +85,53 @@ export default function Auth() {
           navigate("/");
         }
       } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
+        const { data, error } = await supabase.auth.signUp({
+          email: validated.email,
+          password: validated.password,
           options: {
             data: {
-              full_name: fullName,
+              full_name: validated.fullName,
               user_type: userType,
+              phone_number: validated.phoneNumber,
             },
             emailRedirectTo: `${window.location.origin}/`,
           },
         });
         if (error) throw error;
-        toast({
-          title: "Account created!",
-          description: "You can now start using Rwanda Smart Market.",
-        });
-        
-        // Redirect based on user type
-        if (userType === "seller") {
-          navigate("/seller/dashboard");
+
+        if (data.user && !data.user.confirmed_at) {
+          toast({
+            title: "Verify your email",
+            description: "Please check your email to verify your account.",
+          });
+          navigate("/verify-email");
         } else {
-          navigate("/");
+          toast({
+            title: "Account created!",
+            description: "You can now start using Rwanda Smart Market.",
+          });
+          
+          if (userType === "seller") {
+            navigate("/seller/dashboard");
+          } else {
+            navigate("/");
+          }
         }
       }
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation Error",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -130,6 +172,18 @@ export default function Auth() {
                   </div>
 
                   <div className="space-y-2">
+                    <Label htmlFor="phoneNumber">Phone Number</Label>
+                    <Input
+                      id="phoneNumber"
+                      type="tel"
+                      placeholder="+250780000000"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
                     <Label>I want to</Label>
                     <RadioGroup value={userType} onValueChange={setUserType}>
                       <div className="flex items-center space-x-2">
@@ -163,14 +217,32 @@ export default function Auth() {
 
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    minLength={8}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
+
+              {isLogin && (
+                <div className="text-right">
+                  <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+                    Forgot password?
+                  </Link>
+                </div>
+              )}
 
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Loading..." : isLogin ? "Sign In" : "Create Account"}

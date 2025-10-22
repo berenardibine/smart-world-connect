@@ -36,38 +36,53 @@ export function BottomNav() {
 
   const isActive = (path: string) => location.pathname === path;
 
-  // Show different nav for admin
   if (isAdmin) {
     return (
       <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-around h-16">
-            <Link
-              to="/admin/dashboard"
-              className={`flex flex-col items-center justify-center flex-1 h-full ${
-                isActive("/admin/dashboard") ? "text-primary" : "text-muted-foreground"
-              }`}
-            >
+            <Link to="/admin/dashboard" className={`flex flex-col items-center justify-center flex-1 h-full ${isActive("/admin/dashboard") ? "text-primary" : "text-muted-foreground"}`}>
               <LayoutDashboard className="h-6 w-6 mb-1" />
               <span className="text-xs">Dashboard</span>
             </Link>
-            <Link
-              to="/messages"
-              className={`flex flex-col items-center justify-center flex-1 h-full ${
-                isActive("/messages") ? "text-primary" : "text-muted-foreground"
-              }`}
-            >
+            <Link to="/messages" className={`flex flex-col items-center justify-center flex-1 h-full ${isActive("/messages") ? "text-primary" : "text-muted-foreground"}`}>
               <MessageCircle className="h-6 w-6 mb-1" />
               <span className="text-xs">Messages</span>
             </Link>
-            <Link
-              to="/account"
-              className={`flex flex-col items-center justify-center flex-1 h-full ${
-                isActive("/account") ? "text-primary" : "text-muted-foreground"
-              }`}
-            >
+            <Link to="/account" className={`flex flex-col items-center justify-center flex-1 h-full ${isActive("/account") ? "text-primary" : "text-muted-foreground"}`}>
               <User className="h-6 w-6 mb-1" />
               <span className="text-xs">Account</span>
+            </Link>
+          </div>
+        </div>
+      </nav>
+    );
+  }
+
+  if (userType === "buyer") {
+    return (
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border">
+        <div className="container mx-auto px-2">
+          <div className="flex items-center justify-around h-16">
+            <Link to="/" className={`flex flex-col items-center justify-center flex-1 h-full ${isActive("/") ? "text-primary" : "text-muted-foreground"}`}>
+              <Home className="h-5 w-5 mb-1" />
+              <span className="text-[10px]">Home</span>
+            </Link>
+            <Link to="/agriculture" className={`flex flex-col items-center justify-center flex-1 h-full ${isActive("/agriculture") ? "text-primary" : "text-muted-foreground"}`}>
+              <LayoutDashboard className="h-5 w-5 mb-1" />
+              <span className="text-[10px]">Agriculture</span>
+            </Link>
+            <Link to="/equipment" className={`flex flex-col items-center justify-center flex-1 h-full ${isActive("/equipment") ? "text-primary" : "text-muted-foreground"}`}>
+              <LayoutDashboard className="h-5 w-5 mb-1" />
+              <span className="text-[10px]">Equipment</span>
+            </Link>
+            <Link to="/messages" className={`flex flex-col items-center justify-center flex-1 h-full ${isActive("/messages") ? "text-primary" : "text-muted-foreground"}`}>
+              <MessageCircle className="h-5 w-5 mb-1" />
+              <span className="text-[10px]">Messages</span>
+            </Link>
+            <Link to="/account" className={`flex flex-col items-center justify-center flex-1 h-full ${isActive("/account") ? "text-primary" : "text-muted-foreground"}`}>
+              <User className="h-5 w-5 mb-1" />
+              <span className="text-[10px]">Account</span>
             </Link>
           </div>
         </div>
@@ -79,41 +94,15 @@ export function BottomNav() {
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-around h-16">
-          <Link
-            to={userType === "seller" ? "/seller/dashboard" : "/"}
-            className={`flex flex-col items-center justify-center flex-1 h-full ${
-              isActive(userType === "seller" ? "/seller/dashboard" : "/")
-                ? "text-primary"
-                : "text-muted-foreground"
-            }`}
-          >
-            {userType === "seller" ? (
-              <>
-                <LayoutDashboard className="h-6 w-6 mb-1" />
-                <span className="text-xs">Dashboard</span>
-              </>
-            ) : (
-              <>
-                <Home className="h-6 w-6 mb-1" />
-                <span className="text-xs">Home</span>
-              </>
-            )}
+          <Link to="/seller/dashboard" className={`flex flex-col items-center justify-center flex-1 h-full ${isActive("/seller/dashboard") ? "text-primary" : "text-muted-foreground"}`}>
+            <LayoutDashboard className="h-6 w-6 mb-1" />
+            <span className="text-xs">Dashboard</span>
           </Link>
-          <Link
-            to="/messages"
-            className={`flex flex-col items-center justify-center flex-1 h-full ${
-              isActive("/messages") ? "text-primary" : "text-muted-foreground"
-            }`}
-          >
+          <Link to="/messages" className={`flex flex-col items-center justify-center flex-1 h-full ${isActive("/messages") ? "text-primary" : "text-muted-foreground"}`}>
             <MessageCircle className="h-6 w-6 mb-1" />
             <span className="text-xs">Messages</span>
           </Link>
-          <Link
-            to="/account"
-            className={`flex flex-col items-center justify-center flex-1 h-full ${
-              isActive("/account") ? "text-primary" : "text-muted-foreground"
-            }`}
-          >
+          <Link to="/account" className={`flex flex-col items-center justify-center flex-1 h-full ${isActive("/account") ? "text-primary" : "text-muted-foreground"}`}>
             <User className="h-6 w-6 mb-1" />
             <span className="text-xs">Account</span>
           </Link>
