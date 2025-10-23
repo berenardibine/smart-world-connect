@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Send } from "lucide-react";
+import { z } from "zod";
 import {
   Select,
   SelectContent,
@@ -15,6 +16,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+// Notification validation schema
+const notificationSchema = z.object({
+  title: z.string()
+    .trim()
+    .min(1, 'Title is required')
+    .max(100, 'Title is too long (max 100 characters)'),
+  message: z.string()
+    .trim()
+    .min(1, 'Message is required')
+    .max(500, 'Message is too long (max 500 characters)'),
+  recipientCount: z.number()
+    .max(1000, 'Cannot send to more than 1000 users at once'),
+});
 
 export default function AdminNotifications() {
   const [loading, setLoading] = useState(true);
@@ -63,15 +78,6 @@ export default function AdminNotifications() {
   };
 
   const sendNotifications = async () => {
-    if (!title || !message) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
     let recipientIds: string[] = [];
 
     if (recipient === "all") {
@@ -82,6 +88,24 @@ export default function AdminNotifications() {
       recipientIds = users.filter(u => u.user_type === "buyer").map(u => u.id);
     } else {
       recipientIds = [recipient];
+    }
+
+    // Validate notification data
+    try {
+      notificationSchema.parse({
+        title,
+        message,
+        recipientCount: recipientIds.length,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation Error",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     const notifications = recipientIds.map(userId => ({
@@ -162,6 +186,7 @@ export default function AdminNotifications() {
                 placeholder="Notification title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
+                maxLength={100}
               />
             </div>
 
@@ -172,6 +197,7 @@ export default function AdminNotifications() {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 rows={5}
+                maxLength={500}
               />
             </div>
 

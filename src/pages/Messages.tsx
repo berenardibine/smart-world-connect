@@ -9,6 +9,15 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Send } from "lucide-react";
 import { useUserStatus } from "@/hooks/useUserStatus";
+import { z } from "zod";
+
+// Message validation schema
+const messageSchema = z.object({
+  content: z.string()
+    .trim()
+    .min(1, 'Message cannot be empty')
+    .max(1000, 'Message is too long (max 1000 characters)'),
+});
 
 export default function Messages() {
   useUserStatus();
@@ -131,7 +140,19 @@ export default function Messages() {
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim()) return;
+    // Validate message
+    try {
+      messageSchema.parse({ content: newMessage });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation Error",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
 
     const { error } = await supabase
       .from("messages")

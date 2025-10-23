@@ -3,9 +3,18 @@ import { useLocation, Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AlertCircle } from "lucide-react";
+
+// Admin message validation schema
+const adminMessageSchema = z.object({
+  message: z.string()
+    .trim()
+    .min(1, 'Message cannot be empty')
+    .max(1000, 'Message is too long (max 1000 characters)'),
+});
 
 export default function BlockedAccount() {
   const location = useLocation();
@@ -15,13 +24,18 @@ export default function BlockedAccount() {
   const { toast } = useToast();
 
   const sendMessage = async () => {
-    if (!message.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a message",
-        variant: "destructive",
-      });
-      return;
+    // Validate message
+    try {
+      adminMessageSchema.parse({ message });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation Error",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     setLoading(true);
@@ -84,6 +98,7 @@ export default function BlockedAccount() {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 rows={5}
+                maxLength={1000}
               />
             </div>
             <Button onClick={sendMessage} disabled={loading} className="w-full">

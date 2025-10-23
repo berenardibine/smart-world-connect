@@ -17,6 +17,15 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useUserStatus } from "@/hooks/useUserStatus";
+import { z } from "zod";
+
+// Message validation schema
+const messageSchema = z.object({
+  content: z.string()
+    .trim()
+    .min(1, 'Message cannot be empty')
+    .max(1000, 'Message is too long (max 1000 characters)'),
+});
 
 export default function ProductDetail() {
   useUserStatus();
@@ -216,13 +225,18 @@ export default function ProductDetail() {
       return;
     }
 
-    if (!message.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a message",
-        variant: "destructive",
-      });
-      return;
+    // Validate message
+    try {
+      messageSchema.parse({ content: message });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation Error",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     // Check if conversation exists

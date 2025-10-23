@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2, Eye, Heart } from "lucide-react";
+import { z } from "zod";
 
 const categories = [
   "Electronics",
@@ -51,6 +52,31 @@ const categories = [
   "Equipment for Lent",
   "Other",
 ];
+
+// Product validation schema
+const productSchema = z.object({
+  title: z.string()
+    .trim()
+    .min(3, 'Title must be at least 3 characters')
+    .max(200, 'Title must be less than 200 characters'),
+  description: z.string()
+    .trim()
+    .min(10, 'Description must be at least 10 characters')
+    .max(2000, 'Description must be less than 2000 characters'),
+  price: z.number()
+    .positive('Price must be positive')
+    .max(100000000, 'Price is too high'),
+  quantity: z.number()
+    .int('Quantity must be a whole number')
+    .positive('Quantity must be positive')
+    .max(100000, 'Quantity is too high'),
+  category: z.string().min(1, 'Please select a category'),
+  location: z.string().max(200, 'Location is too long').optional(),
+  images: z.array(z.string().url('Invalid image URL'))
+    .min(1, 'At least one image is required')
+    .max(5, 'Maximum 5 images allowed'),
+  video_url: z.string().url('Invalid video URL').optional().or(z.literal('')),
+});
 
 export default function SellerProducts() {
   const [loading, setLoading] = useState(true);
@@ -127,6 +153,29 @@ export default function SellerProducts() {
     e.preventDefault();
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
+
+    // Validate form data
+    try {
+      productSchema.parse({
+        title: formData.title,
+        description: formData.description,
+        price: parseFloat(formData.price),
+        quantity: parseInt(formData.quantity),
+        category: formData.category,
+        location: formData.location,
+        images: formData.images,
+        video_url: formData.video_url || '',
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation Error",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
 
     const productData = {
       title: formData.title,
