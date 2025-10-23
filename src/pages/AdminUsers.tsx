@@ -129,32 +129,41 @@ export default function AdminUsers() {
   };
 
   const deleteUser = async (userId: string) => {
-    // Delete from auth.users which will cascade delete profile
-    const { data: { user }, error: authError } = await supabase.auth.admin.getUserById(userId);
-    
-    if (authError || !user) {
-      toast({
-        title: "Error",
-        description: "Failed to find user",
-        variant: "destructive",
+    try {
+      // Call the secure edge function to delete user
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { userId }
       });
-      return;
-    }
 
-    const { error } = await supabase.auth.admin.deleteUser(userId);
+      if (error) {
+        toast({
+          title: "Error",
+          description: `Failed to delete user: ${error.message}`,
+          variant: "destructive",
+        });
+        return;
+      }
 
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete user: " + error.message,
-        variant: "destructive",
-      });
-    } else {
+      if (!data?.success) {
+        toast({
+          title: "Error",
+          description: data?.error || "Failed to delete user",
+          variant: "destructive",
+        });
+        return;
+      }
+
       toast({
         title: "Success",
         description: "User deleted successfully",
       });
       fetchUsers();
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
     }
   };
 

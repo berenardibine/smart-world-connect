@@ -263,13 +263,16 @@ export default function SellerProducts() {
     const files = e.target.files;
     if (!files) return;
 
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
     const uploadedUrls: string[] = [];
     
     for (let i = 0; i < files.length && i < (5 - formData.images.length); i++) {
       const file = files[i];
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const filePath = `${session.user.id}/${fileName}`;
 
       const { error: uploadError, data } = await supabase.storage
         .from('product-images')
@@ -290,9 +293,12 @@ export default function SellerProducts() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
     const fileExt = file.name.split('.').pop();
     const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `${fileName}`;
+    const filePath = `${session.user.id}/${fileName}`;
 
     const { error: uploadError, data } = await supabase.storage
       .from('product-videos')
