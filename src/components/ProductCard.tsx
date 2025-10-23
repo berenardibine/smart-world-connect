@@ -122,9 +122,13 @@ export const ProductCard = ({
     }
   };
 
-  const isVideo = (url: string) => {
-    return url.includes('.mp4') || url.includes('.webm') || url.includes('.mov');
+  const isVideo = (url: string | undefined) => {
+    return url?.includes('.mp4') || url?.includes('.webm') || url?.includes('.mov');
   };
+
+  if (media.length === 0) {
+    return null;
+  }
 
   return (
     <Card className="group overflow-hidden transition-all duration-300 hover:shadow-lg">
