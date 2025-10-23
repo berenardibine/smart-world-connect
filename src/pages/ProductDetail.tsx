@@ -41,6 +41,7 @@ export default function ProductDetail() {
   const [rating, setRating] = useState(0);
   const [userRating, setUserRating] = useState(0);
   const [showRatingDialog, setShowRatingDialog] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const productRef = useRef<HTMLDivElement>(null);
   const hasTrackedView = useRef(false);
 
@@ -364,28 +365,54 @@ export default function ProductDetail() {
       <main className="container mx-auto px-4 py-6">
         <div className="grid md:grid-cols-2 gap-6">
           <div className="space-y-4">
-            <div className="aspect-video bg-muted rounded-lg overflow-hidden">
-              {product.images && product.images[0] && (
+            {/* Main Image Display */}
+            <div className="aspect-square bg-muted rounded-lg overflow-hidden border-2 border-border">
+              {product.images && product.images.length > 0 ? (
                 <img
-                  src={product.images[0]}
-                  alt={product.title}
+                  src={product.images[selectedImageIndex]}
+                  alt={`${product.title} - Image ${selectedImageIndex + 1}`}
                   className="w-full h-full object-cover"
                 />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <img
+                    src="/placeholder.svg"
+                    alt={product.title}
+                    className="w-full h-full object-cover opacity-50"
+                  />
+                </div>
               )}
             </div>
+            
+            {/* Image Thumbnails Gallery */}
             {product.images && product.images.length > 1 && (
-              <div className="grid grid-cols-4 gap-2">
-                {product.images.slice(1).map((img: string, idx: number) => (
-                  <div key={idx} className="aspect-square bg-muted rounded overflow-hidden">
-                    <img src={img} alt={`${product.title} ${idx + 2}`} className="w-full h-full object-cover" />
-                  </div>
+              <div className="grid grid-cols-5 gap-2">
+                {product.images.map((img: string, idx: number) => (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedImageIndex(idx)}
+                    className={`aspect-square bg-muted rounded overflow-hidden border-2 transition-all hover:border-primary ${
+                      idx === selectedImageIndex ? 'border-primary ring-2 ring-primary' : 'border-border'
+                    }`}
+                  >
+                    <img 
+                      src={img} 
+                      alt={`${product.title} thumbnail ${idx + 1}`} 
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
                 ))}
               </div>
             )}
+            
+            {/* Video Player */}
             {product.video_url && (
-              <video controls className="w-full rounded-lg">
-                <source src={product.video_url} type="video/mp4" />
-              </video>
+              <div className="rounded-lg overflow-hidden border-2 border-border">
+                <video controls className="w-full">
+                  <source src={product.video_url} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              </div>
             )}
           </div>
 

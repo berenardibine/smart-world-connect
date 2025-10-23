@@ -126,18 +126,16 @@ export const ProductCard = ({
     return url?.includes('.mp4') || url?.includes('.webm') || url?.includes('.mov');
   };
 
-  if (media.length === 0) {
-    return null;
-  }
+  const displayMedia = media.length > 0 ? media : ['/placeholder.svg'];
 
   return (
     <Card className="group overflow-hidden transition-all duration-300 hover:shadow-lg">
       <Link to={`/product/${id}`}>
         <div className="relative aspect-square overflow-hidden bg-muted">
-          {isVideo(media[currentIndex]) ? (
+          {isVideo(displayMedia[currentIndex]) ? (
             <div className="relative h-full w-full">
               <video
-                src={media[currentIndex]}
+                src={displayMedia[currentIndex]}
                 className="h-full w-full object-cover"
                 muted
                 loop
@@ -149,13 +147,13 @@ export const ProductCard = ({
             </div>
           ) : (
             <img
-              src={media[currentIndex]}
+              src={displayMedia[currentIndex]}
               alt={title}
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
           )}
           
-          {media.length > 1 && (
+          {displayMedia.length > 1 && media.length > 1 && (
             <>
               <Button
                 size="icon"
@@ -174,7 +172,7 @@ export const ProductCard = ({
                 <ChevronRight className="h-4 w-4" />
               </Button>
               <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-                {media.map((_, idx) => (
+                {displayMedia.map((_, idx) => (
                   <div
                     key={idx}
                     className={`h-1.5 rounded-full transition-all ${
