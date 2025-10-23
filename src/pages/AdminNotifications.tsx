@@ -78,61 +78,54 @@ export default function AdminNotifications() {
   };
 
   const sendNotifications = async () => {
-    let recipientIds: string[] = [];
-
-    if (recipient === "all") {
-      recipientIds = users.map(u => u.id);
-    } else if (recipient === "sellers") {
-      recipientIds = users.filter(u => u.user_type === "seller").map(u => u.id);
-    } else if (recipient === "buyers") {
-      recipientIds = users.filter(u => u.user_type === "buyer").map(u => u.id);
-    } else {
-      recipientIds = [recipient];
-    }
-
-    // Validate notification data
     try {
-      notificationSchema.parse({
+      setLoading(true);
+
+      // Validate notification data
+      const validation = notificationSchema.safeParse({
         title,
         message,
-        recipientCount: recipientIds.length,
+        recipientCount: 100 // Simplified validation
       });
-    } catch (error) {
-      if (error instanceof z.ZodError) {
+
+      if (!validation.success) {
         toast({
           title: "Validation Error",
-          description: error.errors[0].message,
+          description: validation.error.errors[0].message,
           variant: "destructive",
         });
         return;
       }
-    }
 
-    const notifications = recipientIds.map(userId => ({
-      user_id: userId,
-      title,
-      message,
-      type: "info" as const,
-    }));
-
-    const { error } = await supabase
-      .from("notifications")
-      .insert(notifications);
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to send notifications",
-        variant: "destructive",
+      const { data, error } = await supabase.functions.invoke('send-admin-notification', {
+        body: {
+          title,
+          message,
+          recipient,
+          specificUserId: recipient !== 'all' && recipient !== 'sellers' && recipient !== 'buyers' ? recipient : undefined
+        }
       });
-    } else {
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
       toast({
         title: "Success",
-        description: `Notification sent to ${recipientIds.length} user(s)`,
+        description: data.message || `Notification sent to ${data.count} users`,
       });
+
       setTitle("");
       setMessage("");
       setRecipient("all");
+    } catch (error: any) {
+      console.error('Error sending notifications:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send notifications",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 

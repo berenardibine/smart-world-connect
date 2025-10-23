@@ -99,32 +99,27 @@ export default function AdminUsers() {
   };
 
   const updateUserStatus = async (userId: string, status: string) => {
-    const { error } = await supabase
-      .from("profiles")
-      .update({ status })
-      .eq("id", userId);
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update user status",
-        variant: "destructive",
+    try {
+      const { data, error } = await supabase.functions.invoke('update-user-status', {
+        body: { userId, status }
       });
-    } else {
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
       toast({
         title: "Success",
-        description: `User status updated to ${status}`,
-      });
-      
-      // Send notification to user about status change
-      await supabase.from("notifications").insert({
-        user_id: userId,
-        title: "Account Status Updated",
-        message: `Your account status has been changed to: ${status}`,
-        type: "info",
+        description: "User status updated successfully",
       });
       
       fetchUsers();
+    } catch (error: any) {
+      console.error('Error updating user status:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update user status",
+        variant: "destructive",
+      });
     }
   };
 
