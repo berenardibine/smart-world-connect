@@ -18,8 +18,10 @@ import {
   Camera,
   LayoutDashboard,
 } from "lucide-react";
+import { useUserStatus } from "@/hooks/useUserStatus";
 
 export default function Account() {
+  useUserStatus();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);

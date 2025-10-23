@@ -396,6 +396,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_user_status: {
+        Args: { user_uuid: string }
+        Returns: {
+          blocking_reason: string
+          status: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

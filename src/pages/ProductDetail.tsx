@@ -16,8 +16,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { useUserStatus } from "@/hooks/useUserStatus";
 
 export default function ProductDetail() {
+  useUserStatus();
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();

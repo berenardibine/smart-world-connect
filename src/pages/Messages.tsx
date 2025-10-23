@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Send } from "lucide-react";
+import { useUserStatus } from "@/hooks/useUserStatus";
 
 export default function Messages() {
+  useUserStatus();
   const [loading, setLoading] = useState(true);
   const [conversations, setConversations] = useState<any[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<any>(null);
@@ -49,6 +51,30 @@ export default function Messages() {
       };
     }
   }, [selectedConversation]);
+
+  useEffect(() => {
+    // Subscribe to conversation updates to refresh list
+    const channel = supabase
+      .channel('conversations-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'conversations',
+        },
+        () => {
+          if (currentUser) {
+            fetchConversations(currentUser.id);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentUser]);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -112,7 +138,7 @@ export default function Messages() {
       .insert({
         conversation_id: selectedConversation.id,
         sender_id: currentUser.id,
-        content: newMessage,
+        content: newMessage.trim(),
       });
 
     if (error) {
@@ -124,8 +150,13 @@ export default function Messages() {
       return;
     }
 
+    // Update conversation timestamp
+    await supabase
+      .from("conversations")
+      .update({ updated_at: new Date().toISOString() })
+      .eq("id", selectedConversation.id);
+
     setNewMessage("");
-    fetchMessages();
   };
 
   if (loading) {

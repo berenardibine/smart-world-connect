@@ -115,7 +115,8 @@ export default function SellerProfile() {
                   id={product.id}
                   title={product.title}
                   price={product.price}
-                  image={product.images?.[0] || ""}
+                  images={product.images || []}
+                  video={product.video_url}
                   location={product.location}
                   sellerName={seller.business_name || seller.full_name}
                   likes={product.likes}

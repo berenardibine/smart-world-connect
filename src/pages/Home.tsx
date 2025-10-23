@@ -6,12 +6,17 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { ProductCard } from "@/components/ProductCard";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { useUserStatus } from "@/hooks/useUserStatus";
 
 export default function Home() {
+  useUserStatus();
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [likedProducts, setLikedProducts] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     checkAuth();
@@ -23,6 +28,18 @@ export default function Home() {
     if (!session) {
       navigate("/auth");
       return;
+    }
+
+    setCurrentUserId(session.user.id);
+    
+    // Fetch user's liked products
+    const { data: likes } = await supabase
+      .from("product_likes")
+      .select("product_id")
+      .eq("user_id", session.user.id);
+    
+    if (likes) {
+      setLikedProducts(new Set(likes.map(l => l.product_id)));
     }
 
     await fetchProducts();
@@ -99,10 +116,12 @@ export default function Home() {
                 id={product.id}
                 title={product.title}
                 price={product.price}
-                image={product.images?.[0] || ""}
+                images={product.images || []}
+                video={product.video_url}
                 location={product.location}
                 sellerName={product.profiles?.business_name || product.profiles?.full_name || "Seller"}
                 likes={product.likes}
+                isLiked={likedProducts.has(product.id)}
               />
             ))}
           </div>
