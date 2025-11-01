@@ -39,6 +39,8 @@ import { Plus, Edit, Trash2, Eye, Heart } from "lucide-react";
 import { z } from "zod";
 
 const categories = [
+  "Agriculture Product",
+  "Equipment for Lent",
   "Electronics",
   "Fashion",
   "Home & Garden",
@@ -48,8 +50,6 @@ const categories = [
   "Food & Beverage",
   "Health & Beauty",
   "Automotive",
-  "Agriculture Product",
-  "Equipment for Lent",
   "Other",
 ];
 

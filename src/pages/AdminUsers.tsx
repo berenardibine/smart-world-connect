@@ -225,6 +225,7 @@ export default function AdminUsers() {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
+                  <TableHead>Phone</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Business</TableHead>
@@ -237,6 +238,7 @@ export default function AdminUsers() {
                   <TableRow key={user.id}>
                     <TableCell>{user.full_name}</TableCell>
                     <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.phone_number || "-"}</TableCell>
                     <TableCell className="capitalize">{user.user_type}</TableCell>
                     <TableCell>
                       <Select

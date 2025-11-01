@@ -78,6 +78,7 @@ export type Database = {
           content: string
           conversation_id: string
           created_at: string | null
+          delivered_at: string | null
           id: string
           is_read: boolean | null
           sender_id: string
@@ -86,6 +87,7 @@ export type Database = {
           content: string
           conversation_id: string
           created_at?: string | null
+          delivered_at?: string | null
           id?: string
           is_read?: boolean | null
           sender_id: string
@@ -94,6 +96,7 @@ export type Database = {
           content?: string
           conversation_id?: string
           created_at?: string | null
+          delivered_at?: string | null
           id?: string
           is_read?: boolean | null
           sender_id?: string
@@ -383,6 +386,51 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: []
+      }
+      updates: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          images: string[] | null
+          seller_id: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          images?: string[] | null
+          seller_id: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          images?: string[] | null
+          seller_id?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "updates_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "updates_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

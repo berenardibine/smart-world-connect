@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, MessageCircle, User, LayoutDashboard } from "lucide-react";
+import { Home, MessageCircle, LayoutDashboard, TrendingUp, Plus, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -80,9 +80,9 @@ export function BottomNav() {
               <MessageCircle className="h-5 w-5 mb-1" />
               <span className="text-[10px]">Messages</span>
             </Link>
-            <Link to="/account" className={`flex flex-col items-center justify-center flex-1 h-full ${isActive("/account") ? "text-primary" : "text-muted-foreground"}`}>
-              <User className="h-5 w-5 mb-1" />
-              <span className="text-[10px]">Account</span>
+            <Link to="/updates" className={`flex flex-col items-center justify-center flex-1 h-full ${isActive("/updates") ? "text-primary" : "text-muted-foreground"}`}>
+              <TrendingUp className="h-5 w-5 mb-1" />
+              <span className="text-[10px]">Updates</span>
             </Link>
           </div>
         </div>
@@ -98,13 +98,13 @@ export function BottomNav() {
             <LayoutDashboard className="h-6 w-6 mb-1" />
             <span className="text-xs">Dashboard</span>
           </Link>
+          <Link to="/seller/updates" className={`flex flex-col items-center justify-center flex-1 h-full ${isActive("/seller/updates") ? "text-primary" : "text-muted-foreground"}`}>
+            <Plus className="h-6 w-6 mb-1" />
+            <span className="text-xs">Post Update</span>
+          </Link>
           <Link to="/messages" className={`flex flex-col items-center justify-center flex-1 h-full ${isActive("/messages") ? "text-primary" : "text-muted-foreground"}`}>
             <MessageCircle className="h-6 w-6 mb-1" />
             <span className="text-xs">Messages</span>
-          </Link>
-          <Link to="/account" className={`flex flex-col items-center justify-center flex-1 h-full ${isActive("/account") ? "text-primary" : "text-muted-foreground"}`}>
-            <User className="h-6 w-6 mb-1" />
-            <span className="text-xs">Account</span>
           </Link>
         </div>
       </div>

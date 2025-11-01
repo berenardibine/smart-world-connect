@@ -160,6 +160,7 @@ export default function Messages() {
         conversation_id: selectedConversation.id,
         sender_id: currentUser.id,
         content: newMessage.trim(),
+        delivered_at: new Date().toISOString(),
       });
 
     if (error) {
@@ -200,7 +201,10 @@ export default function Messages() {
             <CardContent className="p-0">
               <div className="divide-y">
                 {conversations.map((conv) => {
-                  const otherParty = conv.buyer_id === currentUser.id ? conv.seller : conv.buyer;
+                  const isUserBuyer = currentUser.id === conv.buyer_id;
+                  const otherParty = isUserBuyer ? conv.seller : conv.buyer;
+                  const otherPersonName = otherParty?.business_name || otherParty?.full_name || "Unknown User";
+                  
                   return (
                     <div
                       key={conv.id}
@@ -209,7 +213,7 @@ export default function Messages() {
                         selectedConversation?.id === conv.id ? "bg-muted" : ""
                       }`}
                     >
-                      <p className="font-semibold">{otherParty.business_name || otherParty.full_name}</p>
+                      <p className="font-semibold">{otherPersonName}</p>
                       <p className="text-sm text-muted-foreground truncate">{conv.product?.title}</p>
                     </div>
                   );
@@ -243,9 +247,14 @@ export default function Messages() {
                           }`}
                         >
                           <p className="text-sm">{msg.content}</p>
-                          <p className="text-xs opacity-70 mt-1">
-                            {new Date(msg.created_at).toLocaleTimeString()}
-                          </p>
+                          <div className="flex items-center justify-between gap-2 mt-1">
+                            <p className="text-xs opacity-70">
+                              {new Date(msg.created_at).toLocaleTimeString()}
+                            </p>
+                            {msg.sender_id === currentUser.id && msg.delivered_at && (
+                              <p className="text-xs opacity-70">Delivered</p>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}

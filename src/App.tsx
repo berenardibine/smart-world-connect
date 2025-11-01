@@ -22,6 +22,8 @@ import Messages from "./pages/Messages";
 import Account from "./pages/Account";
 import AgricultureProducts from "./pages/AgricultureProducts";
 import EquipmentForLent from "./pages/EquipmentForLent";
+import Updates from "./pages/Updates";
+import SellerUpdates from "./pages/SellerUpdates";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,8 +46,10 @@ const App = () => (
           <Route path="/equipment" element={<EquipmentForLent />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/account" element={<Account />} />
+          <Route path="/updates" element={<Updates />} />
           <Route path="/seller/dashboard" element={<SellerDashboard />} />
           <Route path="/seller/products" element={<SellerProducts />} />
+          <Route path="/seller/updates" element={<SellerUpdates />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/products" element={<AdminProducts />} />
           <Route path="/admin/users" element={<AdminUsers />} />

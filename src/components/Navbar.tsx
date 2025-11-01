@@ -37,6 +37,9 @@ export const Navbar = () => {
             <Button variant="ghost">Products</Button>
           </Link>
           <NotificationBell />
+          <Link to="/account">
+            <Button variant="ghost">Account</Button>
+          </Link>
           <UserMenu />
         </div>
 

@@ -6,7 +6,8 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { ProductCard } from "@/components/ProductCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Star, MapPin } from "lucide-react";
+import { ArrowLeft, Star, MapPin, MessageCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export default function SellerProfile() {
   const { id } = useParams();
@@ -14,10 +15,41 @@ export default function SellerProfile() {
   const [seller, setSeller] = useState<any>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [conversations, setConversations] = useState<any[]>([]);
 
   useEffect(() => {
+    checkAdmin();
     fetchSellerData();
   }, [id]);
+
+  const checkAdmin = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const { data: roleData } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", session.user.id)
+      .eq("role", "admin")
+      .single();
+
+    setIsAdmin(!!roleData);
+  };
+
+  const fetchConversations = async () => {
+    const { data } = await supabase
+      .from("conversations")
+      .select(`
+        *,
+        buyer:profiles!conversations_buyer_id_fkey(full_name),
+        messages(content, created_at, sender_id)
+      `)
+      .eq("seller_id", id)
+      .order("updated_at", { ascending: false });
+
+    setConversations(data || []);
+  };
 
   const fetchSellerData = async () => {
     // Fetch seller profile (excluding email and phone)
@@ -93,6 +125,40 @@ export default function SellerProfile() {
                 </div>
                 {seller.bio && (
                   <p className="text-sm text-muted-foreground">{seller.bio}</p>
+                )}
+                {isAdmin && (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="mt-2" onClick={fetchConversations}>
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        View Conversations
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Seller Conversations</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        {conversations.map((conv) => (
+                          <Card key={conv.id}>
+                            <CardContent className="p-4">
+                              <p className="font-semibold mb-2">Buyer: {conv.buyer?.full_name}</p>
+                              <div className="space-y-2 text-sm">
+                                {conv.messages?.slice(0, 5).map((msg: any, idx: number) => (
+                                  <p key={idx} className="text-muted-foreground">
+                                    {msg.content}
+                                  </p>
+                                ))}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                        {conversations.length === 0 && (
+                          <p className="text-center text-muted-foreground">No conversations yet</p>
+                        )}
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 )}
               </div>
             </div>

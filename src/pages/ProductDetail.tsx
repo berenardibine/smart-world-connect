@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useUserStatus } from "@/hooks/useUserStatus";
+import { FullScreenImageViewer } from "@/components/FullScreenImageViewer";
 import { z } from "zod";
 
 // Message validation schema
@@ -42,6 +43,7 @@ export default function ProductDetail() {
   const [userRating, setUserRating] = useState(0);
   const [showRatingDialog, setShowRatingDialog] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [showFullScreen, setShowFullScreen] = useState(false);
   const productRef = useRef<HTMLDivElement>(null);
   const hasTrackedView = useRef(false);
 
@@ -366,7 +368,8 @@ export default function ProductDetail() {
         <div className="grid md:grid-cols-2 gap-6">
           <div className="space-y-4">
             {/* Main Image Display */}
-            <div className="aspect-square bg-muted rounded-lg overflow-hidden border-2 border-border">
+            <div className="aspect-square bg-muted rounded-lg overflow-hidden border-2 border-border cursor-pointer"
+                 onClick={() => product.images?.length > 0 && setShowFullScreen(true)}>
               {product.images && product.images.length > 0 ? (
                 <img
                   src={product.images[selectedImageIndex]}
@@ -551,6 +554,21 @@ export default function ProductDetail() {
           </div>
         </div>
       </main>
+
+      {product.images && product.images.length > 0 && (
+        <FullScreenImageViewer
+          images={product.images}
+          currentIndex={selectedImageIndex}
+          isOpen={showFullScreen}
+          onClose={() => setShowFullScreen(false)}
+          onPrevious={() => setSelectedImageIndex((prev) => 
+            prev > 0 ? prev - 1 : product.images.length - 1
+          )}
+          onNext={() => setSelectedImageIndex((prev) => 
+            prev < product.images.length - 1 ? prev + 1 : 0
+          )}
+        />
+      )}
 
       <BottomNav />
     </div>
