@@ -81,8 +81,9 @@ export const UserMenu = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" className="gap-2">
           <User className="h-5 w-5" />
+          <span className="hidden md:inline">Account</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
@@ -93,6 +94,13 @@ export const UserMenu = () => {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        
+        <DropdownMenuItem asChild>
+          <Link to="/account" className="cursor-pointer">
+            <User className="mr-2 h-4 w-4" />
+            <span>My Account</span>
+          </Link>
+        </DropdownMenuItem>
         
         {profile?.user_type === "seller" && (
           <DropdownMenuItem asChild>

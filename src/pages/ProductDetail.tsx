@@ -282,6 +282,7 @@ export default function ProductDetail() {
         conversation_id: conversation.id,
         sender_id: currentUser.id,
         content: message,
+        delivered_at: new Date().toISOString(),
       });
 
     if (messageError) {
@@ -295,9 +296,14 @@ export default function ProductDetail() {
 
     toast({
       title: "Success",
-      description: "Message sent to seller",
+      description: "Message sent to seller! Opening messages...",
     });
     setMessage("");
+    
+    // Navigate to messages page to view the conversation
+    setTimeout(() => {
+      navigate("/messages");
+    }, 1000);
   };
 
   const submitRating = async () => {

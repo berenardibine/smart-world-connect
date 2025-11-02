@@ -202,6 +202,18 @@ export default function AdminDashboard() {
               </Link>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Post Updates</CardTitle>
+              <CardDescription>Share news and updates with users</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link to="/seller/updates">
+                <Button className="w-full">Create Update</Button>
+              </Link>
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>

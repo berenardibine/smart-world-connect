@@ -37,9 +37,6 @@ export const Navbar = () => {
             <Button variant="ghost">Products</Button>
           </Link>
           <NotificationBell />
-          <Link to="/account">
-            <Button variant="ghost">Account</Button>
-          </Link>
           <UserMenu />
         </div>
 
@@ -57,9 +54,7 @@ export const Navbar = () => {
                   Products
                 </Button>
               </Link>
-              <div className="px-2">
-                <UserMenu />
-              </div>
+              <UserMenu />
             </div>
           </SheetContent>
         </Sheet>

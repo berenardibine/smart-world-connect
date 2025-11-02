@@ -128,24 +128,41 @@ export default function SellerDashboard() {
           </Card>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Quick Actions</span>
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Manage Products</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-muted-foreground text-sm">
+                View and manage all your product listings
+              </p>
               <Link to="/seller/products">
-                <Button variant="outline" size="sm">
+                <Button className="w-full">
                   <LayoutDashboard className="mr-2 h-4 w-4" />
-                  Manage Products
+                  Go to Products
                 </Button>
               </Link>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground text-sm">
-              View and manage all your product listings from the Products page
-            </p>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Post Updates</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-muted-foreground text-sm">
+                Share news, promotions, and updates with your customers
+              </p>
+              <Link to="/seller/updates">
+                <Button className="w-full">
+                  <Package className="mr-2 h-4 w-4" />
+                  Create Update
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
       </main>
 
       <BottomNav />
