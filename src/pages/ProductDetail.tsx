@@ -282,7 +282,7 @@ export default function ProductDetail() {
       .insert({
         conversation_id: conversation.id,
         sender_id: currentUser.id,
-        content: message,
+        content: message.trim(),
         delivered_at: new Date().toISOString(),
       });
 
@@ -295,16 +295,20 @@ export default function ProductDetail() {
       return;
     }
 
+    // Update conversation timestamp
+    await supabase
+      .from("conversations")
+      .update({ updated_at: new Date().toISOString() })
+      .eq("id", conversation.id);
+
     toast({
       title: "Success",
-      description: "Message sent to seller! Opening messages...",
+      description: "Message sent! Opening messages...",
     });
     setMessage("");
     
-    // Navigate to messages page to view the conversation
-    setTimeout(() => {
-      navigate("/messages");
-    }, 1000);
+    // Navigate to messages page immediately
+    navigate("/messages");
   };
 
   const submitRating = async () => {
