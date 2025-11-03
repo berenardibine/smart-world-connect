@@ -110,6 +110,48 @@ export default function Account() {
     );
   }
 
+  // Simplified view for admin email
+  if (profile?.email === "manishimweberenard@gmail.com" && isAdmin) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <div className="sticky top-0 z-40 bg-background border-b border-border">
+          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+            <h1 className="text-2xl font-bold">Account</h1>
+            <NotificationBell />
+          </div>
+        </div>
+
+        <main className="container mx-auto px-4 py-6 space-y-6">
+          <Card>
+            <CardContent className="p-4">
+              <Link to="/admin/dashboard">
+                <Button variant="outline" className="w-full justify-start">
+                  <Shield className="mr-2 h-4 w-4" />
+                  Admin Dashboard
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <Button
+                variant="destructive"
+                className="w-full"
+                onClick={handleLogout}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Log Out
+              </Button>
+            </CardContent>
+          </Card>
+        </main>
+
+        <BottomNav />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background pb-20">
       <div className="sticky top-0 z-40 bg-background border-b border-border">

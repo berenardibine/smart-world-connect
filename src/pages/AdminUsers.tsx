@@ -5,7 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Ban, Check, Trash2, Mail } from "lucide-react";
+import { ArrowLeft, Ban, Check, Trash2, Mail, Edit } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -49,6 +49,17 @@ export default function AdminUsers() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [notificationTitle, setNotificationTitle] = useState("");
   const [notificationMessage, setNotificationMessage] = useState("");
+  const [editingUser, setEditingUser] = useState<any>(null);
+  const [editFormData, setEditFormData] = useState({
+    full_name: "",
+    email: "",
+    phone_number: "",
+    whatsapp_number: "",
+    call_number: "",
+    business_name: "",
+    location: "",
+    bio: "",
+  });
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -198,6 +209,44 @@ export default function AdminUsers() {
     }
   };
 
+  const openEditDialog = (user: any) => {
+    setEditingUser(user);
+    setEditFormData({
+      full_name: user.full_name || "",
+      email: user.email || "",
+      phone_number: user.phone_number || "",
+      whatsapp_number: user.whatsapp_number || "",
+      call_number: user.call_number || "",
+      business_name: user.business_name || "",
+      location: user.location || "",
+      bio: user.bio || "",
+    });
+  };
+
+  const updateUserInfo = async () => {
+    if (!editingUser) return;
+
+    const { error } = await supabase
+      .from("profiles")
+      .update(editFormData)
+      .eq("id", editingUser.id);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update user information",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "User information updated successfully",
+      });
+      setEditingUser(null);
+      fetchUsers();
+    }
+  };
+
   if (loading) {
     return <div className="min-h-screen bg-background flex items-center justify-center">Loading...</div>;
   }
@@ -263,6 +312,103 @@ export default function AdminUsers() {
                     <TableCell>{user.location || "-"}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openEditDialog(user)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-h-[80vh] overflow-y-auto">
+                            <DialogHeader>
+                              <DialogTitle>Edit User Information</DialogTitle>
+                              <DialogDescription>
+                                Update information for {user.full_name}
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">Full Name</label>
+                                <Input
+                                  value={editFormData.full_name}
+                                  onChange={(e) =>
+                                    setEditFormData({ ...editFormData, full_name: e.target.value })
+                                  }
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">Email</label>
+                                <Input
+                                  value={editFormData.email}
+                                  onChange={(e) =>
+                                    setEditFormData({ ...editFormData, email: e.target.value })
+                                  }
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">Phone Number</label>
+                                <Input
+                                  value={editFormData.phone_number}
+                                  onChange={(e) =>
+                                    setEditFormData({ ...editFormData, phone_number: e.target.value })
+                                  }
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">WhatsApp Number</label>
+                                <Input
+                                  value={editFormData.whatsapp_number}
+                                  onChange={(e) =>
+                                    setEditFormData({ ...editFormData, whatsapp_number: e.target.value })
+                                  }
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">Call Number</label>
+                                <Input
+                                  value={editFormData.call_number}
+                                  onChange={(e) =>
+                                    setEditFormData({ ...editFormData, call_number: e.target.value })
+                                  }
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">Business Name</label>
+                                <Input
+                                  value={editFormData.business_name}
+                                  onChange={(e) =>
+                                    setEditFormData({ ...editFormData, business_name: e.target.value })
+                                  }
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">Location</label>
+                                <Input
+                                  value={editFormData.location}
+                                  onChange={(e) =>
+                                    setEditFormData({ ...editFormData, location: e.target.value })
+                                  }
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">Bio</label>
+                                <Textarea
+                                  value={editFormData.bio}
+                                  onChange={(e) =>
+                                    setEditFormData({ ...editFormData, bio: e.target.value })
+                                  }
+                                />
+                              </div>
+                              <Button onClick={updateUserInfo} className="w-full">
+                                Update User Information
+                              </Button>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button
