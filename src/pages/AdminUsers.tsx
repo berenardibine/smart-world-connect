@@ -226,6 +226,8 @@ export default function AdminUsers() {
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Phone</TableHead>
+                  <TableHead>WhatsApp</TableHead>
+                  <TableHead>Call Number</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Business</TableHead>
@@ -239,6 +241,8 @@ export default function AdminUsers() {
                     <TableCell>{user.full_name}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>{user.phone_number || "-"}</TableCell>
+                    <TableCell>{user.whatsapp_number || "-"}</TableCell>
+                    <TableCell>{user.call_number || "-"}</TableCell>
                     <TableCell className="capitalize">{user.user_type}</TableCell>
                     <TableCell>
                       <Select

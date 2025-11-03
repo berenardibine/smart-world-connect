@@ -7,7 +7,7 @@ import { UserMenu } from "@/components/UserMenu";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Heart, Eye, MessageCircle, MapPin, ArrowLeft, Share2, Star } from "lucide-react";
+import { Heart, Eye, MessageCircle, MapPin, ArrowLeft, Share2, Star, Phone } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -35,6 +35,7 @@ export default function ProductDetail() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [product, setProduct] = useState<any>(null);
+  const [seller, setSeller] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -140,6 +141,17 @@ export default function ProductDetail() {
     }
 
     setProduct(data);
+
+    // Fetch seller profile with contact numbers
+    const { data: sellerData } = await supabase
+      .from("profiles")
+      .select("full_name, business_name, whatsapp_number, call_number")
+      .eq("id", data.seller_id)
+      .single();
+
+    if (sellerData) {
+      setSeller(sellerData);
+    }
 
     // Get like count
     const { count } = await supabase
@@ -565,6 +577,38 @@ export default function ProductDetail() {
                 </div>
               </DialogContent>
             </Dialog>
+
+            {seller?.whatsapp_number && (
+              <Button
+                onClick={() => {
+                  const productUrl = window.location.href;
+                  const firstImage = product.images?.[0] || '';
+                  const message = `Hi, I'm interested in your product: ${product.title}\n\nProduct Link: ${productUrl}\n\nProduct Image: ${firstImage}`;
+                  const whatsappUrl = `https://wa.me/${seller.whatsapp_number.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
+                  window.open(whatsappUrl, '_blank');
+                }}
+                variant="outline"
+                size="lg"
+                className="w-full"
+              >
+                <MessageCircle className="mr-2 h-5 w-5" />
+                Contact on WhatsApp
+              </Button>
+            )}
+
+            {seller?.call_number && (
+              <Button
+                onClick={() => {
+                  window.location.href = `tel:${seller.call_number}`;
+                }}
+                variant="outline"
+                size="lg"
+                className="w-full"
+              >
+                <Phone className="mr-2 h-5 w-5" />
+                Call Seller
+              </Button>
+            )}
           </div>
         </div>
       </main>

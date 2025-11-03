@@ -15,6 +15,8 @@ const authSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters").max(100),
   fullName: z.string().trim().min(2, "Name must be at least 2 characters").max(100).optional(),
   phoneNumber: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number").optional(),
+  whatsappNumber: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Invalid WhatsApp number").optional(),
+  callNumber: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Invalid call number").optional(),
 });
 
 export default function Auth() {
@@ -23,6 +25,8 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [callNumber, setCallNumber] = useState("");
   const [userType, setUserType] = useState("buyer");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -39,6 +43,10 @@ export default function Auth() {
       if (!isLogin) {
         validationData.fullName = fullName;
         validationData.phoneNumber = phoneNumber;
+        if (userType === "seller") {
+          validationData.whatsappNumber = whatsappNumber;
+          validationData.callNumber = callNumber;
+        }
       }
       
       const validated = authSchema.parse(validationData);
@@ -93,6 +101,8 @@ export default function Auth() {
               full_name: validated.fullName,
               user_type: userType,
               phone_number: validated.phoneNumber,
+              whatsapp_number: validated.whatsappNumber,
+              call_number: validated.callNumber,
             },
             emailRedirectTo: `${window.location.origin}/`,
           },
@@ -200,6 +210,34 @@ export default function Auth() {
                       </div>
                     </RadioGroup>
                   </div>
+
+                  {userType === "seller" && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="whatsappNumber">WhatsApp Number</Label>
+                        <Input
+                          id="whatsappNumber"
+                          type="tel"
+                          placeholder="+250780000000"
+                          value={whatsappNumber}
+                          onChange={(e) => setWhatsappNumber(e.target.value)}
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="callNumber">Call Number</Label>
+                        <Input
+                          id="callNumber"
+                          type="tel"
+                          placeholder="+250780000000"
+                          value={callNumber}
+                          onChange={(e) => setCallNumber(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </>
+                  )}
                 </>
               )}
 

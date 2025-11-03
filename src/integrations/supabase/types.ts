@@ -296,6 +296,7 @@ export type Database = {
           bio: string | null
           blocking_reason: string | null
           business_name: string | null
+          call_number: string | null
           created_at: string | null
           email: string
           full_name: string
@@ -309,11 +310,13 @@ export type Database = {
           status: string | null
           updated_at: string | null
           user_type: string
+          whatsapp_number: string | null
         }
         Insert: {
           bio?: string | null
           blocking_reason?: string | null
           business_name?: string | null
+          call_number?: string | null
           created_at?: string | null
           email: string
           full_name: string
@@ -327,11 +330,13 @@ export type Database = {
           status?: string | null
           updated_at?: string | null
           user_type: string
+          whatsapp_number?: string | null
         }
         Update: {
           bio?: string | null
           blocking_reason?: string | null
           business_name?: string | null
+          call_number?: string | null
           created_at?: string | null
           email?: string
           full_name?: string
@@ -345,6 +350,7 @@ export type Database = {
           status?: string | null
           updated_at?: string | null
           user_type?: string
+          whatsapp_number?: string | null
         }
         Relationships: []
       }
