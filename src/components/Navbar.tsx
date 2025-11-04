@@ -54,9 +54,23 @@ export const Navbar = () => {
             <div className="flex flex-col space-y-4 mt-8">
               <Link to="/">
                 <Button variant="ghost" className="w-full justify-start">
-                  Products
+                  Home
                 </Button>
               </Link>
+              <Link to="/updates">
+                <Button variant="ghost" className="w-full justify-start">
+                  Updates
+                </Button>
+              </Link>
+              <Link to="/messages">
+                <Button variant="ghost" className="w-full justify-start">
+                  Messages
+                </Button>
+              </Link>
+              <div className="flex items-center justify-between px-3">
+                <span className="text-sm font-medium">Notifications</span>
+                <NotificationBell />
+              </div>
               <UserMenu />
             </div>
           </SheetContent>
