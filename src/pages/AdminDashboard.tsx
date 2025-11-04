@@ -169,6 +169,18 @@ export default function AdminDashboard() {
 
           <Card>
             <CardHeader>
+              <CardTitle>Opportunity Management</CardTitle>
+              <CardDescription>Review and manage job opportunities</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link to="/admin/opportunities">
+                <Button className="w-full">Manage Opportunities</Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
               <CardTitle>Send Notifications</CardTitle>
               <CardDescription>Send messages to users</CardDescription>
             </CardHeader>

@@ -128,7 +128,7 @@ export default function SellerDashboard() {
           </Card>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card>
             <CardHeader>
               <CardTitle>Manage Products</CardTitle>
@@ -158,6 +158,23 @@ export default function SellerDashboard() {
                 <Button className="w-full">
                   <Package className="mr-2 h-4 w-4" />
                   Create Update
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Post Opportunity</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-muted-foreground text-sm">
+                List job opportunities for your company
+              </p>
+              <Link to="/post-opportunity">
+                <Button className="w-full">
+                  <Package className="mr-2 h-4 w-4" />
+                  Post Opportunity
                 </Button>
               </Link>
             </CardContent>

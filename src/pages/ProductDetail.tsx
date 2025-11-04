@@ -587,9 +587,8 @@ export default function ProductDetail() {
                   const whatsappUrl = `https://wa.me/${seller.whatsapp_number.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
                   window.open(whatsappUrl, '_blank');
                 }}
-                variant="outline"
                 size="lg"
-                className="w-full"
+                className="w-full h-14 text-lg bg-green-600 hover:bg-green-700 text-white"
               >
                 <MessageCircle className="mr-2 h-5 w-5" />
                 Contact on WhatsApp
@@ -601,12 +600,11 @@ export default function ProductDetail() {
                 onClick={() => {
                   window.location.href = `tel:${seller.call_number}`;
                 }}
-                variant="outline"
                 size="lg"
-                className="w-full"
+                className="w-full h-14 text-lg bg-blue-600 hover:bg-blue-700 text-white"
               >
                 <Phone className="mr-2 h-5 w-5" />
-                Call Seller
+                Call Seller Directly
               </Button>
             )}
           </div>

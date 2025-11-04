@@ -24,6 +24,10 @@ import AgricultureProducts from "./pages/AgricultureProducts";
 import EquipmentForLent from "./pages/EquipmentForLent";
 import Updates from "./pages/Updates";
 import SellerUpdates from "./pages/SellerUpdates";
+import Opportunities from "./pages/Opportunities";
+import OpportunityDetail from "./pages/OpportunityDetail";
+import PostOpportunity from "./pages/PostOpportunity";
+import AdminOpportunities from "./pages/AdminOpportunities";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,11 +51,15 @@ const App = () => (
           <Route path="/messages" element={<Messages />} />
           <Route path="/account" element={<Account />} />
           <Route path="/updates" element={<Updates />} />
+          <Route path="/opportunities" element={<Opportunities />} />
+          <Route path="/opportunities/:id" element={<OpportunityDetail />} />
+          <Route path="/post-opportunity" element={<PostOpportunity />} />
           <Route path="/seller/dashboard" element={<SellerDashboard />} />
           <Route path="/seller/products" element={<SellerProducts />} />
           <Route path="/seller/updates" element={<SellerUpdates />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/products" element={<AdminProducts />} />
+          <Route path="/admin/opportunities" element={<AdminOpportunities />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/notifications" element={<AdminNotifications />} />
           <Route path="/admin/analytics" element={<AdminAnalytics />} />

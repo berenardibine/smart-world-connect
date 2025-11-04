@@ -141,6 +141,66 @@ export type Database = {
         }
         Relationships: []
       }
+      opportunities: {
+        Row: {
+          apply_link: string | null
+          company_name: string
+          contact_email: string | null
+          created_at: string
+          description: string
+          id: string
+          images: string[] | null
+          job_type: string
+          location: string
+          requirements: string | null
+          salary: string | null
+          seller_id: string
+          status: string | null
+          title: string
+          updated_at: string
+          video_url: string | null
+          views: number | null
+        }
+        Insert: {
+          apply_link?: string | null
+          company_name: string
+          contact_email?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          images?: string[] | null
+          job_type: string
+          location: string
+          requirements?: string | null
+          salary?: string | null
+          seller_id: string
+          status?: string | null
+          title: string
+          updated_at?: string
+          video_url?: string | null
+          views?: number | null
+        }
+        Update: {
+          apply_link?: string | null
+          company_name?: string
+          contact_email?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          images?: string[] | null
+          job_type?: string
+          location?: string
+          requirements?: string | null
+          salary?: string | null
+          seller_id?: string
+          status?: string | null
+          title?: string
+          updated_at?: string
+          video_url?: string | null
+          views?: number | null
+        }
+        Relationships: []
+      }
       product_likes: {
         Row: {
           created_at: string
@@ -518,6 +578,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_opportunity_view: {
+        Args: { opportunity_uuid: string }
+        Returns: undefined
       }
       increment_product_view: {
         Args: { product_uuid: string }
