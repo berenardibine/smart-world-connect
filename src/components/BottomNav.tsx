@@ -16,7 +16,7 @@ export function BottomNav() {
           }`}
         >
           <Home className="h-5 w-5" />
-          <span className="text-xs mt-1">Home 2</span>
+          <span className="text-xs mt-1">Home</span>
         </Link>
         <Link
           to="/agriculture"
