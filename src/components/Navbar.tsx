@@ -1,21 +1,16 @@
 import { Link } from "react-router-dom";
-import { Search, Menu } from "lucide-react";
+import { Search, Home, TrendingUp, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import { UserMenu } from "@/components/UserMenu";
 import { NotificationBell } from "@/components/NotificationBell";
 
 export const Navbar = () => {
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center space-x-2">
-          <div className="text-2xl font-bold text-primary">
+      <div className="container flex h-16 items-center justify-between gap-4">
+        <Link to="/" className="flex items-center space-x-2 flex-shrink-0">
+          <div className="text-xl md:text-2xl font-bold text-primary">
             Rwanda Smart Market
           </div>
         </Link>
@@ -31,50 +26,28 @@ export const Navbar = () => {
           </div>
         </div>
 
-        {/* Desktop Nav */}
-        <div className="hidden md:flex items-center space-x-2">
+        {/* Desktop & Mobile Nav */}
+        <div className="flex items-center gap-1 md:gap-2">
+          <Link to="/" className="md:hidden">
+            <Button variant="ghost" size="icon" className="h-9 w-9">
+              <Home className="h-4 w-4" />
+            </Button>
+          </Link>
           <Link to="/updates">
-            <Button variant="ghost">Updates</Button>
+            <Button variant="ghost" size="icon" className="h-9 w-9 md:w-auto md:px-4">
+              <TrendingUp className="h-4 w-4" />
+              <span className="hidden md:inline ml-2">Updates</span>
+            </Button>
           </Link>
           <Link to="/messages">
-            <Button variant="ghost">Messages</Button>
+            <Button variant="ghost" size="icon" className="h-9 w-9 md:w-auto md:px-4">
+              <MessageCircle className="h-4 w-4" />
+              <span className="hidden md:inline ml-2">Messages</span>
+            </Button>
           </Link>
           <NotificationBell />
           <UserMenu />
         </div>
-
-        {/* Mobile Menu */}
-        <Sheet>
-          <SheetTrigger asChild className="md:hidden">
-            <Button variant="ghost" size="icon">
-              <Menu className="h-5 w-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent>
-            <div className="flex flex-col space-y-4 mt-8">
-              <Link to="/">
-                <Button variant="ghost" className="w-full justify-start">
-                  Home
-                </Button>
-              </Link>
-              <Link to="/updates">
-                <Button variant="ghost" className="w-full justify-start">
-                  Updates
-                </Button>
-              </Link>
-              <Link to="/messages">
-                <Button variant="ghost" className="w-full justify-start">
-                  Messages
-                </Button>
-              </Link>
-              <div className="flex items-center justify-between px-3">
-                <span className="text-sm font-medium">Notifications</span>
-                <NotificationBell />
-              </div>
-              <UserMenu />
-            </div>
-          </SheetContent>
-        </Sheet>
       </div>
 
       {/* Mobile Search */}
