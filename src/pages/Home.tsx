@@ -8,7 +8,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useUserStatus } from "@/hooks/useUserStatus";
-
+<meta name="google-site-verification" content="ikJWFvPngcSiim-Fo1bnn58Z9ikjhJ4K0en4L0OvNuI" />
 export default function Home() {
   useUserStatus();
   const [loading, setLoading] = useState(true);
