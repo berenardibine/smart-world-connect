@@ -6,7 +6,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Upload, X } from "lucide-react";
 import { toast } from "sonner";
-import { BottomNav } from "@/components/BottomNav";
 import { z } from "zod";
 
 const updateSchema = z.object({
@@ -266,7 +265,6 @@ const SellerUpdates = () => {
         </Card>
       </div>
 
-      <BottomNav />
     </div>
   );
 };

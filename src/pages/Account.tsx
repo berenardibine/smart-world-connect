@@ -26,6 +26,7 @@ export default function Account() {
   const [profile, setProfile] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     full_name: "",
     business_name: "",
@@ -94,6 +95,56 @@ export default function Account() {
       });
       setEditing(false);
       checkAuth();
+    }
+  };
+
+  const handleProfileImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    setUploading(true);
+
+    try {
+      // Upload to storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${session.user.id}/profile.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('profile-images')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile-images')
+        .getPublicUrl(fileName);
+
+      // Update profile with image URL
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ profile_image: publicUrl })
+        .eq('id', session.user.id);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: "Success",
+        description: "Profile picture updated successfully",
+      });
+
+      checkAuth();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to upload profile picture",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -184,10 +235,20 @@ export default function Account() {
                     <User className="h-10 w-10 text-muted-foreground" />
                   )}
                 </div>
+                <input
+                  type="file"
+                  id="profile-image-upload"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleProfileImageUpload}
+                  disabled={uploading}
+                />
                 <Button
                   size="icon"
                   variant="secondary"
                   className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full"
+                  onClick={() => document.getElementById('profile-image-upload')?.click()}
+                  disabled={uploading}
                 >
                   <Camera className="h-4 w-4" />
                 </Button>

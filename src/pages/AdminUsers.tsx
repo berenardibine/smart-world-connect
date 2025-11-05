@@ -223,6 +223,27 @@ export default function AdminUsers() {
     });
   };
 
+  const updateUserType = async (userId: string, newType: string) => {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ user_type: newType })
+      .eq("id", userId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update user type",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "User type updated successfully",
+      });
+      fetchUsers();
+    }
+  };
+
   const updateUserInfo = async () => {
     if (!editingUser) return;
 
@@ -292,7 +313,20 @@ export default function AdminUsers() {
                     <TableCell>{user.phone_number || "-"}</TableCell>
                     <TableCell>{user.whatsapp_number || "-"}</TableCell>
                     <TableCell>{user.call_number || "-"}</TableCell>
-                    <TableCell className="capitalize">{user.user_type}</TableCell>
+                    <TableCell>
+                      <Select
+                        value={user.user_type}
+                        onValueChange={(value) => updateUserType(user.id, value)}
+                      >
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="buyer">Buyer</SelectItem>
+                          <SelectItem value="seller">Seller</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
                     <TableCell>
                       <Select
                         value={user.status || "active"}

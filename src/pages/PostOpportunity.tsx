@@ -8,9 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Navbar } from "@/components/Navbar";
-import { BottomNav } from "@/components/BottomNav";
-import { Upload, X } from "lucide-react";
+import { Upload, X, ArrowLeft } from "lucide-react";
 
 const PostOpportunity = () => {
   const navigate = useNavigate();
@@ -127,13 +125,13 @@ const PostOpportunity = () => {
           apply_link: formData.applyLink || null,
           images: imageUrls,
           video_url: videoUrl,
-          status: 'pending'
+          status: 'approved'
         });
 
       if (insertError) throw insertError;
 
-      toast.success("Opportunity posted successfully! It will be reviewed by admin.");
-      navigate("/seller-dashboard");
+      toast.success("Opportunity posted successfully!");
+      navigate("/seller/dashboard");
     } catch (error: any) {
       toast.error(error.message || "Failed to post opportunity");
     } finally {
@@ -142,8 +140,17 @@ const PostOpportunity = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <Navbar />
+    <div className="min-h-screen bg-background">
+      <div className="sticky top-0 z-40 bg-background border-b border-border">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <Button variant="ghost" onClick={() => navigate("/seller/dashboard")}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Dashboard
+          </Button>
+          <h1 className="text-xl font-bold">Post Opportunity</h1>
+          <div className="w-20"></div>
+        </div>
+      </div>
       <div className="container mx-auto px-4 py-8 max-w-2xl">
         <Card>
           <CardHeader>
@@ -325,7 +332,6 @@ const PostOpportunity = () => {
           </CardContent>
         </Card>
       </div>
-      <BottomNav />
     </div>
   );
 };

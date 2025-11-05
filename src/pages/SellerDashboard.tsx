@@ -3,9 +3,8 @@ import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BottomNav } from "@/components/BottomNav";
 import { NotificationBell } from "@/components/NotificationBell";
-import { Package, Eye, Heart, TrendingUp, LayoutDashboard } from "lucide-react";
+import { Package, Eye, Heart, TrendingUp, LayoutDashboard, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function SellerDashboard() {
@@ -70,11 +69,18 @@ export default function SellerDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background">
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold">Seller Dashboard</h1>
-          <NotificationBell />
+          <div className="flex items-center gap-2">
+            <Link to="/account">
+              <Button variant="ghost" size="icon">
+                <User className="h-5 w-5" />
+              </Button>
+            </Link>
+            <NotificationBell />
+          </div>
         </div>
       </div>
 
@@ -181,8 +187,6 @@ export default function SellerDashboard() {
           </Card>
         </div>
       </main>
-
-      <BottomNav />
     </div>
   );
 }
