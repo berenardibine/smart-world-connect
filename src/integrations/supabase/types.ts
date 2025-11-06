@@ -286,6 +286,7 @@ export type Database = {
           description: string
           id: string
           images: string[]
+          impressions: number | null
           likes: number | null
           location: string | null
           price: number
@@ -304,6 +305,7 @@ export type Database = {
           description: string
           id?: string
           images: string[]
+          impressions?: number | null
           likes?: number | null
           location?: string | null
           price: number
@@ -322,6 +324,7 @@ export type Database = {
           description?: string
           id?: string
           images?: string[]
+          impressions?: number | null
           likes?: number | null
           location?: string | null
           price?: number
@@ -460,6 +463,7 @@ export type Database = {
           id: string
           images: string[] | null
           seller_id: string
+          title: string | null
           updated_at: string
           video_url: string | null
         }
@@ -469,6 +473,7 @@ export type Database = {
           id?: string
           images?: string[] | null
           seller_id: string
+          title?: string | null
           updated_at?: string
           video_url?: string | null
         }
@@ -478,6 +483,7 @@ export type Database = {
           id?: string
           images?: string[] | null
           seller_id?: string
+          title?: string | null
           updated_at?: string
           video_url?: string | null
         }

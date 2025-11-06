@@ -19,7 +19,10 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useUserStatus } from "@/hooks/useUserStatus";
 import { FullScreenImageViewer } from "@/components/FullScreenImageViewer";
+import { RecommendedProducts } from "@/components/RecommendedProducts";
+import { useProductImpression } from "@/hooks/useProductImpression";
 import { z } from "zod";
+import { Helmet } from "react-helmet";
 
 // Message validation schema
 const messageSchema = z.object({
@@ -32,6 +35,7 @@ const messageSchema = z.object({
 export default function ProductDetail() {
   useUserStatus();
   const { id } = useParams();
+  useProductImpression(id || '');
   const navigate = useNavigate();
   const { toast } = useToast();
   const [product, setProduct] = useState<any>(null);
@@ -377,7 +381,19 @@ export default function ProductDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20" ref={productRef}>
+    <>
+      <Helmet>
+        <title>{product.title} - Rwanda Smart Market</title>
+        <meta name="description" content={product.description} />
+        <meta property="og:title" content={product.title} />
+        <meta property="og:description" content={product.description} />
+        <meta property="og:image" content={product.images?.[0] || '/placeholder.svg'} />
+        <meta property="og:type" content="product" />
+        <meta property="og:url" content={window.location.href} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content={product.images?.[0] || '/placeholder.svg'} />
+      </Helmet>
+      <div className="min-h-screen bg-background pb-20" ref={productRef}>
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
@@ -628,5 +644,6 @@ export default function ProductDetail() {
 
       <BottomNav />
     </div>
+    </>
   );
 }

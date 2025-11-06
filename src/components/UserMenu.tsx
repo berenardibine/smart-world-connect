@@ -69,12 +69,18 @@ export const UserMenu = () => {
 
   if (!user) {
     return (
-      <Link to="/auth">
-        <Button variant="outline">
-          <User className="mr-2 h-4 w-4" />
-          Sign In
-        </Button>
-      </Link>
+      <div className="flex gap-2">
+        <Link to="/auth?mode=signin">
+          <Button variant="outline" size="sm">
+            Sign In
+          </Button>
+        </Link>
+        <Link to="/auth?mode=signup">
+          <Button variant="default" size="sm">
+            Sign Up
+          </Button>
+        </Link>
+      </div>
     );
   }
 

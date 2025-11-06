@@ -14,6 +14,7 @@ const updateSchema = z.object({
 
 const SellerUpdates = () => {
   const navigate = useNavigate();
+  const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [images, setImages] = useState<string[]>([]);
   const [videoUrl, setVideoUrl] = useState<string>("");
@@ -124,6 +125,10 @@ const SellerUpdates = () => {
 
   const handleSubmit = async () => {
     try {
+      if (!title.trim()) {
+        toast.error("Please add a title");
+        return;
+      }
       updateSchema.parse({ content });
 
       const { data: { session } } = await supabase.auth.getSession();
@@ -134,6 +139,7 @@ const SellerUpdates = () => {
 
       const { error } = await supabase.from("updates").insert({
         seller_id: session.user.id,
+        title,
         content,
         images,
         video_url: videoUrl || null,
@@ -142,6 +148,7 @@ const SellerUpdates = () => {
       if (error) throw error;
 
       toast.success("Update posted successfully");
+      setTitle("");
       setContent("");
       setImages([]);
       setVideoUrl("");
@@ -175,6 +182,20 @@ const SellerUpdates = () => {
             <CardTitle>Share with your customers</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div>
+              <label htmlFor="title" className="block text-sm font-medium mb-2">
+                Title
+              </label>
+              <input
+                id="title"
+                type="text"
+                placeholder="Enter update title..."
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-md bg-background"
+              />
+            </div>
+            
             <Textarea
               placeholder="What's new with your business?"
               value={content}

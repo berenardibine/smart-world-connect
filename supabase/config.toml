@@ -1,1 +1,4 @@
 project_id = "oetfkucowritkncvfhrl"
+
+[functions.product-recommendations]
+verify_jwt = false

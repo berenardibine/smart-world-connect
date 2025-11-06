@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Search, TrendingUp, MessageCircle, Bell, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,8 +6,16 @@ import { UserMenu } from "@/components/UserMenu";
 import { NotificationBell } from "@/components/NotificationBell";
 
 export const Navbar = () => {
+  const location = useLocation();
+  
+  // Hide navbar on seller and admin dashboard pages
+  const hiddenPaths = ['/seller', '/admin'];
+  const shouldHide = hiddenPaths.some(path => location.pathname.startsWith(path));
+  
+  if (shouldHide) return null;
+  
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav className="fixed top-0 left-0 right-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       {/* Top Bar */}
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center space-x-2">
