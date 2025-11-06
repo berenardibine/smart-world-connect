@@ -184,7 +184,7 @@ const SellerUpdates = () => {
           <CardContent className="space-y-4">
             <div>
               <label htmlFor="title" className="block text-sm font-medium mb-2">
-                Title
+                Title of your updates
               </label>
               <input
                 id="title"
