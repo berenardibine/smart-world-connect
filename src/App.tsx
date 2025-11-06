@@ -5,6 +5,25 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
+import React from "react";
+import { HashRouter, Routes, Route } from "react-router-dom";
+import Home from "./pages/Home";
+import Products from "./pages/Products";
+
+const App: React.FC = () => {
+  return (
+    <HashRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/products" element={<Products />} />
+        {/* Shyiramo izindi pages zawe hano */}
+      </Routes>
+    </HashRouter>
+  );
+}
+
+export default App;
+
 import EmailVerification from "./pages/EmailVerification";
 import ForgotPassword from "./pages/ForgotPassword";
 import BlockedAccount from "./pages/BlockedAccount";
