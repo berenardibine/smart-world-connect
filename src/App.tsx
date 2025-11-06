@@ -10,6 +10,17 @@ import { HashRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Products from "./pages/Products";
 import { HashRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from 'react-router-dom';
+import PremiumPlansPage from '@/pages/PremiumPlans';
+import AdminDashboard from '@/pages/AdminDashboard';
+// ...
+<HashRouter>
+  <Routes>
+    <Route path="/" element={<Home/>} />
+    <Route path="/plans" element={<PremiumPlansPage/>} />
+    <Route path="/admin/requests" element={<AdminDashboard/>} />
+  </Routes>
+</HashRouter>
 
 <HashRouter>
   <Routes>

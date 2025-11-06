@@ -77,6 +77,61 @@ export default function AdminDashboard() {
       totalBuyers: buyersCount || 0,
     });
   };
+// src/pages/AdminDashboard.tsx
+import React, { useEffect, useState } from "react";
+import { mockApi } from "@/api/mockSubscriptionApi";
+import type { SubscriptionRequest } from "@/types/subscription";
+
+export const AdminDashboard: React.FC = () => {
+  const [reqs, setReqs] = useState<SubscriptionRequest[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    const r = await mockApi.getRequests();
+    setReqs(r);
+    setLoading(false);
+  };
+
+  useEffect(()=>{ load(); }, []);
+
+  const review = async (id: string, approve: boolean) => {
+    const admin = { name: 'Admin (Manual)' };
+    const note = approve ? 'Approved manually' : 'Rejected manually';
+    await mockApi.reviewRequest(id, admin, approve, note);
+    await load();
+    alert('Reviewed');
+  };
+
+  return (
+    <div className="max-w-5xl mx-auto p-4">
+      <h1 className="text-2xl font-bold">Admin — Subscription Requests</h1>
+      {loading ? <div>Loading...</div> : (
+        <div className="mt-4 space-y-4">
+          {reqs.length === 0 && <div className="text-sm text-muted-foreground">No requests yet.</div>}
+          {reqs.map(r => (
+            <div key={r.id} className="border rounded p-4 flex justify-between items-start">
+              <div>
+                <div className="font-semibold">{r.requestedPlan.toUpperCase()} - {r.amountFrw.toLocaleString()} FRW</div>
+                <div className="text-sm text-muted-foreground">From user: {r.userId} • {new Date(r.createdAtISO).toLocaleString()}</div>
+                <div className="mt-2 text-sm">{r.message}</div>
+                <div className="mt-2 text-xs">Payment phone: {r.phonePaidTo} • Ref: {r.paymentReference || '—'}</div>
+                <div className="mt-2 text-xs">Status: <strong>{r.status}</strong></div>
+              </div>
+              <div className="flex flex-col gap-2">
+                {r.status === 'pending' ? <>
+                  <button onClick={()=>review(r.id, true)} className="px-3 py-2 bg-green-600 text-white rounded">Approve</button>
+                  <button onClick={()=>review(r.id, false)} className="px-3 py-2 bg-red-600 text-white rounded">Reject</button>
+                </> : <div className="text-sm text-muted-foreground">Reviewed at {r.reviewedAtISO ? new Date(r.reviewedAtISO).toLocaleString() : '-'}</div>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+export default AdminDashboard;
 
   if (loading) {
     return <div className="min-h-screen bg-background flex items-center justify-center">Loading...</div>;
