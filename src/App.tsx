@@ -13,16 +13,6 @@ import { HashRouter, Routes, Route } from "react-router-dom";
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import PremiumPlansPage from '@/pages/PremiumPlans';
 import AdminDashboard from '@/pages/AdminDashboard';
-import { PlansPage } from "@/pages/PlansPage";
-import { PlanRequestsPage } from "@/pages/admin/PlanRequestsPage";
-import { SellerActivityPage } from "@/pages/admin/SellerActivityPage";
-
-<Route path="/admin/seller-activity" element={<SellerActivityPage />} />
-
-// ...
-<Route path="/plans" element={<PlansPage />} />
-<Route path="/admin/plan-requests" element={<PlanRequestsPage />} />
-
 // ...
 <HashRouter>
   <Routes>
