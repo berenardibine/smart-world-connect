@@ -120,8 +120,3 @@ const App = () => (
 );
 
 export default App;
-import { SellerDashboard } from '@/pages/SellerDashboard';
-import { PlanRequestsPage } from '@/pages/admin/PlanRequestsPage';
-// ...
-<Route path="/seller/dashboard" element={<SellerDashboard />} />
-<Route path="/admin/plan-requests" element={<PlanRequestsPage />} />
