@@ -1,38 +1,48 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
-import { getPlans } from "@/lib/api/planApi";
-import { recordSellerActivity, getSellerActivity } from "@/lib/planTracker";
+import { useState, useEffect } from "react";
+import { plans } from "@/lib/api/planApi";
+import { SellerPlan } from "@/models/SellerPlan";
+import { checkPlanLimit, recordSellerActivity } from "@/lib/planTracker";
 
 export const useSellerPlan = (userId: string) => {
-  const [plan, setPlan] = useState<any>(null);
-  const [activity, setActivity] = useState<any>({ products_posted: 0, updates_created: 0 });
+  const [sellerPlan, setSellerPlan] = useState<SellerPlan | null>(null);
+  const [planInfo, setPlanInfo] = useState<any>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const { data } = await supabase
-        .from("seller_plans")
-        .select("*, plans(*)")
-        .eq("user_id", userId)
-        .eq("status", "active")
-        .single();
-      setPlan(data);
-      const act = await getSellerActivity(userId);
-      setActivity(act);
+    // Fake load user active plan
+    const activePlan: SellerPlan = {
+      userId,
+      planId: "gold", // You can dynamically load from backend
+      startDate: "2025-11-01",
+      endDate: "2025-12-01",
+      status: "active",
     };
-    fetchData();
+    setSellerPlan(activePlan);
+
+    const plan = plans.find((p) => p.id === activePlan.planId);
+    setPlanInfo(plan);
   }, [userId]);
 
-  const canPost = (type: "product" | "update") => {
-    if (!plan) return false;
-    const limit = type === "product" ? plan.plans.product_limit : plan.plans.update_limit;
-    const current = type === "product" ? activity.products_posted : activity.updates_created;
-    if (limit !== null && current >= limit) {
-      alert("⚠️ You’ve reached your monthly limit for this plan.");
+  const canPostProduct = (): boolean => {
+    if (!sellerPlan || !planInfo) return false;
+    const warning = checkPlanLimit(planInfo, userId);
+    if (warning) {
+      alert(warning);
       return false;
     }
-    recordSellerActivity(userId, type);
+    recordSellerActivity(userId, "product");
     return true;
   };
 
-  return { plan, activity, canPost };
+  const canPostUpdate = (): boolean => {
+    if (!sellerPlan || !planInfo) return false;
+    const warning = checkPlanLimit(planInfo, userId);
+    if (warning) {
+      alert(warning);
+      return false;
+    }
+    recordSellerActivity(userId, "update");
+    return true;
+  };
+
+  return { sellerPlan, planInfo, canPostProduct, canPostUpdate };
 };
