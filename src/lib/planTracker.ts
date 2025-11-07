@@ -1,38 +1,41 @@
-import { Plan } from "@/models/Plan";
-import { SellerPlan } from "@/models/SellerPlan";
-import { plans } from "@/lib/api/planApi";
+import { supabase } from "@/lib/supabaseClient";
 
-// Fake database
-let sellerActivity: Record<string, { products: number; updates: number }> = {};
+export const recordSellerActivity = async (userId: string, type: "product" | "update") => {
+  const month = new Date().toISOString().slice(0, 7); // e.g. 2025-11
+  const { data, error } = await supabase
+    .from("seller_activity")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("month", month)
+    .single();
 
-export const getSellerActivity = (userId: string) => {
-  return sellerActivity[userId] || { products: 0, updates: 0 };
-};
+  if (error && error.code !== "PGRST116") throw error;
 
-export const recordSellerActivity = (userId: string, type: "product" | "update") => {
-  if (!sellerActivity[userId]) {
-    sellerActivity[userId] = { products: 0, updates: 0 };
-  }
+  const field = type === "product" ? "products_posted" : "updates_created";
 
-  if (type === "product") {
-    sellerActivity[userId].products += 1;
+  if (data) {
+    const updated = { ...data, [field]: data[field] + 1 };
+    await supabase.from("seller_activity").update(updated).eq("id", data.id);
   } else {
-    sellerActivity[userId].updates += 1;
+    const newRecord = {
+      user_id: userId,
+      month,
+      products_posted: type === "product" ? 1 : 0,
+      updates_created: type === "update" ? 1 : 0,
+    };
+    await supabase.from("seller_activity").insert(newRecord);
   }
 };
 
-export const checkPlanLimit = (plan: Plan, userId: string): string | null => {
-  const activity = getSellerActivity(userId);
-  if (activity.products >= plan.productLimit) {
-    return "⚠️ You have reached your monthly product posting limit.";
-  }
-  if (activity.updates >= plan.updateLimit) {
-    return "⚠️ You have reached your monthly update limit.";
-  }
-  return null; // All good
-};
+export const getSellerActivity = async (userId: string) => {
+  const month = new Date().toISOString().slice(0, 7);
+  const { data, error } = await supabase
+    .from("seller_activity")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("month", month)
+    .single();
 
-export const resetMonthlyLimits = () => {
-  // Called at the beginning of each month
-  sellerActivity = {};
+  if (error && error.code !== "PGRST116") throw error;
+  return data || { products_posted: 0, updates_created: 0 };
 };

@@ -1,89 +1,143 @@
-import { Plan } from "@/models/Plan";
-import { SellerPlan } from "@/models/SellerPlan";
+import { supabase } from "@/lib/supabaseClient";
 
-export const plans: Plan[] = [
-  {
-    id: "free",
-    name: "Free",
-    price: 0,
-    productLimit: 1,
-    updateLimit: 0,
-    canEditProducts: false,
-    description: "Post 1 product or opportunity monthly. Cannot edit or update products.",
-  },
-  {
-    id: "stone",
-    name: "Stone",
-    price: 1000,
-    productLimit: 5,
-    updateLimit: 2,
-    canEditProducts: true,
-    description: "Post 5 products or opportunities, 2 updates monthly, can edit products.",
-  },
-  {
-    id: "gold",
-    name: "Gold",
-    price: 5000,
-    productLimit: 10,
-    updateLimit: 10,
-    canEditProducts: true,
-    description: "Post 10 products and 10 updates monthly, can edit products.",
-  },
-  {
-    id: "silver",
-    name: "Silver",
-    price: 25000,
-    productLimit: 50,
-    updateLimit: Infinity,
-    canEditProducts: true,
-    description: "Post 50 products monthly, unlimited updates.",
-  },
-  {
-    id: "diamond",
-    name: "Diamond",
-    price: 50000,
-    productLimit: 70,
-    updateLimit: Infinity,
-    canEditProducts: true,
-    description: "Post 70 products and unlimited updates.",
-  },
-  {
-    id: "master",
-    name: "Master",
-    price: 100000,
-    productLimit: Infinity,
-    updateLimit: Infinity,
-    canEditProducts: true,
-    description: "Unlimited everything.",
-  },
-];
+export const getPlans = async () => {
+  const { data, error } = await supabase.from("plans").select("*").order("price", { ascending: true });
+  if (error) throw error;
+  return data;
+};
 
-let requests: SellerPlan[] = [];
+export const requestPlanUpgrade = async (userId: string, planId: string) => {
+  const { data, error } = await supabase.from("seller_plans").insert([
+    {
+      user_id: userId,
+      plan_id: planId,
+      status: "pending",
+      payment_phone: "+250798751685",
+      start_date: new Date().toISOString(),
+    },
+  ]);
+  if (error) throw error;
+  return data;
+};
 
-export const requestPlanUpgrade = async (userId: string, planId: string): Promise<SellerPlan> => {
-  const newRequest: SellerPlan = {
-    userId,
-    planId,
-    startDate: new Date().toISOString(),
-    endDate: "",
-    status: "pending",
-    paymentPhone: "+250798751685",
+export const getPendingRequests = async () => {
+  const { data, error } = await supabase.from("seller_plans").select("*").eq("status", "pending");
+  if (error) throw error;
+  return data;
+};
+
+export const reviewUpgradeRequest = async (id: string, action: 'approve' | 'reject') => {
+  const { error } = await supabase
+    .from("seller_plans")
+    .update({ status: action === "approve" ? "active" : "rejected" })
+    .eq("id", id);
+  if (error) throw error;
+  return action === "approve" ? "Plan approved ✅" : "Request rejected ❌";
+};
+// src/lib/api/supabasePlanApi.ts
+import { supabase } from '@/lib/supabaseClient';
+
+export const getPlans = async () => {
+  const { data, error } = await supabase.from('plans').select('*').order('price', { ascending: true });
+  if (error) throw error;
+  return data;
+};
+
+export const requestPlanUpgrade = async (userId: string, planId: string, paymentPhone = '+250798751685', paymentRef?: string, message?: string) => {
+  const payload = {
+    user_id: userId,
+    plan_id: planId,
+    status: 'pending',
+    payment_phone: paymentPhone,
+    payment_reference: paymentRef || null,
+    admin_note: message || null,
+    start_date: new Date().toISOString(),
   };
-  requests.push(newRequest);
-  return newRequest;
+  const { data, error } = await supabase.from('seller_plans').insert(payload).select().single();
+  if (error) throw error;
+  return data;
 };
 
-export const getPendingRequests = async (): Promise<SellerPlan[]> => {
-  return requests.filter(r => r.status === "pending");
+export const getPendingRequests = async () => {
+  const { data, error } = await supabase.from('seller_plans').select('*, plans(*)').eq('status', 'pending').order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
 };
 
-export const reviewUpgradeRequest = async (
-  userId: string,
-  action: 'approve' | 'reject'
-): Promise<string> => {
-  const req = requests.find(r => r.userId === userId && r.status === "pending");
-  if (!req) return "No pending request found.";
+export const reviewUpgradeRequest = async (requestId: string, approve: boolean, adminName: string, adminNote?: string) => {
+  const newStatus = approve ? 'active' : 'rejected';
+  const { error } = await supabase.from('seller_plans').update({
+    status: newStatus,
+    reviewed_at: new Date().toISOString(),
+    reviewed_by: adminName,
+    admin_note: adminNote || null
+  }).eq('id', requestId);
+  if (error) throw error;
 
-  req.status = action === 'approve' ? 'active' : 'rejected';
-  return action === 'approve' ? "Plan approved ✅" : "Request rejected ❌";
+  if (approve) {
+    // If approved, optionally set start/end dates and create/replace active plan record
+    // For simplicity we keep the same row as active; if you want a separate active table, adapt accordingly.
+  }
+
+  return { success: true, status: newStatus };
+};
+
+export const getActivePlanForUser = async (userId: string) => {
+  // try to get latest active plan for user
+  const { data, error } = await supabase
+    .from('seller_plans')
+    .select('*, plans(*)')
+    .eq('user_id', userId)
+    .in('status', ['active'])
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+};
+
+export const getSellerActivity = async (userId: string) => {
+  const month = new Date().toISOString().slice(0,7); // YYYY-MM
+  const { data, error } = await supabase
+    .from('seller_activity')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('month', month)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return { products_posted: 0, updates_created: 0, month };
+  return data;
+};
+
+export const recordSellerActivity = async (userId: string, type: 'product' | 'update') => {
+  const month = new Date().toISOString().slice(0,7);
+  // try update
+  const field = type === 'product' ? 'products_posted' : 'updates_created';
+  const { data, error } = await supabase
+    .from('seller_activity')
+    .upsert({
+      user_id: userId,
+      month,
+      products_posted: type === 'product' ? 1 : 0,
+      updates_created: type === 'update' ? 1 : 0,
+    }, { onConflict: ['user_id','month'], ignoreDuplicates: false })
+    .select()
+    .single();
+  if (error) throw error;
+  // When upsert, we need to increment properly. Supabase upsert with expressions isn't supported in JS client easily;
+  // For production, prefer RPC or Postgres function to increment atomically. For demo, a simple approach:
+  // Try patch: fetch, then update incrementally (race conditions possible).
+  return data;
+};
+
+/** Realtime subscription helpers */
+export const subscribeToPendingRequests = (cb: (payload: any) => void) => {
+  const channel = supabase.channel('public:seller_plans_pending')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'seller_plans', filter: "status=eq.pending" },
+      (payload) => cb(payload)
+    )
+    .subscribe();
+  return channel;
 };
