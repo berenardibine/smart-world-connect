@@ -1,5 +1,5 @@
 // src/utils/activityTracker.ts
-import { User, PlanKey } from '@/types/subscription';
+import { User, PlanKey } from '@/type/subscription';
 import { PLANS } from '@/data/plans';
 import { mockApi } from '@/api/mockSubscriptionApi';
 

@@ -4,7 +4,7 @@ import { PLANS } from "@/data/plans";
 import PremiumPlanCard from "@/components/PremiumPlanCard";
 import PaymentRequestModal from "@/components/PaymentRequestModal";
 import { mockApi } from "@/api/mockSubscriptionApi";
-import type { User } from "@/types/subscription";
+import type { User } from "@/type/subscription";
 
 // For demo: assume current user id stored in localStorage or choose first
 const CURRENT_USER_KEY = 'rsm_current_user_demo';

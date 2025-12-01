@@ -1,6 +1,6 @@
 // src/components/PremiumPlanCard.tsx
 import React from "react";
-import { Plan } from "@/types/subscription";
+import { Plan } from "@/type/subscription";
 import { Button } from "@/components/ui/button";
 
 interface Props {

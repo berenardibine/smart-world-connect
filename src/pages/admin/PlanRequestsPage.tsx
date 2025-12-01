@@ -1,19 +1,25 @@
 import { useEffect, useState } from "react";
 import { getPendingRequests, reviewUpgradeRequest } from "@/lib/api/planApi";
 import { Button } from "@/components/ui/button";
-import { SellerPlan } from "@/models/SellerPlan";
+
+interface PlanRequest {
+  userId: string;
+  planId: string;
+  paymentPhone: string;
+}
 
 export const PlanRequestsPage = () => {
-  const [requests, setRequests] = useState<SellerPlan[]>([]);
+  const [requests, setRequests] = useState<PlanRequest[]>([]);
 
   useEffect(() => {
-    getPendingRequests().then(setRequests);
+    getPendingRequests().then((data) => setRequests(data as any));
   }, []);
 
   const handleReview = async (userId: string, action: 'approve' | 'reject') => {
     const message = await reviewUpgradeRequest(userId, action);
     alert(message);
-    setRequests(await getPendingRequests());
+    const data = await getPendingRequests();
+    setRequests(data as any);
   };
 
   return (

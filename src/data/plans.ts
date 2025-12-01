@@ -1,5 +1,5 @@
 // src/data/plans.ts
-import type { Plan } from '@/types/subscription';
+import type { Plan } from '@/type/subscription';
 
 export const PLANS: Plan[] = [
   {

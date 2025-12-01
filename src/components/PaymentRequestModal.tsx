@@ -1,6 +1,6 @@
 // src/components/PaymentRequestModal.tsx
 import React, { useState } from "react";
-import { Plan } from "@/types/subscription";
+import { Plan } from "@/type/subscription";
 
 interface Props {
   plan: Plan;
