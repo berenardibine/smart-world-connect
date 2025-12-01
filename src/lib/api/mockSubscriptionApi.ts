@@ -1,5 +1,5 @@
 // src/api/mockSubscriptionApi.ts
-import { User, SubscriptionRequest } from '@/types/subscription';
+import { User, SubscriptionRequest } from '@/type/subscription';
 import { v4 as uuid } from 'uuid';
 
 const USERS_KEY = 'rsm_users_v1';
