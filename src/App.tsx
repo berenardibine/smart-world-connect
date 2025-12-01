@@ -5,54 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
-import React from "react";
-import { HashRouter, Routes, Route } from "react-router-dom";
-import Home from "./pages/Home";
-import Products from "./pages/Products";
-import { HashRouter, Routes, Route } from "react-router-dom";
-import { HashRouter, Routes, Route } from 'react-router-dom';
-import PremiumPlansPage from '@/pages/PremiumPlans';
-import AdminDashboard from '@/pages/AdminDashboard';
-import { PlansPage } from "@/pages/PlansPage";
-import { PlanRequestsPage } from "@/pages/admin/PlanRequestsPage";
-import { SellerActivityPage } from "@/pages/admin/SellerActivityPage";
-
-<Route path="/admin/seller-activity" element={<SellerActivityPage />} />
-
-// ...
-<Route path="/plans" element={<PlansPage />} />
-<Route path="/admin/plan-requests" element={<PlanRequestsPage />} />
-
-// ...
-<HashRouter>
-  <Routes>
-    <Route path="/" element={<Home/>} />
-    <Route path="/plans" element={<PremiumPlansPage/>} />
-    <Route path="/admin/requests" element={<AdminDashboard/>} />
-  </Routes>
-</HashRouter>
-
-<HashRouter>
-  <Routes>
-    <Route path="/" element={<Home />} />
-    <Route path="/products" element={<Products />} />
-  </Routes>
-</HashRouter>
-
-const App: React.FC = () => {
-  return (
-    <HashRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/products" element={<Products />} />
-        {/* Shyiramo izindi pages zawe hano */}
-      </Routes>
-    </HashRouter>
-  );
-}
-
-export default App;
-
 import EmailVerification from "./pages/EmailVerification";
 import ForgotPassword from "./pages/ForgotPassword";
 import BlockedAccount from "./pages/BlockedAccount";
