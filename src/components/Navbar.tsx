@@ -15,47 +15,67 @@ export const Navbar = () => {
   if (shouldHide) return null;
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-gray-200">
-      {/* Main Navbar */}
-      <div className="flex flex-col md:flex-row items-center justify-between max-w-7xl mx-auto px-4 py-2 md:py-3">
-        
-        {/* Logo */}
-        <Link to="/" className="flex items-center space-x-2">
-          <div className="text-xl md:text-2xl font-bold text-primary">
-            Rwanda Smart Market
-          </div>
-        </Link>
+    <header className="fixed top-0 left-0 right-0 z-50 w-full bg-background/95 backdrop-blur-md border-b border-border shadow-sm">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+        <div className="flex items-center justify-between h-14 sm:h-16 gap-2 sm:gap-4">
+          
+          {/* Logo */}
+          <Link to="/" className="flex items-center flex-shrink-0">
+            <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-primary whitespace-nowrap">
+              Rwanda Smart Market
+            </div>
+          </Link>
 
-        {/* Search Bar */}
-        <div className="w-full md:w-1/3 my-2 md:my-0 relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Search products..." className="pl-10 pr-3 bg-muted/50 w-full" />
+          {/* Search Bar - Hidden on mobile, visible on tablet+ */}
+          <div className="hidden sm:flex flex-1 max-w-md lg:max-w-lg relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input 
+              placeholder="Search products..." 
+              className="pl-10 pr-3 bg-muted/50 w-full h-9 md:h-10" 
+            />
+          </div>
+
+          {/* Navigation Icons */}
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Link to="/updates">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="flex items-center gap-1 h-9 px-2 sm:px-3"
+              >
+                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="hidden lg:inline text-sm">Updates</span>
+              </Button>
+            </Link>
+
+            <Link to="/messages">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="flex items-center gap-1 h-9 px-2 sm:px-3"
+              >
+                <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="hidden lg:inline text-sm">Messages</span>
+              </Button>
+            </Link>
+
+            <div className="flex items-center gap-1 px-2 sm:px-3">
+              <NotificationBell />
+              <span className="hidden lg:inline text-sm">Notifications</span>
+            </div>
+
+            <UserMenu />
+          </div>
         </div>
 
-        {/* Menu & Icons */}
-        <div className="flex items-center space-x-2 md:space-x-4">
-          <Link to="/updates">
-            <Button variant="ghost" className="flex flex-col md:flex-row items-center gap-1 md:gap-2 h-auto py-2 px-3 md:px-4">
-              <TrendingUp className="h-5 w-5" />
-              <span className="text-xs md:text-sm">Updates</span>
-            </Button>
-          </Link>
-
-          <Link to="/messages">
-            <Button variant="ghost" className="flex flex-col md:flex-row items-center gap-1 md:gap-2 h-auto py-2 px-3 md:px-4">
-              <MessageCircle className="h-5 w-5" />
-              <span className="text-xs md:text-sm">Messages</span>
-            </Button>
-          </Link>
-
-          <div className="flex flex-col md:flex-row items-center gap-1 md:gap-2 px-3 md:px-4">
-            <NotificationBell />
-            <span className="text-xs md:text-sm">Notifications</span>
-          </div>
-
-          {/* User Menu */}
-          <div className="block md:hidden">
-            <UserMenu />
+        {/* Mobile Search Bar */}
+        <div className="sm:hidden pb-3 pt-1">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input 
+              placeholder="Search products..." 
+              className="pl-10 pr-3 bg-muted/50 w-full h-9" 
+            />
           </div>
         </div>
       </div>
