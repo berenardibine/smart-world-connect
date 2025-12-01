@@ -181,6 +181,18 @@ export default function AdminDashboard() {
 
           <Card>
             <CardHeader>
+              <CardTitle>Premium Plans</CardTitle>
+              <CardDescription>Manage plans and subscription requests</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link to="/admin/plans">
+                <Button className="w-full">Manage Plans</Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
               <CardTitle>Send Notifications</CardTitle>
               <CardDescription>Send messages to users</CardDescription>
             </CardHeader>
