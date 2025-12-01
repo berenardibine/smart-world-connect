@@ -4,8 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { NotificationBell } from "@/components/NotificationBell";
-import { Package, Eye, Heart, TrendingUp, LayoutDashboard, User } from "lucide-react";
+import { Package, Eye, Heart, TrendingUp, LayoutDashboard, User, Crown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useUserPlan } from "@/hooks/useUserPlan";
+import { Badge } from "@/components/ui/badge";
 
 export default function SellerDashboard() {
   const [loading, setLoading] = useState(true);
@@ -17,6 +19,8 @@ export default function SellerDashboard() {
   });
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [userId, setUserId] = useState<string | null>(null);
+  const { plan, activity, loading: planLoading } = useUserPlan(userId);
 
   useEffect(() => {
     checkUser();
@@ -42,6 +46,7 @@ export default function SellerDashboard() {
     }
 
     setProfile(profileData);
+    setUserId(session.user.id);
     await fetchStats(session.user.id);
     setLoading(false);
   };
@@ -133,6 +138,66 @@ export default function SellerDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {plan && !planLoading && (
+          <Card className="mb-8 border-primary">
+            <CardHeader>
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Crown className="h-5 w-5 text-primary" />
+                    Your Plan: {plan.name}
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {plan.price_rwf === 0 ? 'Free Plan' : `${plan.price_rwf.toLocaleString()} RWF / month`}
+                  </p>
+                </div>
+                <Link to="/seller/plans">
+                  <Button variant="outline" size="sm">
+                    Upgrade Plan
+                  </Button>
+                </Link>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-3 gap-6">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Posts This Month</p>
+                  <div className="flex items-baseline gap-1">
+                    <p className="text-3xl font-bold">{activity.posts_this_month}</p>
+                    <p className="text-muted-foreground">
+                      / {plan.post_limit_monthly === -1 ? '∞' : plan.post_limit_monthly}
+                    </p>
+                  </div>
+                  {plan.post_limit_monthly !== -1 && activity.posts_this_month >= plan.post_limit_monthly && (
+                    <Badge variant="destructive" className="mt-1">Limit reached</Badge>
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Updates This Month</p>
+                  <div className="flex items-baseline gap-1">
+                    <p className="text-3xl font-bold">{activity.updates_this_month}</p>
+                    <p className="text-muted-foreground">
+                      / {plan.updates_limit_monthly === -1 ? '∞' : plan.updates_limit_monthly}
+                    </p>
+                  </div>
+                  {plan.updates_limit_monthly !== -1 && activity.updates_this_month >= plan.updates_limit_monthly && (
+                    <Badge variant="destructive" className="mt-1">Limit reached</Badge>
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Product Edits</p>
+                  <div className="flex items-baseline gap-1">
+                    <p className="text-3xl font-bold">{activity.edits_this_month}</p>
+                  </div>
+                  {!plan.can_edit_product && (
+                    <Badge variant="secondary" className="mt-1">Upgrade to edit</Badge>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card>

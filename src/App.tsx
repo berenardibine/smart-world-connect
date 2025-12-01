@@ -28,6 +28,8 @@ import Opportunities from "./pages/Opportunities";
 import OpportunityDetail from "./pages/OpportunityDetail";
 import PostOpportunity from "./pages/PostOpportunity";
 import AdminOpportunities from "./pages/AdminOpportunities";
+import SellerPlans from "./pages/SellerPlans";
+import AdminPlans from "./pages/AdminPlans";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -57,6 +59,7 @@ const App = () => (
           <Route path="/seller/dashboard" element={<SellerDashboard />} />
           <Route path="/seller/products" element={<SellerProducts />} />
           <Route path="/seller/updates" element={<SellerUpdates />} />
+          <Route path="/seller/plans" element={<SellerPlans />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/products" element={<AdminProducts />} />
           <Route path="/admin/opportunities" element={<AdminOpportunities />} />
@@ -64,6 +67,7 @@ const App = () => (
           <Route path="/admin/notifications" element={<AdminNotifications />} />
           <Route path="/admin/analytics" element={<AdminAnalytics />} />
           <Route path="/admin/settings" element={<AdminSettings />} />
+          <Route path="/admin/plans" element={<AdminPlans />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

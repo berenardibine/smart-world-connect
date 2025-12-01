@@ -201,6 +201,48 @@ export type Database = {
         }
         Relationships: []
       }
+      plans: {
+        Row: {
+          can_edit_product: boolean
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          key: string
+          name: string
+          post_limit_monthly: number
+          price_rwf: number
+          updated_at: string | null
+          updates_limit_monthly: number
+        }
+        Insert: {
+          can_edit_product?: boolean
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          key: string
+          name: string
+          post_limit_monthly: number
+          price_rwf: number
+          updated_at?: string | null
+          updates_limit_monthly: number
+        }
+        Update: {
+          can_edit_product?: boolean
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          key?: string
+          name?: string
+          post_limit_monthly?: number
+          price_rwf?: number
+          updated_at?: string | null
+          updates_limit_monthly?: number
+        }
+        Relationships: []
+      }
       product_likes: {
         Row: {
           created_at: string
@@ -417,6 +459,39 @@ export type Database = {
         }
         Relationships: []
       }
+      seller_activity: {
+        Row: {
+          created_at: string | null
+          edits_this_month: number
+          id: string
+          last_reset_date: string
+          posts_this_month: number
+          updated_at: string | null
+          updates_this_month: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          edits_this_month?: number
+          id?: string
+          last_reset_date?: string
+          posts_this_month?: number
+          updated_at?: string | null
+          updates_this_month?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          edits_this_month?: number
+          id?: string
+          last_reset_date?: string
+          posts_this_month?: number
+          updated_at?: string | null
+          updates_this_month?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           contact_email: string | null
@@ -455,6 +530,59 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: []
+      }
+      subscription_requests: {
+        Row: {
+          admin_note: string | null
+          amount_rwf: number
+          created_at: string | null
+          id: string
+          message: string | null
+          payment_reference: string | null
+          phone_paid_to: string | null
+          requested_plan_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          amount_rwf: number
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          payment_reference?: string | null
+          phone_paid_to?: string | null
+          requested_plan_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          amount_rwf?: number
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          payment_reference?: string | null
+          phone_paid_to?: string | null
+          requested_plan_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_requests_requested_plan_id_fkey"
+            columns: ["requested_plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       updates: {
         Row: {
@@ -525,6 +653,47 @@ export type Database = {
         }
         Relationships: []
       }
+      user_subscriptions: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          plan_id: string
+          started_at: string
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          plan_id: string
+          started_at?: string
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          plan_id?: string
+          started_at?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       public_profiles: {
@@ -571,6 +740,10 @@ export type Database = {
       }
     }
     Functions: {
+      can_user_perform_action: {
+        Args: { _action_type: string; _user_id: string }
+        Returns: boolean
+      }
       check_user_status: {
         Args: { user_uuid: string }
         Returns: {
@@ -593,6 +766,11 @@ export type Database = {
         Args: { product_uuid: string }
         Returns: undefined
       }
+      record_user_action: {
+        Args: { _action_type: string; _user_id: string }
+        Returns: undefined
+      }
+      reset_monthly_activity: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
