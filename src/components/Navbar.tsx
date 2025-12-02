@@ -1,15 +1,20 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Search, TrendingUp, MessageCircle } from "lucide-react";
+import { Search, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UserMenu } from "@/components/UserMenu";
-import { NotificationBell } from "@/components/NotificationBell";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Navbar = () => {
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -26,7 +31,7 @@ export const Navbar = () => {
     setIsLoggedIn(!!session);
   };
 
-  // Hide navbar on seller and admin dashboard pages
+  // Hide navbar on seller and admin dashboard pages (buyers only)
   const hiddenPaths = ['/seller', '/admin'];
   const shouldHide = hiddenPaths.some(path => location.pathname.startsWith(path));
 
@@ -53,37 +58,42 @@ export const Navbar = () => {
             />
           </div>
 
-          {/* Navigation Icons */}
-          <div className="flex items-center gap-1 sm:gap-2">
+          {/* Menu Button & User Actions */}
+          <div className="flex items-center gap-2">
             {isLoggedIn ? (
               <>
-                <Link to="/updates">
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="flex items-center gap-1 h-9 px-2 sm:px-3"
-                  >
-                    <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
-                    <span className="hidden lg:inline text-sm">Updates</span>
-                  </Button>
-                </Link>
-
-                <Link to="/messages">
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="flex items-center gap-1 h-9 px-2 sm:px-3"
-                  >
-                    <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
-                    <span className="hidden lg:inline text-sm">Messages</span>
-                  </Button>
-                </Link>
-
-                <div className="flex items-center gap-1 px-2 sm:px-3">
-                  <NotificationBell />
-                  <span className="hidden lg:inline text-sm">Notifications</span>
-                </div>
-
+                <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-9 px-3">
+                      <Menu className="h-5 w-5" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                    <nav className="flex flex-col gap-4 mt-8">
+                      <Link 
+                        to="/updates" 
+                        onClick={() => setIsMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-muted transition-colors"
+                      >
+                        <span className="text-base font-medium">Updates</span>
+                      </Link>
+                      <Link 
+                        to="/messages" 
+                        onClick={() => setIsMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-muted transition-colors"
+                      >
+                        <span className="text-base font-medium">Messages</span>
+                      </Link>
+                      <Link 
+                        to="/account" 
+                        onClick={() => setIsMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-muted transition-colors"
+                      >
+                        <span className="text-base font-medium">Account</span>
+                      </Link>
+                    </nav>
+                  </SheetContent>
+                </Sheet>
                 <UserMenu />
               </>
             ) : (
