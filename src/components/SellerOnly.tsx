@@ -21,12 +21,17 @@ export function SellerOnly({ children }: { children: React.ReactNode }) {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("user_type")
+      .select("user_type, identity_verified")
       .eq("id", session.user.id)
       .single();
 
     if (profile?.user_type !== "seller") {
       navigate("/");
+      return;
+    }
+
+    if (!profile?.identity_verified) {
+      navigate("/identity-verification");
       return;
     }
 

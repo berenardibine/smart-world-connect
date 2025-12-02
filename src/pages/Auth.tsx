@@ -117,13 +117,13 @@ export default function Auth() {
           });
           navigate("/verify-email");
         } else {
-          toast({
+        toast({
             title: "Account created!",
             description: "You can now start using Rwanda Smart Market.",
           });
           
           if (userType === "seller") {
-            navigate("/seller/dashboard");
+            navigate("/identity-verification");
           } else {
             navigate("/");
           }

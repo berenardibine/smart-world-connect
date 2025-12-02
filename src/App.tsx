@@ -3,11 +3,12 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Home from "./pages/Home";
+import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import EmailVerification from "./pages/EmailVerification";
 import ForgotPassword from "./pages/ForgotPassword";
 import BlockedAccount from "./pages/BlockedAccount";
+import IdentityVerification from "./pages/IdentityVerification";
 import SellerDashboard from "./pages/SellerDashboard";
 import SellerProducts from "./pages/SellerProducts";
 import SellerProfile from "./pages/SellerProfile";
@@ -41,11 +42,12 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/verify-email" element={<EmailVerification />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/blocked" element={<BlockedAccount />} />
+          <Route path="/identity-verification" element={<IdentityVerification />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/seller-profile/:id" element={<SellerProfile />} />
           <Route path="/agriculture" element={<AgricultureProducts />} />
