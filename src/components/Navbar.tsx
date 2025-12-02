@@ -1,12 +1,30 @@
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Search, TrendingUp, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UserMenu } from "@/components/UserMenu";
 import { NotificationBell } from "@/components/NotificationBell";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Navbar = () => {
   const location = useLocation();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    checkAuth();
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsLoggedIn(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setIsLoggedIn(!!session);
+  };
 
   // Hide navbar on seller and admin dashboard pages
   const hiddenPaths = ['/seller', '/admin'];
@@ -37,34 +55,44 @@ export const Navbar = () => {
 
           {/* Navigation Icons */}
           <div className="flex items-center gap-1 sm:gap-2">
-            <Link to="/updates">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="flex items-center gap-1 h-9 px-2 sm:px-3"
-              >
-                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="hidden lg:inline text-sm">Updates</span>
-              </Button>
-            </Link>
+            {isLoggedIn ? (
+              <>
+                <Link to="/updates">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="flex items-center gap-1 h-9 px-2 sm:px-3"
+                  >
+                    <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="hidden lg:inline text-sm">Updates</span>
+                  </Button>
+                </Link>
 
-            <Link to="/messages">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="flex items-center gap-1 h-9 px-2 sm:px-3"
-              >
-                <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="hidden lg:inline text-sm">Messages</span>
-              </Button>
-            </Link>
+                <Link to="/messages">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="flex items-center gap-1 h-9 px-2 sm:px-3"
+                  >
+                    <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="hidden lg:inline text-sm">Messages</span>
+                  </Button>
+                </Link>
 
-            <div className="flex items-center gap-1 px-2 sm:px-3">
-              <NotificationBell />
-              <span className="hidden lg:inline text-sm">Notifications</span>
-            </div>
+                <div className="flex items-center gap-1 px-2 sm:px-3">
+                  <NotificationBell />
+                  <span className="hidden lg:inline text-sm">Notifications</span>
+                </div>
 
-            <UserMenu />
+                <UserMenu />
+              </>
+            ) : (
+              <Link to="/auth?mode=signup">
+                <Button size="sm">
+                  Sign Up
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
 

@@ -50,6 +50,8 @@ export default function AdminUsers() {
   const [notificationTitle, setNotificationTitle] = useState("");
   const [notificationMessage, setNotificationMessage] = useState("");
   const [editingUser, setEditingUser] = useState<any>(null);
+  const [plans, setPlans] = useState<any[]>([]);
+  const [viewingIdUser, setViewingIdUser] = useState<any>(null);
   const [editFormData, setEditFormData] = useState({
     full_name: "",
     email: "",
@@ -65,6 +67,7 @@ export default function AdminUsers() {
 
   useEffect(() => {
     checkAdmin();
+    fetchPlans();
   }, []);
 
   const checkAdmin = async () => {
@@ -91,22 +94,42 @@ export default function AdminUsers() {
     setLoading(false);
   };
 
+  const fetchPlans = async () => {
+    const { data } = await supabase
+      .from("plans")
+      .select("*")
+      .eq("is_active", true)
+      .order("price_rwf", { ascending: true });
+    
+    if (data) {
+      setPlans(data);
+    }
+  };
+
   const fetchUsers = async () => {
     const { data, error } = await supabase
       .from("profiles")
-      .select("*")
+      .select(`
+        *,
+        user_subscriptions!inner(
+          plan_id,
+          status,
+          plans(*)
+        )
+      `)
       .order("created_at", { ascending: false });
 
     if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch users",
-        variant: "destructive",
-      });
-      return;
+      // If join fails (no subscription), fetch without it
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      setUsers(profilesData || []);
+    } else {
+      setUsers(data || []);
     }
-
-    setUsers(data || []);
   };
 
   const updateUserStatus = async (userId: string, status: string) => {
@@ -268,6 +291,60 @@ export default function AdminUsers() {
     }
   };
 
+  const updateUserPlan = async (userId: string, planId: string) => {
+    // First, deactivate any existing active subscription
+    await supabase
+      .from("user_subscriptions")
+      .update({ status: "cancelled" })
+      .eq("user_id", userId)
+      .eq("status", "active");
+
+    // Create new subscription
+    const { error } = await supabase
+      .from("user_subscriptions")
+      .insert({
+        user_id: userId,
+        plan_id: planId,
+        status: "active",
+      });
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update user plan",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "User plan updated successfully",
+      });
+      fetchUsers();
+    }
+  };
+
+  const verifyIdentity = async (userId: string, verified: boolean) => {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ identity_verified: verified })
+      .eq("id", userId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update verification status",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: `Identity ${verified ? 'verified' : 'rejected'} successfully`,
+      });
+      fetchUsers();
+      setViewingIdUser(null);
+    }
+  };
+
   if (loading) {
     return <div className="min-h-screen bg-background flex items-center justify-center">Loading...</div>;
   }
@@ -299,9 +376,9 @@ export default function AdminUsers() {
                   <TableHead>WhatsApp</TableHead>
                   <TableHead>Call Number</TableHead>
                   <TableHead>Type</TableHead>
+                  <TableHead>Premium Plan</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Business</TableHead>
-                  <TableHead>Location</TableHead>
+                  <TableHead>ID Documents</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -328,6 +405,40 @@ export default function AdminUsers() {
                       </Select>
                     </TableCell>
                     <TableCell>
+                      {user.user_type === "seller" ? (
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              {user.user_subscriptions?.[0]?.plans?.name || "Free"}
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Change Premium Plan</DialogTitle>
+                              <DialogDescription>
+                                Select a new plan for {user.full_name}
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-2">
+                              {plans.map((plan) => (
+                                <Button
+                                  key={plan.id}
+                                  variant={user.user_subscriptions?.[0]?.plan_id === plan.id ? "default" : "outline"}
+                                  className="w-full justify-between"
+                                  onClick={() => updateUserPlan(user.id, plan.id)}
+                                >
+                                  <span>{plan.name}</span>
+                                  <span>{plan.price_rwf === 0 ? 'Free' : `${plan.price_rwf} RWF`}</span>
+                                </Button>
+                              ))}
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
                       <Select
                         value={user.status || "active"}
                         onValueChange={(value) => updateUserStatus(user.id, value)}
@@ -342,8 +453,65 @@ export default function AdminUsers() {
                         </SelectContent>
                       </Select>
                     </TableCell>
-                    <TableCell>{user.business_name || "-"}</TableCell>
-                    <TableCell>{user.location || "-"}</TableCell>
+                    <TableCell>
+                      {user.user_type === "seller" && (user.id_front_photo || user.id_back_photo) ? (
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setViewingIdUser(user)}
+                            >
+                              {user.identity_verified ? "✓ Verified" : "⏳ Pending"}
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-2xl">
+                            <DialogHeader>
+                              <DialogTitle>Identity Documents - {user.full_name}</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div>
+                                <h3 className="font-medium mb-2">ID Front</h3>
+                                {user.id_front_photo ? (
+                                  <img src={user.id_front_photo} alt="ID Front" className="w-full rounded border" />
+                                ) : (
+                                  <p className="text-muted-foreground">No front photo</p>
+                                )}
+                              </div>
+                              <div>
+                                <h3 className="font-medium mb-2">ID Back</h3>
+                                {user.id_back_photo ? (
+                                  <img src={user.id_back_photo} alt="ID Back" className="w-full rounded border" />
+                                ) : (
+                                  <p className="text-muted-foreground">No back photo</p>
+                                )}
+                              </div>
+                              {!user.identity_verified && (
+                                <div className="flex gap-2 pt-4">
+                                  <Button
+                                    className="flex-1"
+                                    onClick={() => verifyIdentity(user.id, true)}
+                                  >
+                                    <Check className="mr-2 h-4 w-4" />
+                                    Approve
+                                  </Button>
+                                  <Button
+                                    variant="destructive"
+                                    className="flex-1"
+                                    onClick={() => verifyIdentity(user.id, false)}
+                                  >
+                                    <Ban className="mr-2 h-4 w-4" />
+                                    Reject
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
                         <Dialog>

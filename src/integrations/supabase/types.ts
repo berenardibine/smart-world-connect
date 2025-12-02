@@ -406,6 +406,9 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          id_back_photo: string | null
+          id_front_photo: string | null
+          identity_verified: boolean | null
           location: string | null
           phone_number: string | null
           profile_image: string | null
@@ -415,6 +418,7 @@ export type Database = {
           status: string | null
           updated_at: string | null
           user_type: string
+          verification_notes: string | null
           whatsapp_number: string | null
         }
         Insert: {
@@ -426,6 +430,9 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          id_back_photo?: string | null
+          id_front_photo?: string | null
+          identity_verified?: boolean | null
           location?: string | null
           phone_number?: string | null
           profile_image?: string | null
@@ -435,6 +442,7 @@ export type Database = {
           status?: string | null
           updated_at?: string | null
           user_type: string
+          verification_notes?: string | null
           whatsapp_number?: string | null
         }
         Update: {
@@ -446,6 +454,9 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          id_back_photo?: string | null
+          id_front_photo?: string | null
+          identity_verified?: boolean | null
           location?: string | null
           phone_number?: string | null
           profile_image?: string | null
@@ -455,6 +466,7 @@ export type Database = {
           status?: string | null
           updated_at?: string | null
           user_type?: string
+          verification_notes?: string | null
           whatsapp_number?: string | null
         }
         Relationships: []
