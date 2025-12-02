@@ -6,6 +6,12 @@ export function BottomNav() {
 
   const isActive = (path: string) => location.pathname === path;
 
+  // Hide bottom nav on seller and admin dashboard pages
+  const hiddenPaths = ['/seller', '/admin'];
+  const shouldHide = hiddenPaths.some(path => location.pathname.startsWith(path));
+
+  if (shouldHide) return null;
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border">
       <div className="flex justify-around items-center h-16 px-2">
