@@ -31,6 +31,7 @@ import PostOpportunity from "./pages/PostOpportunity";
 import AdminOpportunities from "./pages/AdminOpportunities";
 import SellerPlans from "./pages/SellerPlans";
 import AdminPlans from "./pages/AdminPlans";
+import MarketingPosts from "./pages/admin/MarketingPosts";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -70,6 +71,7 @@ const App = () => (
           <Route path="/admin/analytics" element={<AdminAnalytics />} />
           <Route path="/admin/settings" element={<AdminSettings />} />
           <Route path="/admin/plans" element={<AdminPlans />} />
+          <Route path="/admin/marketing" element={<MarketingPosts />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

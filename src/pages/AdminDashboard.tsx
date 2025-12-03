@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Package, DollarSign, MessageSquare, ShoppingCart } from "lucide-react";
+import { Users, Package, ShoppingCart, Megaphone, Briefcase } from "lucide-react";
 
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
@@ -88,8 +87,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
-      
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
@@ -169,12 +166,33 @@ export default function AdminDashboard() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Opportunity Management</CardTitle>
-              <CardDescription>Review and manage job opportunities</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <Briefcase className="h-5 w-5" />
+                Opportunities
+              </CardTitle>
+              <CardDescription>Post and manage job opportunities</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Link to="/post-opportunity">
+                <Button className="w-full mb-2">Post Opportunity</Button>
+              </Link>
+              <Link to="/admin/opportunities">
+                <Button variant="outline" className="w-full">Manage Opportunities</Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Megaphone className="h-5 w-5" />
+                Marketing Posts
+              </CardTitle>
+              <CardDescription>Create announcements and promotions</CardDescription>
             </CardHeader>
             <CardContent>
-              <Link to="/admin/opportunities">
-                <Button className="w-full">Manage Opportunities</Button>
+              <Link to="/admin/marketing">
+                <Button className="w-full">Manage Marketing</Button>
               </Link>
             </CardContent>
           </Card>
