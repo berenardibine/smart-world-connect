@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { BottomNav } from "@/components/BottomNav";
 import { Navbar } from "@/components/Navbar";
 import { ProductCard } from "@/components/ProductCard";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Home() {
@@ -13,6 +12,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [likedProducts, setLikedProducts] = useState<Set<string>>(new Set());
+  const navigate = useNavigate();
 
   useEffect(() => {
     checkAuth();
@@ -22,6 +22,18 @@ export default function Home() {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (session) {
+      // Check if user is a seller - redirect to dashboard
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("user_type")
+        .eq("id", session.user.id)
+        .single();
+      
+      if (profile?.user_type === "seller") {
+        navigate("/seller/dashboard");
+        return;
+      }
+      
       setCurrentUserId(session.user.id);
       
       // Fetch user's liked products
