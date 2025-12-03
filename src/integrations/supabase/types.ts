@@ -73,6 +73,54 @@ export type Database = {
           },
         ]
       }
+      marketing_posts: {
+        Row: {
+          admin_id: string
+          content: string
+          created_at: string
+          id: string
+          images: string[] | null
+          is_active: boolean | null
+          link_text: string | null
+          link_url: string | null
+          post_type: string
+          title: string
+          updated_at: string
+          video_url: string | null
+          views: number | null
+        }
+        Insert: {
+          admin_id: string
+          content: string
+          created_at?: string
+          id?: string
+          images?: string[] | null
+          is_active?: boolean | null
+          link_text?: string | null
+          link_url?: string | null
+          post_type?: string
+          title: string
+          updated_at?: string
+          video_url?: string | null
+          views?: number | null
+        }
+        Update: {
+          admin_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          images?: string[] | null
+          is_active?: boolean | null
+          link_text?: string | null
+          link_url?: string | null
+          post_type?: string
+          title?: string
+          updated_at?: string
+          video_url?: string | null
+          views?: number | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string

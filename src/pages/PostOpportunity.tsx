@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,8 @@ import { Upload, X, ArrowLeft } from "lucide-react";
 const PostOpportunity = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [checkingAdmin, setCheckingAdmin] = useState(true);
   const [formData, setFormData] = useState({
     title: "",
     companyName: "",
@@ -28,6 +30,34 @@ const PostOpportunity = () => {
   const [video, setVideo] = useState<File | null>(null);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [videoPreviews, setVideoPreviews] = useState<string>("");
+
+  useEffect(() => {
+    checkAdminStatus();
+  }, []);
+
+  const checkAdminStatus = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+
+    const { data: roleData } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    if (!roleData) {
+      toast.error("Only admins can post opportunities");
+      navigate("/");
+      return;
+    }
+
+    setIsAdmin(true);
+    setCheckingAdmin(false);
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -68,7 +98,7 @@ const PostOpportunity = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        toast.error("You must be logged in to post opportunities");
+        toast.error("You must be logged in");
         navigate("/auth");
         return;
       }
@@ -78,7 +108,7 @@ const PostOpportunity = () => {
       for (const image of images) {
         const fileExt = image.name.split('.').pop();
         const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-        const { error: uploadError, data } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('product-images')
           .upload(fileName, image);
 
@@ -131,7 +161,7 @@ const PostOpportunity = () => {
       if (insertError) throw insertError;
 
       toast.success("Opportunity posted successfully!");
-      navigate("/seller/dashboard");
+      navigate("/admin/opportunities");
     } catch (error: any) {
       toast.error(error.message || "Failed to post opportunity");
     } finally {
@@ -139,13 +169,21 @@ const PostOpportunity = () => {
     }
   };
 
+  if (checkingAdmin) {
+    return <div className="min-h-screen bg-background flex items-center justify-center">Checking permissions...</div>;
+  }
+
+  if (!isAdmin) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Button variant="ghost" onClick={() => navigate("/seller/dashboard")}>
+          <Button variant="ghost" onClick={() => navigate("/admin/opportunities")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
+            Back to Opportunities
           </Button>
           <h1 className="text-xl font-bold">Post Opportunity</h1>
           <div className="w-20"></div>
