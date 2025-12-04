@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -102,20 +101,17 @@ export default function AdminSettings() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <div className="sticky top-0 z-40 bg-background border-b border-border">
+        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
+          <Button variant="ghost" onClick={() => navigate("/admin/dashboard")}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h1 className="text-xl font-bold">Website Settings</h1>
+        </div>
+      </div>
       
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <Link to="/admin/dashboard">
-            <Button variant="ghost" className="mb-4">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Dashboard
-            </Button>
-          </Link>
-          <h1 className="text-3xl font-bold mb-2">Website Settings</h1>
-          <p className="text-muted-foreground">Configure your website information</p>
-        </div>
-
         <Card className="max-w-2xl">
           <CardHeader>
             <CardTitle>General Settings</CardTitle>

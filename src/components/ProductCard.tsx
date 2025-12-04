@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { createProductUrl } from "@/lib/slugify";
 
 interface ProductCardProps {
   id: string;
@@ -95,7 +96,7 @@ export const ProductCard = ({
 
   const handleShare = async (e: React.MouseEvent) => {
     e.preventDefault();
-    const url = `${window.location.origin}/product/${id}`;
+    const url = `${window.location.origin}${createProductUrl(id, title)}`;
     
     if (navigator.share) {
       try {
@@ -128,9 +129,11 @@ export const ProductCard = ({
 
   const displayMedia = media.length > 0 ? media : ['/placeholder.svg'];
 
+  const productUrl = createProductUrl(id, title);
+
   return (
     <Card className="group overflow-hidden transition-all duration-300 hover:shadow-lg">
-      <Link to={`/product/${id}`}>
+      <Link to={productUrl}>
         <div className="relative aspect-square overflow-hidden bg-muted">
           {isVideo(displayMedia[currentIndex]) ? (
             <div className="relative h-full w-full">
@@ -206,7 +209,7 @@ export const ProductCard = ({
       </Link>
 
       <CardContent className="p-4">
-        <Link to={`/product/${id}`}>
+        <Link to={productUrl}>
           <h3 className="font-semibold text-lg mb-1 line-clamp-2 group-hover:text-primary transition-colors">
             {title}
           </h3>
@@ -228,7 +231,7 @@ export const ProductCard = ({
       </CardContent>
 
       <CardFooter className="p-4 pt-0">
-        <Link to={`/product/${id}`} className="w-full">
+        <Link to={productUrl} className="w-full">
           <Button className="w-full">View Details</Button>
         </Link>
       </CardFooter>

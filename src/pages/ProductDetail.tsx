@@ -23,6 +23,7 @@ import { RecommendedProducts } from "@/components/RecommendedProducts";
 import { useProductImpression } from "@/hooks/useProductImpression";
 import { z } from "zod";
 import { Helmet } from "react-helmet";
+import { extractProductId } from "@/lib/slugify";
 
 // Message validation schema
 const messageSchema = z.object({
@@ -34,7 +35,8 @@ const messageSchema = z.object({
 
 export default function ProductDetail() {
   useUserStatus();
-  const { id } = useParams();
+  const { slugId } = useParams();
+  const id = extractProductId(slugId || '');
   useProductImpression(id || '');
   const navigate = useNavigate();
   const { toast } = useToast();
