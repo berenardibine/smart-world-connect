@@ -34,7 +34,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Eye, Heart } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Heart, ArrowLeft } from "lucide-react";
 import { z } from "zod";
 
 const categories = [
@@ -330,9 +330,12 @@ export default function SellerProducts() {
     <div className="min-h-screen bg-background pb-20">
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">My Products</h1>
+          <Button variant="ghost" onClick={() => navigate("/seller/dashboard")}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h1 className="text-xl font-bold">My Products</h1>
           <div className="flex items-center gap-2">
-            <NotificationBell />
             <Dialog
               open={showAddDialog}
               onOpenChange={(open) => {

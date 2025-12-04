@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check } from "lucide-react";
+import { Check, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useUserPlan } from "@/hooks/useUserPlan";
 import {
@@ -116,14 +117,23 @@ export const SellerPlans = () => {
     }
   };
 
+  const navigate = useNavigate();
+
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Premium Plans</h1>
-        <p className="text-muted-foreground">
+    <div className="min-h-screen bg-background">
+      <div className="sticky top-0 z-40 bg-background border-b border-border">
+        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
+          <Button variant="ghost" onClick={() => navigate("/seller/dashboard")}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h1 className="text-xl font-bold">Premium Plans</h1>
+        </div>
+      </div>
+      <div className="container mx-auto p-6">
+        <p className="text-muted-foreground mb-6">
           Choose a plan that suits your selling needs. Payment: +250798751685 (Manishimwe Berenard)
         </p>
-      </div>
 
       {currentPlan && (
         <Card className="mb-8 border-primary">
@@ -250,6 +260,7 @@ export const SellerPlans = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 };

@@ -1,14 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Navbar } from "@/components/Navbar";
-import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Check, X, Eye } from "lucide-react";
+import { Check, X, Eye, ArrowLeft } from "lucide-react";
 
 interface Opportunity {
   id: string;
@@ -110,23 +108,26 @@ const AdminOpportunities = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">Loading...</div>
-        </div>
-        <BottomNav />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        Loading...
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <Navbar />
+    <div className="min-h-screen bg-background">
+      <div className="sticky top-0 z-40 bg-background border-b border-border">
+        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
+          <Button variant="ghost" onClick={() => navigate("/admin/dashboard")}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h1 className="text-xl font-bold">Opportunity Management</h1>
+        </div>
+      </div>
       <div className="container mx-auto px-4 py-8">
         <Card>
           <CardHeader>
-            <CardTitle>Opportunity Management</CardTitle>
             <CardDescription>Review and manage job opportunities</CardDescription>
           </CardHeader>
           <CardContent>
@@ -209,7 +210,6 @@ const AdminOpportunities = () => {
           </CardContent>
         </Card>
       </div>
-      <BottomNav />
     </div>
   );
 };
