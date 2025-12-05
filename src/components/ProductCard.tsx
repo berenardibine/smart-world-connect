@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Heart, Share2, MapPin, ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { Heart, MapPin, ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -94,34 +94,6 @@ export const ProductCard = ({
     }
   };
 
-  const handleShare = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    const url = `${window.location.origin}${createProductUrl(id, title)}`;
-    
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title,
-          text: `Check out ${title}`,
-          url,
-        });
-        
-        // Increment share count
-        await supabase
-          .from("products")
-          .update({ share_count: (likeCount || 0) + 1 })
-          .eq("id", id);
-      } catch (error) {
-        console.log("Share cancelled");
-      }
-    } else {
-      navigator.clipboard.writeText(url);
-      toast({
-        title: "Link copied",
-        description: "Product link copied to clipboard",
-      });
-    }
-  };
 
   const isVideo = (url: string | undefined) => {
     return url?.includes('.mp4') || url?.includes('.webm') || url?.includes('.mov');
@@ -187,7 +159,7 @@ export const ProductCard = ({
             </>
           )}
           
-          <div className="absolute top-2 right-2 flex gap-2">
+          <div className="absolute top-2 right-2">
             <Button
               size="icon"
               variant="secondary"
@@ -195,14 +167,6 @@ export const ProductCard = ({
               onClick={handleLike}
             >
               <Heart className={`h-4 w-4 ${liked ? 'fill-red-500 text-red-500' : ''}`} />
-            </Button>
-            <Button
-              size="icon"
-              variant="secondary"
-              className="h-8 w-8 rounded-full bg-background/80 backdrop-blur"
-              onClick={handleShare}
-            >
-              <Share2 className="h-4 w-4" />
             </Button>
           </div>
         </div>
