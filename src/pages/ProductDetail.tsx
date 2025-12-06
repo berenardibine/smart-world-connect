@@ -7,7 +7,7 @@ import { UserMenu } from "@/components/UserMenu";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Heart, Eye, MessageCircle, MapPin, ArrowLeft, Share2, Star, Phone } from "lucide-react";
+import { Heart, Eye, MessageCircle, MapPin, ArrowLeft, Star, Phone } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -202,39 +202,6 @@ export default function ProductDetail() {
     }
   };
 
-  const handleShare = async () => {
-    const url = window.location.href;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: product.title,
-          text: product.description,
-          url: url,
-        });
-
-        // Increment share count
-        await supabase
-          .from("products")
-          .update({ share_count: (product.share_count || 0) + 1 })
-          .eq("id", id);
-
-        toast({
-          title: "Success",
-          description: "Product shared!",
-        });
-      } catch (error) {
-        console.error("Error sharing:", error);
-      }
-    } else {
-      // Fallback: copy to clipboard
-      navigator.clipboard.writeText(url);
-      toast({
-        title: "Link copied",
-        description: "Product link copied to clipboard",
-      });
-    }
-  };
 
   const sendMessage = async () => {
     if (!currentUser) {
@@ -490,9 +457,6 @@ export default function ProductDetail() {
               >
                 <Heart className={`h-5 w-5 mr-2 ${isLiked ? "fill-current" : ""}`} />
                 {isLiked ? "Liked" : "Like"}
-              </Button>
-              <Button variant="outline" size="lg" onClick={handleShare}>
-                <Share2 className="h-5 w-5" />
               </Button>
             </div>
 

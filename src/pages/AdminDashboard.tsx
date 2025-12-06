@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Package, ShoppingCart, Megaphone, Briefcase, ArrowLeft, LogOut } from "lucide-react";
+import { Users, Package, ShoppingCart, Megaphone, Briefcase, ArrowLeft, LogOut, MessageSquare } from "lucide-react";
 
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
@@ -269,6 +269,21 @@ export default function AdminDashboard() {
             <CardContent>
               <Link to="/seller/updates">
                 <Button className="w-full">Create Update</Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                Contact Messages
+              </CardTitle>
+              <CardDescription>View messages from contact form</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link to="/admin/messages">
+                <Button className="w-full">View Messages</Button>
               </Link>
             </CardContent>
           </Card>
