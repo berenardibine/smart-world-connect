@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { BottomNav } from "@/components/BottomNav";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -8,6 +7,8 @@ import { ProductCard } from "@/components/ProductCard";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useUserStatus } from "@/hooks/useUserStatus";
+import { DashboardFloatingButton } from "@/components/DashboardFloatingButton";
+import { shuffleArray } from "@/lib/shuffleArray";
 
 export default function AgricultureProducts() {
   useUserStatus();
@@ -15,7 +16,6 @@ export default function AgricultureProducts() {
   const [products, setProducts] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [likedProducts, setLikedProducts] = useState<Set<string>>(new Set());
-  const navigate = useNavigate();
 
   useEffect(() => {
     checkAuth();
@@ -24,19 +24,16 @@ export default function AgricultureProducts() {
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     
-    if (!session) {
-      navigate("/auth");
-      return;
-    }
-
-    // Fetch user's liked products
-    const { data: likes } = await supabase
-      .from("product_likes")
-      .select("product_id")
-      .eq("user_id", session.user.id);
-    
-    if (likes) {
-      setLikedProducts(new Set(likes.map(l => l.product_id)));
+    if (session) {
+      // Fetch user's liked products
+      const { data: likes } = await supabase
+        .from("product_likes")
+        .select("product_id")
+        .eq("user_id", session.user.id);
+      
+      if (likes) {
+        setLikedProducts(new Set(likes.map(l => l.product_id)));
+      }
     }
 
     await fetchProducts();
@@ -60,10 +57,11 @@ export default function AgricultureProducts() {
       query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
     }
 
-    const { data, error } = await query.order("created_at", { ascending: false });
+    const { data, error } = await query;
 
     if (!error && data) {
-      setProducts(data);
+      // Shuffle products randomly instead of sorting by time
+      setProducts(shuffleArray(data));
     }
   };
 
@@ -128,6 +126,7 @@ export default function AgricultureProducts() {
         )}
       </main>
 
+      <DashboardFloatingButton />
       <BottomNav />
     </div>
   );

@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { BottomNav } from "@/components/BottomNav";
 import { Navbar } from "@/components/Navbar";
 import { ProductCard } from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DashboardFloatingButton } from "@/components/DashboardFloatingButton";
+import { AIRecommendedProducts } from "@/components/AIRecommendedProducts";
+import { shuffleArray } from "@/lib/shuffleArray";
 
 export default function Home() {
   const [loading, setLoading] = useState(true);
@@ -12,7 +14,6 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [likedProducts, setLikedProducts] = useState<Set<string>>(new Set());
-  const navigate = useNavigate();
 
   useEffect(() => {
     checkAuth();
@@ -22,18 +23,6 @@ export default function Home() {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (session) {
-      // Check if user is a seller - redirect to dashboard
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("user_type")
-        .eq("id", session.user.id)
-        .single();
-      
-      if (profile?.user_type === "seller") {
-        navigate("/seller/dashboard");
-        return;
-      }
-      
       setCurrentUserId(session.user.id);
       
       // Fetch user's liked products
@@ -62,16 +51,17 @@ export default function Home() {
         )
       `)
       .eq("status", "approved")
-      .not("category", "in", '("Agriculture Product","Equipment for Lent")'); // Exclude special categories from home
+      .not("category", "in", '("Agriculture Product","Equipment for Lent")');
 
     if (searchQuery.trim()) {
       query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
     }
 
-    const { data, error } = await query.order("created_at", { ascending: false });
+    const { data, error } = await query;
 
     if (!error && data) {
-      setProducts(data);
+      // Shuffle products randomly instead of sorting by time
+      setProducts(shuffleArray(data));
     }
   };
 
@@ -107,26 +97,32 @@ export default function Home() {
               No products available yet
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {products.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  id={product.id}
-                  title={product.title}
-                  price={product.price}
-                  images={product.images || []}
-                  video={product.video_url}
-                  location={product.location}
-                  sellerName={product.profiles?.business_name || product.profiles?.full_name || "Seller"}
-                  likes={product.likes}
-                  isLiked={likedProducts.has(product.id)}
-                />
-              ))}
-            </div>
+            <>
+              {currentUserId && <AIRecommendedProducts />}
+              
+              <h2 className="text-lg font-bold mt-8 mb-4">All Products</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {products.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    id={product.id}
+                    title={product.title}
+                    price={product.price}
+                    images={product.images || []}
+                    video={product.video_url}
+                    location={product.location}
+                    sellerName={product.profiles?.business_name || product.profiles?.full_name || "Seller"}
+                    likes={product.likes}
+                    isLiked={likedProducts.has(product.id)}
+                  />
+                ))}
+              </div>
+            </>
           )
         )}
       </main>
 
+      <DashboardFloatingButton />
       <BottomNav />
     </div>
   );
