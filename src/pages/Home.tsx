@@ -29,34 +29,8 @@ export default function Home() {
         .eq("id", session.user.id)
         .single();
       
-      // Check user type and admin role to redirect appropriately
       if (profile?.user_type === "seller") {
-        // Check if user is also admin
-        const { data: roleData } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", session.user.id)
-          .eq("role", "admin")
-          .single();
-        
-        if (roleData) {
-          navigate("/admin/dashboard");
-        } else {
-          navigate("/seller/dashboard");
-        }
-        return;
-      }
-      
-      // Check if buyer is admin
-      const { data: buyerRoleData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", session.user.id)
-        .eq("role", "admin")
-        .single();
-      
-      if (buyerRoleData) {
-        navigate("/admin/dashboard");
+        navigate("/seller/dashboard");
         return;
       }
       
@@ -133,7 +107,7 @@ export default function Home() {
               No products available yet
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {products.map((product) => (
                 <ProductCard
                   key={product.id}

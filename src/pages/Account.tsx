@@ -17,8 +17,6 @@ import {
   LogOut,
   Camera,
   LayoutDashboard,
-  MessageSquare,
-  Phone,
 } from "lucide-react";
 import { useUserStatus } from "@/hooks/useUserStatus";
 
@@ -371,30 +369,6 @@ export default function Account() {
             </CardContent>
           </Card>
         )}
-
-        {/* Contact & Support */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" />
-              Contact & Support
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Link to="/contact">
-              <Button variant="ghost" className="w-full justify-start">
-                <MessageSquare className="mr-2 h-4 w-4" />
-                Contact Us
-              </Button>
-            </Link>
-            <a href="tel:+250798751685">
-              <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive">
-                <Phone className="mr-2 h-4 w-4" />
-                Emergency Call: +250798751685
-              </Button>
-            </a>
-          </CardContent>
-        </Card>
 
         {/* Settings & Legal */}
         <Card>
