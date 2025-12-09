@@ -21,6 +21,8 @@ import { useUserStatus } from "@/hooks/useUserStatus";
 import { FullScreenImageViewer } from "@/components/FullScreenImageViewer";
 import { RecommendedProducts } from "@/components/RecommendedProducts";
 import { useProductImpression } from "@/hooks/useProductImpression";
+import { useBrowsingHistory } from "@/hooks/useBrowsingHistory";
+import { DashboardFloatingButton } from "@/components/DashboardFloatingButton";
 import { z } from "zod";
 import { Helmet } from "react-helmet";
 import { extractProductId } from "@/lib/slugify";
@@ -38,6 +40,7 @@ export default function ProductDetail() {
   const { slugId } = useParams();
   const id = extractProductId(slugId || '');
   useProductImpression(id || '');
+  useBrowsingHistory(id);
   const navigate = useNavigate();
   const { toast } = useToast();
   const [product, setProduct] = useState<any>(null);
@@ -608,6 +611,7 @@ export default function ProductDetail() {
         />
       )}
 
+      <DashboardFloatingButton />
       <BottomNav />
     </div>
     </>
