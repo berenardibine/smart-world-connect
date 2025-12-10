@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supaseClient";
 
 export function SellerOnly({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);

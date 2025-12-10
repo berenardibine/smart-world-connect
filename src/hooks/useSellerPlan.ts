@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supaseClient";
 import { getPlans } from "@/lib/api/planApi";
 
 export const useSellerPlan = (userId: string) => {
