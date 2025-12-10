@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supaseClient";
 
 export const recordSellerActivity = async (userId: string, type: "product" | "update") => {
   // Tables don't exist yet, just log
