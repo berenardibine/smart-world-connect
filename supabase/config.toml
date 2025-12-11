@@ -3,4 +3,5 @@
 project_id = "tbykrulfzhhkmtgjhvjh"
 api_url = "https://api.supabase.com"
 db_url = "postgresql://postgres.tbykrulfzhhkmtgjhvjh:12003Kivu..@db.tbykrulfzhhkmtgjhvjh.supabase.co:5432/postgres"
-studio_port = 54323
+studio_port = 5432
+verify_jwt = true
