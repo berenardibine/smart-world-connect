@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/lib/supaseClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Eye, Heart, Trash2, ArrowLeft } from "lucide-react";
+import { Eye, Heart, Trash2, ArrowLeft, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -104,12 +104,18 @@ export default function AdminProducts() {
   return (
     <div className="min-h-screen bg-background">
       <div className="sticky top-0 z-40 bg-background border-b border-border">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" onClick={() => navigate("/admin/dashboard")}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" onClick={() => navigate("/admin/dashboard")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Button>
+            <h1 className="text-xl font-bold">Product Management</h1>
+          </div>
+          <Button onClick={() => navigate("/admin/post-product")}>
+            <Plus className="mr-2 h-4 w-4" />
+            Post Product
           </Button>
-          <h1 className="text-xl font-bold">Product Management</h1>
         </div>
       </div>
       

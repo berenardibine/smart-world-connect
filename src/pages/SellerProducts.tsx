@@ -33,9 +33,19 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2, Eye, Heart, ArrowLeft } from "lucide-react";
 import { z } from "zod";
+
+const rentalRateTypes = [
+  { value: "per_hour", label: "Per Hour" },
+  { value: "per_day", label: "Per Day" },
+  { value: "per_week", label: "Per Week" },
+  { value: "per_month", label: "Per Month" },
+  { value: "per_season", label: "Per Season" },
+  { value: "custom", label: "Custom Rate" },
+];
 
 const categories = [
   "Agriculture Product",
@@ -91,6 +101,8 @@ export default function SellerProducts() {
     location: "",
     images: [] as string[],
     video_url: "",
+    is_negotiable: false,
+    rental_rate_type: "",
   });
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -144,6 +156,8 @@ export default function SellerProducts() {
       location: "",
       images: [],
       video_url: "",
+      is_negotiable: false,
+      rental_rate_type: "",
     });
     setEditingProduct(null);
   };
@@ -186,6 +200,8 @@ export default function SellerProducts() {
       images: formData.images,
       video_url: formData.video_url || null,
       status: "approved",
+      is_negotiable: formData.is_negotiable,
+      rental_rate_type: formData.category === "Equipment for Lent" ? formData.rental_rate_type : null,
     };
 
     let error;
@@ -233,6 +249,8 @@ export default function SellerProducts() {
       location: product.location || "",
       images: product.images || [],
       video_url: product.video_url || "",
+      is_negotiable: product.is_negotiable || false,
+      rental_rate_type: product.rental_rate_type || "",
     });
     setShowAddDialog(true);
   };
@@ -447,6 +465,44 @@ export default function SellerProducts() {
                       />
                     </div>
                   </div>
+
+                  {/* Negotiable Price Option */}
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="is_negotiable"
+                      checked={formData.is_negotiable}
+                      onCheckedChange={(checked) =>
+                        setFormData({ ...formData, is_negotiable: checked as boolean })
+                      }
+                    />
+                    <Label htmlFor="is_negotiable" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                      Price is negotiable
+                    </Label>
+                  </div>
+
+                  {/* Rental Rate Type for Equipment */}
+                  {formData.category === "Equipment for Lent" && (
+                    <div className="space-y-2">
+                      <Label htmlFor="rental_rate_type">Rental Rate Type</Label>
+                      <Select
+                        value={formData.rental_rate_type}
+                        onValueChange={(value) =>
+                          setFormData({ ...formData, rental_rate_type: value })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select rate type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {rentalRateTypes.map((rate) => (
+                            <SelectItem key={rate.value} value={rate.value}>
+                              {rate.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <Label>Images (up to 5)</Label>
