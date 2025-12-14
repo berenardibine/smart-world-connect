@@ -402,15 +402,19 @@ export type Database = {
       products: {
         Row: {
           category: string | null
+          contact_call: string | null
+          contact_whatsapp: string | null
           created_at: string | null
           description: string
           id: string
           images: string[]
           impressions: number | null
+          is_negotiable: boolean | null
           likes: number | null
           location: string | null
           price: number
           quantity: number
+          rental_rate_type: string | null
           seller_id: string
           share_count: number | null
           status: string | null
@@ -421,15 +425,19 @@ export type Database = {
         }
         Insert: {
           category?: string | null
+          contact_call?: string | null
+          contact_whatsapp?: string | null
           created_at?: string | null
           description: string
           id?: string
           images: string[]
           impressions?: number | null
+          is_negotiable?: boolean | null
           likes?: number | null
           location?: string | null
           price: number
           quantity: number
+          rental_rate_type?: string | null
           seller_id: string
           share_count?: number | null
           status?: string | null
@@ -440,15 +448,19 @@ export type Database = {
         }
         Update: {
           category?: string | null
+          contact_call?: string | null
+          contact_whatsapp?: string | null
           created_at?: string | null
           description?: string
           id?: string
           images?: string[]
           impressions?: number | null
+          is_negotiable?: boolean | null
           likes?: number | null
           location?: string | null
           price?: number
           quantity?: number
+          rental_rate_type?: string | null
           seller_id?: string
           share_count?: number | null
           status?: string | null

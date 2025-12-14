@@ -17,6 +17,8 @@ interface ProductCardProps {
   sellerName: string;
   likes?: number;
   isLiked?: boolean;
+  isNegotiable?: boolean;
+  rentalRateType?: string;
 }
 
 export const ProductCard = ({
@@ -29,6 +31,8 @@ export const ProductCard = ({
   sellerName,
   likes = 0,
   isLiked = false,
+  isNegotiable = false,
+  rentalRateType,
 }: ProductCardProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [liked, setLiked] = useState(isLiked);
@@ -179,9 +183,21 @@ export const ProductCard = ({
           </h3>
         </Link>
         <div className="flex items-center justify-between mb-2">
-          <span className="text-2xl font-bold text-primary">
-            {price.toLocaleString()} RWF
-          </span>
+          <div className="flex flex-col">
+            <span className="text-2xl font-bold text-primary">
+              {price.toLocaleString()} RWF
+              {rentalRateType && (
+                <span className="text-sm font-normal text-muted-foreground ml-1">
+                  /{rentalRateType.replace("per_", "")}
+                </span>
+              )}
+            </span>
+            {isNegotiable && (
+              <span className="text-xs text-green-600 font-medium">
+                Negotiable
+              </span>
+            )}
+          </div>
         </div>
         {location && (
           <div className="flex items-center text-sm text-muted-foreground mb-2">

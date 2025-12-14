@@ -436,7 +436,21 @@ export default function ProductDetail() {
           <div className="space-y-6">
             <div>
               <h1 className="text-3xl font-bold mb-2">{product.title}</h1>
-              <p className="text-2xl font-bold text-primary mb-4">{product.price} RWF</p>
+              <div className="flex items-center gap-2 mb-2">
+                <p className="text-2xl font-bold text-primary">
+                  {product.price} RWF
+                  {product.rental_rate_type && (
+                    <span className="text-base font-normal text-muted-foreground ml-1">
+                      /{product.rental_rate_type.replace("per_", "")}
+                    </span>
+                  )}
+                </p>
+                {product.is_negotiable && (
+                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                    Negotiable
+                  </span>
+                )}
+              </div>
               <p className="text-muted-foreground mb-4">{product.description}</p>
             </div>
 
@@ -563,13 +577,15 @@ export default function ProductDetail() {
               </DialogContent>
             </Dialog>
 
-            {seller?.whatsapp_number && (
+            {/* Use product-level contact if available (admin products), otherwise use seller profile */}
+            {(product.contact_whatsapp || seller?.whatsapp_number) && (
               <Button
                 onClick={() => {
+                  const whatsappNumber = product.contact_whatsapp || seller?.whatsapp_number;
                   const productUrl = window.location.href;
                   const firstImage = product.images?.[0] || '';
                   const message = `Hi, I'm interested in your product: ${product.title}\n\nProduct Link: ${productUrl}\n\nProduct Image: ${firstImage}`;
-                  const whatsappUrl = `https://wa.me/${seller.whatsapp_number.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
+                  const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
                   window.open(whatsappUrl, '_blank');
                 }}
                 size="lg"
@@ -580,10 +596,11 @@ export default function ProductDetail() {
               </Button>
             )}
 
-            {seller?.call_number && (
+            {(product.contact_call || seller?.call_number) && (
               <Button
                 onClick={() => {
-                  window.location.href = `tel:${seller.call_number}`;
+                  const callNumber = product.contact_call || seller?.call_number;
+                  window.location.href = `tel:${callNumber}`;
                 }}
                 size="lg"
                 className="w-full h-14 text-lg bg-blue-600 hover:bg-blue-700 text-white"

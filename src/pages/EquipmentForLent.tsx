@@ -120,6 +120,8 @@ export default function EquipmentForLent() {
                 sellerName={product.profiles?.business_name || product.profiles?.full_name || "Seller"}
                 likes={product.likes}
                 isLiked={likedProducts.has(product.id)}
+                isNegotiable={product.is_negotiable}
+                rentalRateType={product.rental_rate_type}
               />
             ))}
           </div>
