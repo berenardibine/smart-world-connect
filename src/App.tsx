@@ -36,6 +36,7 @@ import MarketingPosts from "./pages/admin/MarketingPosts";
 import ContactMessages from "./pages/admin/ContactMessages";
 import ContactUs from "./pages/ContactUs";
 import NotFound from "./pages/NotFound";
+import VerifyEmail from "./pages/VerifyEmail";
 
 const queryClient = new QueryClient();
 
@@ -48,11 +49,29 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/verify-email" element={<EmailVerification />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/email-verification" element={<EmailVerification />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/blocked" element={<BlockedAccount />} />
           <Route path="/identity-verification" element={<IdentityVerification />} />
+          
+          {/* SEO-friendly product routes */}
           <Route path="/product/:slugId" element={<ProductDetail />} />
+          <Route path="/products/:name/by/:seller" element={<ProductDetail />} />
+          <Route path="/products/:name" element={<ProductDetail />} />
+          
+          {/* SEO-friendly opportunity routes */}
+          <Route path="/opportunities/:id" element={<OpportunityDetail />} />
+          <Route path="/opportunities/:title/by/:poster" element={<OpportunityDetail />} />
+          
+          {/* SEO-friendly equipment routes */}
+          <Route path="/equipment/:name/by/:owner" element={<ProductDetail />} />
+          <Route path="/equipment/:name" element={<ProductDetail />} />
+          
+          {/* SEO-friendly agriculture routes */}
+          <Route path="/agriculture/:product/by/:farmer" element={<ProductDetail />} />
+          <Route path="/agriculture/:product" element={<ProductDetail />} />
+          
           <Route path="/seller-profile/:id" element={<SellerProfile />} />
           <Route path="/agriculture" element={<AgricultureProducts />} />
           <Route path="/equipment" element={<EquipmentForLent />} />
@@ -60,7 +79,6 @@ const App = () => (
           <Route path="/account" element={<Account />} />
           <Route path="/updates" element={<Updates />} />
           <Route path="/opportunities" element={<Opportunities />} />
-          <Route path="/opportunities/:id" element={<OpportunityDetail />} />
           <Route path="/post-opportunity" element={<PostOpportunity />} />
           <Route path="/seller/dashboard" element={<SellerDashboard />} />
           <Route path="/seller/products" element={<SellerProducts />} />

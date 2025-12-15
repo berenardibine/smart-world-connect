@@ -116,6 +116,8 @@ export default function Home() {
                     isLiked={likedProducts.has(product.id)}
                     isNegotiable={product.is_negotiable}
                     rentalRateType={product.rental_rate_type}
+                    contactWhatsapp={product.contact_whatsapp}
+                    contactCall={product.contact_call}
                   />
                 ))}
               </div>

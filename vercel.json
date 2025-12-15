@@ -1,0 +1,13 @@
+{
+  "rewrites": [
+    { "source": "/products/:name/by/:seller", "destination": "/index.html" },
+    { "source": "/products/:name", "destination": "/index.html" },
+    { "source": "/opportunities/:title/by/:poster", "destination": "/index.html" },
+    { "source": "/opportunities/:title", "destination": "/index.html" },
+    { "source": "/equipment/:name/by/:owner", "destination": "/index.html" },
+    { "source": "/equipment/:name", "destination": "/index.html" },
+    { "source": "/agriculture/:product/by/:farmer", "destination": "/index.html" },
+    { "source": "/agriculture/:product", "destination": "/index.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
