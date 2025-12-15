@@ -1,13 +1,14 @@
 import { useEffect, useState, useRef } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/lib/supaseClient";
 import { BottomNav } from "@/components/BottomNav";
 import { NotificationBell } from "@/components/NotificationBell";
 import { UserMenu } from "@/components/UserMenu";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Heart, Eye, MessageCircle, MapPin, ArrowLeft, Star, Phone } from "lucide-react";
+import { Heart, Eye, MessageCircle, MapPin, ArrowLeft, Star, Phone, Shield } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -20,9 +21,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { useUserStatus } from "@/hooks/useUserStatus";
 import { FullScreenImageViewer } from "@/components/FullScreenImageViewer";
 import { RecommendedProducts } from "@/components/RecommendedProducts";
-import { useProductImpression } from "@/hooks/useProductImpression";
 import { useBrowsingHistory } from "@/hooks/useBrowsingHistory";
 import { DashboardFloatingButton } from "@/components/DashboardFloatingButton";
+import { ShareButton } from "@/components/ShareButton";
+import { createProductShareUrl, isAdminPostedProduct, extractIdFromUrl } from "@/lib/seoUrls";
 import { z } from "zod";
 import { Helmet } from "react-helmet";
 import { extractProductId } from "@/lib/slugify";
@@ -37,9 +39,12 @@ const messageSchema = z.object({
 
 export default function ProductDetail() {
   useUserStatus();
-  const { slugId } = useParams();
-  const id = extractProductId(slugId || '');
-  useProductImpression(id || '');
+  const { slugId, name } = useParams();
+  const [searchParams] = useSearchParams();
+  
+  // Extract ID from either slug format or query param
+  const id = slugId ? extractProductId(slugId) : extractIdFromUrl(searchParams.toString()) || '';
+  
   useBrowsingHistory(id);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -55,14 +60,23 @@ export default function ProductDetail() {
   const [showRatingDialog, setShowRatingDialog] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showFullScreen, setShowFullScreen] = useState(false);
+  const [analyticsData, setAnalyticsData] = useState({ views: 0, impressions: 0 });
   const productRef = useRef<HTMLDivElement>(null);
   const hasTrackedView = useRef(false);
+  const hasTrackedImpression = useRef(false);
 
   useEffect(() => {
-    checkAuth();
-    fetchProduct();
+    if (id) {
+      checkAuth();
+      fetchProduct();
+      trackImpression();
+    }
+  }, [id]);
 
-    // Track view with intersection observer
+  // Track view with intersection observer
+  useEffect(() => {
+    if (!productRef.current || hasTrackedView.current) return;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !hasTrackedView.current) {
@@ -73,19 +87,42 @@ export default function ProductDetail() {
       { threshold: 0.5 }
     );
 
-    if (productRef.current) {
-      observer.observe(productRef.current);
-    }
+    observer.observe(productRef.current);
 
     return () => {
-      if (productRef.current) {
-        observer.unobserve(productRef.current);
-      }
+      observer.disconnect();
     };
-  }, [id]);
+  }, [id, product]);
 
   const trackProductView = async () => {
-    await supabase.rpc('increment_product_view', { product_uuid: id });
+    try {
+      await supabase.rpc('increment_product_view', { product_uuid: id });
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      await supabase.from("product_analytics").insert({
+        product_id: id,
+        viewer_id: session?.user?.id || null,
+        type: "view",
+      });
+    } catch (error) {
+      console.error("View tracking error:", error);
+    }
+  };
+
+  const trackImpression = async () => {
+    if (hasTrackedImpression.current) return;
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      await supabase.from("product_analytics").insert({
+        product_id: id,
+        viewer_id: session?.user?.id || null,
+        type: "impression",
+      });
+      hasTrackedImpression.current = true;
+    } catch (error) {
+      console.error("Impression tracking error:", error);
+    }
   };
 
   const checkAuth = async () => {
@@ -123,54 +160,75 @@ export default function ProductDetail() {
   };
 
   const fetchProduct = async () => {
-    const { data, error } = await supabase
-      .from("products")
-      .select(`
-        *,
-        profiles:seller_id (
-          id,
-          full_name,
-          business_name,
-          profile_image,
-          rating,
-          rating_count
-        )
-      `)
-      .eq("id", id)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .select(`
+          *,
+          profiles:seller_id (
+            id,
+            full_name,
+            business_name,
+            profile_image,
+            rating,
+            rating_count
+          )
+        `)
+        .eq("id", id)
+        .single();
 
-    if (error) {
+      if (error || !data) {
+        toast({
+          title: "Error",
+          description: "Product not found",
+          variant: "destructive",
+        });
+        navigate("/");
+        return;
+      }
+
+      setProduct(data);
+
+      // Fetch seller profile with contact numbers
+      const { data: sellerData } = await supabase
+        .from("profiles")
+        .select("full_name, business_name, whatsapp_number, call_number")
+        .eq("id", data.seller_id)
+        .single();
+
+      if (sellerData) {
+        setSeller(sellerData);
+      }
+
+      // Get like count
+      const { count } = await supabase
+        .from("product_likes")
+        .select("*", { count: "exact", head: true })
+        .eq("product_id", id);
+
+      setLikeCount(count || 0);
+
+      // Fetch analytics data
+      const { data: analytics } = await supabase
+        .from("product_analytics")
+        .select("type")
+        .eq("product_id", id);
+
+      if (analytics) {
+        const views = analytics.filter(a => a.type === "view").length;
+        const impressions = analytics.filter(a => a.type === "impression").length;
+        setAnalyticsData({ views, impressions });
+      }
+
+      setLoading(false);
+    } catch (error) {
       toast({
         title: "Error",
-        description: "Product not found",
+        description: "Failed to load product",
         variant: "destructive",
       });
       navigate("/");
-      return;
     }
-
-    setProduct(data);
-
-    // Fetch seller profile with contact numbers
-    const { data: sellerData } = await supabase
-      .from("profiles")
-      .select("full_name, business_name, whatsapp_number, call_number")
-      .eq("id", data.seller_id)
-      .single();
-
-    if (sellerData) {
-      setSeller(sellerData);
-    }
-
-    // Get like count
-    const { count } = await supabase
-      .from("product_likes")
-      .select("*", { count: "exact", head: true })
-      .eq("product_id", id);
-
-    setLikeCount(count || 0);
-
-    setLoading(false);
   };
 
   const toggleLike = async () => {
@@ -185,7 +243,6 @@ export default function ProductDetail() {
     }
 
     if (isLiked) {
-      // Unlike
       await supabase
         .from("product_likes")
         .delete()
@@ -195,7 +252,6 @@ export default function ProductDetail() {
       setIsLiked(false);
       setLikeCount(likeCount - 1);
     } else {
-      // Like
       await supabase
         .from("product_likes")
         .insert({ user_id: currentUser.id, product_id: id });
@@ -204,7 +260,6 @@ export default function ProductDetail() {
       setLikeCount(likeCount + 1);
     }
   };
-
 
   const sendMessage = async () => {
     if (!currentUser) {
@@ -217,7 +272,6 @@ export default function ProductDetail() {
       return;
     }
 
-    // Validate message
     try {
       messageSchema.parse({ content: message });
     } catch (error) {
@@ -231,7 +285,6 @@ export default function ProductDetail() {
       }
     }
 
-    // Check if conversation exists
     let { data: conversation } = await supabase
       .from("conversations")
       .select("*")
@@ -240,7 +293,6 @@ export default function ProductDetail() {
       .eq("seller_id", product.seller_id)
       .single();
 
-    // Create conversation if it doesn't exist
     if (!conversation) {
       const { data: newConversation, error: convError } = await supabase
         .from("conversations")
@@ -264,7 +316,6 @@ export default function ProductDetail() {
       conversation = newConversation;
     }
 
-    // Send message
     const { error: messageError } = await supabase
       .from("messages")
       .insert({
@@ -283,7 +334,6 @@ export default function ProductDetail() {
       return;
     }
 
-    // Update conversation timestamp
     await supabase
       .from("conversations")
       .update({ updated_at: new Date().toISOString() })
@@ -294,8 +344,6 @@ export default function ProductDetail() {
       description: "Message sent! Opening messages...",
     });
     setMessage("");
-    
-    // Navigate to messages page immediately
     navigate("/messages");
   };
 
@@ -336,8 +384,6 @@ export default function ProductDetail() {
         title: "Success",
         description: "Rating submitted successfully",
       });
-      
-      // Refresh product to show updated rating
       fetchProduct();
     } catch (error: any) {
       toast({
@@ -352,285 +398,301 @@ export default function ProductDetail() {
     return <div className="min-h-screen bg-background flex items-center justify-center">Loading...</div>;
   }
 
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center flex-col gap-4">
+        <h1 className="text-2xl font-bold">Product not found</h1>
+        <Button onClick={() => navigate("/")}>Go Home</Button>
+      </div>
+    );
+  }
+
+  const isAdminProduct = isAdminPostedProduct(product);
+  const sellerName = seller?.business_name || seller?.full_name || 'Seller';
+  const shareUrl = createProductShareUrl(id, product.title, sellerName, isAdminProduct);
+  const whatsappNumber = product.contact_whatsapp || seller?.whatsapp_number;
+  const callNumber = product.contact_call || seller?.call_number;
+
+  // Generate WhatsApp message with product details
+  const whatsappMessage = `Hello, I'm interested in your product: ${product.title}\n\nProduct Link: ${shareUrl}\n\nProduct Image: ${product.images?.[0] || ''}`;
+  const whatsappUrl = whatsappNumber 
+    ? `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(whatsappMessage)}`
+    : '';
+
   return (
     <>
       <Helmet>
         <title>{product.title} - Rwanda Smart Market</title>
-        <meta name="description" content={product.description} />
-        <meta property="og:title" content={product.title} />
-        <meta property="og:description" content={product.description} />
+        <meta name="description" content={product.description?.substring(0, 160)} />
+        <meta property="og:title" content={`${product.title} - Rwanda Smart Market`} />
+        <meta property="og:description" content={product.description?.substring(0, 160)} />
         <meta property="og:image" content={product.images?.[0] || '/placeholder.svg'} />
         <meta property="og:type" content="product" />
-        <meta property="og:url" content={window.location.href} />
+        <meta property="og:url" content={shareUrl} />
+        <meta property="og:site_name" content="Rwanda Smart Market" />
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${product.title} - Rwanda Smart Market`} />
+        <meta name="twitter:description" content={product.description?.substring(0, 160)} />
         <meta name="twitter:image" content={product.images?.[0] || '/placeholder.svg'} />
+        <link rel="canonical" href={shareUrl} />
       </Helmet>
       <div className="min-h-screen bg-background pb-20" ref={productRef}>
-      <div className="sticky top-0 z-40 bg-background border-b border-border">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div className="flex items-center gap-2">
-            <NotificationBell />
-            <UserMenu />
+        <div className="sticky top-0 z-40 bg-background border-b border-border">
+          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div className="flex items-center gap-2">
+              <ShareButton
+                url={shareUrl}
+                title={`${product.title} - Rwanda Smart Market`}
+                description={product.description?.substring(0, 100)}
+                variant="outline"
+                size="sm"
+              />
+              <NotificationBell />
+              <UserMenu />
+            </div>
           </div>
         </div>
-      </div>
 
-      <main className="container mx-auto px-4 py-6">
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            {/* Main Image Display */}
-            <div className="aspect-square bg-muted rounded-lg overflow-hidden border-2 border-border cursor-pointer"
-                 onClick={() => product.images?.length > 0 && setShowFullScreen(true)}>
-              {product.images && product.images.length > 0 ? (
-                <img
-                  src={product.images[selectedImageIndex]}
-                  alt={`${product.title} - Image ${selectedImageIndex + 1}`}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
+        <main className="container mx-auto px-4 py-6">
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              {/* Admin Product Badge */}
+              {isAdminProduct && (
+                <Badge className="bg-orange-500 text-white mb-2">
+                  <Shield className="h-3 w-3 mr-1" />
+                  Admin Product
+                </Badge>
+              )}
+              
+              {/* Main Image Display */}
+              <div className="aspect-square bg-muted rounded-lg overflow-hidden border-2 border-border cursor-pointer"
+                   onClick={() => product.images?.length > 0 && setShowFullScreen(true)}>
+                {product.images && product.images.length > 0 ? (
                   <img
-                    src="/placeholder.svg"
-                    alt={product.title}
-                    className="w-full h-full object-cover opacity-50"
+                    src={product.images[selectedImageIndex]}
+                    alt={`${product.title} - Image ${selectedImageIndex + 1}`}
+                    className="w-full h-full object-cover"
                   />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <img
+                      src="/placeholder.svg"
+                      alt={product.title}
+                      className="w-full h-full object-cover opacity-50"
+                    />
+                  </div>
+                )}
+              </div>
+              
+              {/* Image Thumbnails Gallery */}
+              {product.images && product.images.length > 1 && (
+                <div className="grid grid-cols-5 gap-2">
+                  {product.images.map((img: string, idx: number) => (
+                    <button
+                      key={idx}
+                      onClick={() => setSelectedImageIndex(idx)}
+                      className={`aspect-square bg-muted rounded overflow-hidden border-2 transition-all hover:border-primary ${
+                        idx === selectedImageIndex ? 'border-primary ring-2 ring-primary' : 'border-border'
+                      }`}
+                    >
+                      <img 
+                        src={img} 
+                        alt={`${product.title} thumbnail ${idx + 1}`} 
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+              
+              {/* Video Player */}
+              {product.video_url && (
+                <div className="rounded-lg overflow-hidden border-2 border-border">
+                  <video controls className="w-full">
+                    <source src={product.video_url} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
                 </div>
               )}
             </div>
-            
-            {/* Image Thumbnails Gallery */}
-            {product.images && product.images.length > 1 && (
-              <div className="grid grid-cols-5 gap-2">
-                {product.images.map((img: string, idx: number) => (
-                  <button
-                    key={idx}
-                    onClick={() => setSelectedImageIndex(idx)}
-                    className={`aspect-square bg-muted rounded overflow-hidden border-2 transition-all hover:border-primary ${
-                      idx === selectedImageIndex ? 'border-primary ring-2 ring-primary' : 'border-border'
-                    }`}
-                  >
-                    <img 
-                      src={img} 
-                      alt={`${product.title} thumbnail ${idx + 1}`} 
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
-            
-            {/* Video Player */}
-            {product.video_url && (
-              <div className="rounded-lg overflow-hidden border-2 border-border">
-                <video controls className="w-full">
-                  <source src={product.video_url} type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
-              </div>
-            )}
-          </div>
 
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">{product.title}</h1>
-              <div className="flex items-center gap-2 mb-2">
-                <p className="text-2xl font-bold text-primary">
-                  {product.price} RWF
-                  {product.rental_rate_type && (
-                    <span className="text-base font-normal text-muted-foreground ml-1">
-                      /{product.rental_rate_type.replace("per_", "")}
+            <div className="space-y-6">
+              <div>
+                <h1 className="text-3xl font-bold mb-2">{product.title}</h1>
+                <div className="flex items-center gap-2 mb-2">
+                  <p className="text-2xl font-bold text-primary">
+                    {product.price?.toLocaleString()} RWF
+                    {product.rental_rate_type && (
+                      <span className="text-base font-normal text-muted-foreground ml-1">
+                        /{product.rental_rate_type.replace("per_", "")}
+                      </span>
+                    )}
+                  </p>
+                  {product.is_negotiable && (
+                    <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                      Negotiable
                     </span>
                   )}
-                </p>
-                {product.is_negotiable && (
-                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                    Negotiable
-                  </span>
-                )}
+                </div>
+                <p className="text-muted-foreground mb-4">{product.description}</p>
               </div>
-              <p className="text-muted-foreground mb-4">{product.description}</p>
-            </div>
 
-            <div className="flex gap-6 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <Eye className="h-4 w-4" />
-                {product.views || 0} views
-              </span>
-              <span className="flex items-center gap-1">
-                <Heart className="h-4 w-4" />
-                {likeCount} likes
-              </span>
-            </div>
+              <div className="flex gap-6 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Eye className="h-4 w-4" />
+                  {product.views || analyticsData.views || 0} views
+                </span>
+                <span className="flex items-center gap-1">
+                  <Heart className="h-4 w-4" />
+                  {likeCount} likes
+                </span>
+              </div>
 
-            <div className="flex gap-2">
-              <Button
-                variant={isLiked ? "default" : "outline"}
-                size="lg"
-                onClick={toggleLike}
-                className="flex-1"
-              >
-                <Heart className={`h-5 w-5 mr-2 ${isLiked ? "fill-current" : ""}`} />
-                {isLiked ? "Liked" : "Like"}
-              </Button>
-            </div>
-
-            <div className="space-y-2">
-              <p><strong>Category:</strong> {product.category || "Uncategorized"}</p>
-              <p className="flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                {product.location || "Location not specified"}
-              </p>
-              <p><strong>Quantity:</strong> {product.quantity} available</p>
-            </div>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <h3 className="font-semibold mb-2">Seller Information</h3>
-                    <Link to={`/seller-profile/${product.seller_id}`} className="hover:underline">
-                      <p className="text-sm mb-1">{product.profiles?.business_name || product.profiles?.full_name}</p>
-                    </Link>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      {product.profiles?.rating?.toFixed(1) || "0.0"} ({product.profiles?.rating_count || 0} reviews)
-                    </p>
-                  </div>
-                  {!userRating && currentUser?.id !== product.seller_id && (
-                    <Dialog open={showRatingDialog} onOpenChange={setShowRatingDialog}>
-                      <DialogTrigger asChild>
-                        <Button size="sm" variant="outline">
-                          Rate Seller
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Rate this Seller</DialogTitle>
-                          <DialogDescription>
-                            Share your experience with {product.profiles?.business_name || product.profiles?.full_name}
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div className="flex justify-center gap-2">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <button
-                                key={star}
-                                onClick={() => setRating(star)}
-                                className="transition-transform hover:scale-110"
-                              >
-                                <Star
-                                  className={`h-8 w-8 ${
-                                    star <= rating
-                                      ? "fill-yellow-400 text-yellow-400"
-                                      : "text-muted-foreground"
-                                  }`}
-                                />
-                              </button>
-                            ))}
-                          </div>
-                          <Button onClick={submitRating} className="w-full">
-                            Submit Rating
-                          </Button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  )}
-                </div>
-                {userRating > 0 && (
-                  <div className="mt-2 text-sm text-muted-foreground">
-                    You rated: {[...Array(userRating)].map((_, i) => (
-                      <Star key={i} className="inline h-3 w-3 fill-yellow-400 text-yellow-400" />
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="w-full" size="lg">
-                  <MessageCircle className="mr-2 h-5 w-5" />
-                  Message Seller
+              <div className="flex gap-2">
+                <Button
+                  variant={isLiked ? "default" : "outline"}
+                  size="lg"
+                  onClick={toggleLike}
+                  className="flex-1"
+                >
+                  <Heart className={`h-5 w-5 mr-2 ${isLiked ? "fill-current" : ""}`} />
+                  {isLiked ? "Liked" : "Like"}
                 </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Send Message to Seller</DialogTitle>
-                  <DialogDescription>
-                    Send a message about {product.title}
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <Textarea
-                    placeholder="Type your message here..."
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    rows={5}
-                  />
-                  <Button onClick={sendMessage} className="w-full">
-                    Send Message
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+              </div>
 
-            {/* Use product-level contact if available (admin products), otherwise use seller profile */}
-            {(product.contact_whatsapp || seller?.whatsapp_number) && (
-              <Button
-                onClick={() => {
-                  const whatsappNumber = product.contact_whatsapp || seller?.whatsapp_number;
-                  const productUrl = window.location.href;
-                  const firstImage = product.images?.[0] || '';
-                  const message = `Hi, I'm interested in your product: ${product.title}\n\nProduct Link: ${productUrl}\n\nProduct Image: ${firstImage}`;
-                  const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
-                  window.open(whatsappUrl, '_blank');
-                }}
-                size="lg"
-                className="w-full h-14 text-lg bg-green-600 hover:bg-green-700 text-white"
-              >
-                <MessageCircle className="mr-2 h-5 w-5" />
-                Contact on WhatsApp
-              </Button>
-            )}
+              <div className="space-y-2">
+                <p><strong>Category:</strong> {product.category || "Uncategorized"}</p>
+                <p className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  {product.location || "Location not specified"}
+                </p>
+                <p><strong>Quantity:</strong> {product.quantity} available</p>
+              </div>
 
-            {(product.contact_call || seller?.call_number) && (
-              <Button
-                onClick={() => {
-                  const callNumber = product.contact_call || seller?.call_number;
-                  window.location.href = `tel:${callNumber}`;
-                }}
-                size="lg"
-                className="w-full h-14 text-lg bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <Phone className="mr-2 h-5 w-5" />
-                Call Seller Directly
-              </Button>
-            )}
+              {/* Seller Information - Hidden for admin products */}
+              {!isAdminProduct && (
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <h3 className="font-semibold mb-2">Seller Information</h3>
+                        <Link to={`/seller-profile/${product.seller_id}`} className="hover:underline">
+                          <p className="text-sm mb-1">{product.profiles?.business_name || product.profiles?.full_name}</p>
+                        </Link>
+                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          {product.profiles?.rating?.toFixed(1) || "0.0"} ({product.profiles?.rating_count || 0} reviews)
+                        </p>
+                      </div>
+                      {!userRating && currentUser?.id !== product.seller_id && (
+                        <Dialog open={showRatingDialog} onOpenChange={setShowRatingDialog}>
+                          <DialogTrigger asChild>
+                            <Button size="sm" variant="outline">
+                              Rate Seller
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Rate this Seller</DialogTitle>
+                              <DialogDescription>
+                                Share your experience with {product.profiles?.business_name || product.profiles?.full_name}
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div className="flex justify-center gap-2">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <button
+                                    key={star}
+                                    onClick={() => setRating(star)}
+                                    className="transition-transform hover:scale-110"
+                                  >
+                                    <Star
+                                      className={`h-8 w-8 ${
+                                        star <= rating
+                                          ? "fill-yellow-400 text-yellow-400"
+                                          : "text-muted-foreground"
+                                      }`}
+                                    />
+                                  </button>
+                                ))}
+                              </div>
+                              <Button onClick={submitRating} className="w-full">
+                                Submit Rating
+                              </Button>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      )}
+                    </div>
+                    {userRating > 0 && (
+                      <div className="mt-2 text-sm text-muted-foreground">
+                        You rated: {[...Array(userRating)].map((_, i) => (
+                          <Star key={i} className="inline h-3 w-3 fill-yellow-400 text-yellow-400" />
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* WhatsApp Contact Button */}
+              {whatsappNumber && (
+                <Button
+                  onClick={() => window.open(whatsappUrl, '_blank')}
+                  size="lg"
+                  className="w-full h-14 text-lg bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <MessageCircle className="mr-2 h-5 w-5" />
+                  Contact on WhatsApp
+                </Button>
+              )}
+
+              {/* Call Button */}
+              {callNumber && (
+                <Button
+                  onClick={() => window.location.href = `tel:${callNumber}`}
+                  size="lg"
+                  className="w-full h-14 text-lg bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Phone className="mr-2 h-5 w-5" />
+                  Call {isAdminProduct ? "Now" : "Seller"} Directly
+                </Button>
+              )}
+            </div>
           </div>
-        </div>
-      </main>
+          
+          {/* Recommended Products */}
+          <div className="mt-8">
+            <RecommendedProducts 
+              currentProductId={id} 
+              productTitle={product.title}
+              productCategory={product.category || ''}
+              productDescription={product.description || ''}
+            />
+          </div>
+        </main>
 
-      {product.images && product.images.length > 0 && (
-        <FullScreenImageViewer
-          images={product.images}
-          currentIndex={selectedImageIndex}
-          isOpen={showFullScreen}
-          onClose={() => setShowFullScreen(false)}
-          onPrevious={() => setSelectedImageIndex((prev) => 
-            prev > 0 ? prev - 1 : product.images.length - 1
-          )}
-          onNext={() => setSelectedImageIndex((prev) => 
-            prev < product.images.length - 1 ? prev + 1 : 0
-          )}
-        />
-      )}
+        {product.images && product.images.length > 0 && (
+          <FullScreenImageViewer
+            images={product.images}
+            currentIndex={selectedImageIndex}
+            isOpen={showFullScreen}
+            onClose={() => setShowFullScreen(false)}
+            onPrevious={() => setSelectedImageIndex((prev) => 
+              prev > 0 ? prev - 1 : product.images.length - 1
+            )}
+            onNext={() => setSelectedImageIndex((prev) => 
+              prev < product.images.length - 1 ? prev + 1 : 0
+            )}
+          />
+        )}
 
-      <DashboardFloatingButton />
-      <BottomNav />
-    </div>
+        <DashboardFloatingButton />
+        <BottomNav />
+      </div>
     </>
   );
 }
