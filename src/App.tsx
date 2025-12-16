@@ -40,6 +40,7 @@ import AdminAnalyticsDashboard from "./pages/AdminAnalyticsDashboard";
 import ContactUs from "./pages/ContactUs";
 import NotFound from "./pages/NotFound";
 import VerifyEmail from "./pages/VerifyEmail";
+import CategoryPage from "./pages/CategoryPage";
 
 const queryClient = new QueryClient();
 
@@ -76,6 +77,7 @@ const App = () => (
           <Route path="/agriculture/:product" element={<ProductDetail />} />
           
           <Route path="/seller-profile/:id" element={<SellerProfile />} />
+          <Route path="/category/:categorySlug" element={<CategoryPage />} />
           <Route path="/agriculture" element={<AgricultureProducts />} />
           <Route path="/equipment" element={<EquipmentForLent />} />
           <Route path="/messages" element={<Messages />} />
