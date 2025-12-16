@@ -38,6 +38,60 @@ export type Database = {
         }
         Relationships: []
       }
+      ads: {
+        Row: {
+          bg_color: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          end_date: string
+          font_size: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          link: string | null
+          priority: number | null
+          start_date: string
+          text_color: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          bg_color?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date: string
+          font_size?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          link?: string | null
+          priority?: number | null
+          start_date?: string
+          text_color?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          bg_color?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date?: string
+          font_size?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          link?: string | null
+          priority?: number | null
+          start_date?: string
+          text_color?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       comments: {
         Row: {
           comment: string
