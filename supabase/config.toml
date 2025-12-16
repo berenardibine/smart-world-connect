@@ -1,7 +1,1 @@
-# supabase/config.toml
-
-project_id = "tbykrulfzhhkmtgjhvjh"
-api_url = "https://api.supabase.com"
-db_url = "postgresql://postgres.tbykrulfzhhkmtgjhvjh:12003Kivu..@db.tbykrulfzhhkmtgjhvjh.supabase.co:5432/postgres"
-studio_port = 5432
-verify_jwt = true
+project_id = "kpgbdvptappmoxdzrkwp"

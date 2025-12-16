@@ -400,6 +400,23 @@ CREATE TABLE public.admin_messages (
 
 
 --
+-- Name: comments; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.comments (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    product_id uuid,
+    seller_id uuid,
+    user_id uuid NOT NULL,
+    comment text NOT NULL,
+    rating integer,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now(),
+    CONSTRAINT comments_rating_check CHECK (((rating >= 1) AND (rating <= 5)))
+);
+
+
+--
 -- Name: contact_messages; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -501,7 +518,8 @@ CREATE TABLE public.opportunities (
     status text DEFAULT 'approved'::text,
     views integer DEFAULT 0,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    expire_date timestamp with time zone
 );
 
 
@@ -521,6 +539,20 @@ CREATE TABLE public.plans (
     is_active boolean DEFAULT true NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: product_analytics; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.product_analytics (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    product_id uuid NOT NULL,
+    viewer_id uuid,
+    type text NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    CONSTRAINT product_analytics_type_check CHECK ((type = ANY (ARRAY['view'::text, 'impression'::text])))
 );
 
 
@@ -574,6 +606,12 @@ CREATE TABLE public.products (
     video_url text,
     share_count integer DEFAULT 0,
     impressions integer DEFAULT 0,
+    is_negotiable boolean DEFAULT false,
+    rental_rate_type text,
+    contact_whatsapp text,
+    contact_call text,
+    discount numeric DEFAULT 0,
+    discount_expiry timestamp with time zone,
     CONSTRAINT products_description_check CHECK ((length(description) <= 1000)),
     CONSTRAINT products_images_check CHECK (((array_length(images, 1) >= 1) AND (array_length(images, 1) <= 5))),
     CONSTRAINT products_price_check CHECK ((price >= (0)::numeric)),
@@ -609,6 +647,7 @@ CREATE TABLE public.profiles (
     id_back_photo text,
     identity_verified boolean DEFAULT false,
     verification_notes text,
+    last_active timestamp with time zone DEFAULT now(),
     CONSTRAINT profiles_status_check CHECK ((status = ANY (ARRAY['active'::text, 'blocked'::text, 'banned'::text]))),
     CONSTRAINT profiles_user_type_check CHECK ((user_type = ANY (ARRAY['buyer'::text, 'seller'::text])))
 );
@@ -705,6 +744,18 @@ CREATE TABLE public.updates (
 
 
 --
+-- Name: user_browsing_history; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.user_browsing_history (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_id uuid NOT NULL,
+    product_id uuid NOT NULL,
+    viewed_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: user_roles; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -739,6 +790,14 @@ CREATE TABLE public.user_subscriptions (
 
 ALTER TABLE ONLY public.admin_messages
     ADD CONSTRAINT admin_messages_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: comments comments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.comments
+    ADD CONSTRAINT comments_pkey PRIMARY KEY (id);
 
 
 --
@@ -803,6 +862,14 @@ ALTER TABLE ONLY public.plans
 
 ALTER TABLE ONLY public.plans
     ADD CONSTRAINT plans_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: product_analytics product_analytics_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.product_analytics
+    ADD CONSTRAINT product_analytics_pkey PRIMARY KEY (id);
 
 
 --
@@ -902,6 +969,14 @@ ALTER TABLE ONLY public.product_likes
 
 
 --
+-- Name: user_browsing_history unique_user_product_view; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_browsing_history
+    ADD CONSTRAINT unique_user_product_view UNIQUE (user_id, product_id);
+
+
+--
 -- Name: product_ratings unique_user_seller_rating; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -915,6 +990,14 @@ ALTER TABLE ONLY public.product_ratings
 
 ALTER TABLE ONLY public.updates
     ADD CONSTRAINT updates_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: user_browsing_history user_browsing_history_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_browsing_history
+    ADD CONSTRAINT user_browsing_history_pkey PRIMARY KEY (id);
 
 
 --
@@ -950,10 +1033,87 @@ ALTER TABLE ONLY public.user_subscriptions
 
 
 --
+-- Name: idx_browsing_history_product; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_browsing_history_product ON public.user_browsing_history USING btree (product_id);
+
+
+--
+-- Name: idx_browsing_history_user; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_browsing_history_user ON public.user_browsing_history USING btree (user_id);
+
+
+--
+-- Name: idx_browsing_history_viewed_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_browsing_history_viewed_at ON public.user_browsing_history USING btree (viewed_at DESC);
+
+
+--
+-- Name: idx_comments_product_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_comments_product_id ON public.comments USING btree (product_id);
+
+
+--
+-- Name: idx_comments_seller_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_comments_seller_id ON public.comments USING btree (seller_id);
+
+
+--
+-- Name: idx_opportunities_expire_date; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_opportunities_expire_date ON public.opportunities USING btree (expire_date);
+
+
+--
+-- Name: idx_product_analytics_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_product_analytics_created_at ON public.product_analytics USING btree (created_at);
+
+
+--
+-- Name: idx_product_analytics_product_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_product_analytics_product_id ON public.product_analytics USING btree (product_id);
+
+
+--
+-- Name: idx_product_analytics_type; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_product_analytics_type ON public.product_analytics USING btree (type);
+
+
+--
+-- Name: idx_products_discount; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_products_discount ON public.products USING btree (discount) WHERE (discount > (0)::numeric);
+
+
+--
 -- Name: idx_profiles_identity_verified; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_profiles_identity_verified ON public.profiles USING btree (identity_verified);
+
+
+--
+-- Name: idx_profiles_last_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_profiles_last_active ON public.profiles USING btree (last_active);
 
 
 --
@@ -1035,6 +1195,22 @@ ALTER TABLE ONLY public.admin_messages
 
 
 --
+-- Name: comments comments_product_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.comments
+    ADD CONSTRAINT comments_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE CASCADE;
+
+
+--
+-- Name: comments comments_seller_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.comments
+    ADD CONSTRAINT comments_seller_id_fkey FOREIGN KEY (seller_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+
+
+--
 -- Name: conversations conversations_product_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1056,6 +1232,14 @@ ALTER TABLE ONLY public.messages
 
 ALTER TABLE ONLY public.notifications
     ADD CONSTRAINT notifications_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: product_analytics product_analytics_product_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.product_analytics
+    ADD CONSTRAINT product_analytics_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE CASCADE;
 
 
 --
@@ -1160,6 +1344,14 @@ ALTER TABLE ONLY public.subscription_requests
 
 ALTER TABLE ONLY public.updates
     ADD CONSTRAINT updates_seller_id_fkey FOREIGN KEY (seller_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+
+
+--
+-- Name: user_browsing_history user_browsing_history_product_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_browsing_history
+    ADD CONSTRAINT user_browsing_history_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE CASCADE;
 
 
 --
@@ -1313,6 +1505,13 @@ CREATE POLICY "Admins can view all admin messages" ON public.admin_messages FOR 
 
 
 --
+-- Name: product_analytics Admins can view all analytics; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Admins can view all analytics" ON public.product_analytics FOR SELECT USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
 -- Name: subscription_requests Admins can view all requests; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -1334,6 +1533,13 @@ CREATE POLICY "Admins can view contact messages" ON public.contact_messages FOR 
 
 
 --
+-- Name: product_analytics Anyone can insert analytics; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Anyone can insert analytics" ON public.product_analytics FOR INSERT WITH CHECK (true);
+
+
+--
 -- Name: contact_messages Anyone can submit contact messages; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -1341,10 +1547,24 @@ CREATE POLICY "Anyone can submit contact messages" ON public.contact_messages FO
 
 
 --
+-- Name: comments Anyone can view comments; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Anyone can view comments" ON public.comments FOR SELECT USING (true);
+
+
+--
 -- Name: product_ratings Anyone can view ratings; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY "Anyone can view ratings" ON public.product_ratings FOR SELECT USING (true);
+
+
+--
+-- Name: comments Authenticated users can create comments; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Authenticated users can create comments" ON public.comments FOR INSERT WITH CHECK ((auth.uid() = user_id));
 
 
 --
@@ -1481,6 +1701,15 @@ CREATE POLICY "Sellers can update their own updates" ON public.updates FOR UPDAT
 
 
 --
+-- Name: product_analytics Sellers can view their product analytics; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Sellers can view their product analytics" ON public.product_analytics FOR SELECT USING ((EXISTS ( SELECT 1
+   FROM public.products
+  WHERE ((products.id = product_analytics.product_id) AND (products.seller_id = auth.uid())))));
+
+
+--
 -- Name: seller_activity System can insert activity; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -1520,6 +1749,20 @@ CREATE POLICY "Users can create ratings for products they don't own" ON public.p
 --
 
 CREATE POLICY "Users can create their own requests" ON public.subscription_requests FOR INSERT WITH CHECK ((auth.uid() = user_id));
+
+
+--
+-- Name: comments Users can delete their own comments; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can delete their own comments" ON public.comments FOR DELETE USING ((auth.uid() = user_id));
+
+
+--
+-- Name: user_browsing_history Users can insert their own browsing history; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can insert their own browsing history" ON public.user_browsing_history FOR INSERT WITH CHECK ((auth.uid() = user_id));
 
 
 --
@@ -1569,6 +1812,20 @@ CREATE POLICY "Users can update their messages" ON public.messages FOR UPDATE US
 
 
 --
+-- Name: user_browsing_history Users can update their own browsing history; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can update their own browsing history" ON public.user_browsing_history FOR UPDATE USING ((auth.uid() = user_id));
+
+
+--
+-- Name: comments Users can update their own comments; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can update their own comments" ON public.comments FOR UPDATE USING ((auth.uid() = user_id));
+
+
+--
 -- Name: notifications Users can update their own notifications; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -1606,6 +1863,13 @@ CREATE POLICY "Users can view their own activity" ON public.seller_activity FOR 
 
 
 --
+-- Name: user_browsing_history Users can view their own browsing history; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can view their own browsing history" ON public.user_browsing_history FOR SELECT USING ((auth.uid() = user_id));
+
+
+--
 -- Name: notifications Users can view their own notifications; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -1638,6 +1902,12 @@ CREATE POLICY "Users can view their own subscription" ON public.user_subscriptio
 --
 
 ALTER TABLE public.admin_messages ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: comments; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: contact_messages; Type: ROW SECURITY; Schema: public; Owner: -
@@ -1680,6 +1950,12 @@ ALTER TABLE public.opportunities ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE public.plans ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: product_analytics; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.product_analytics ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: product_likes; Type: ROW SECURITY; Schema: public; Owner: -
@@ -1728,6 +2004,12 @@ ALTER TABLE public.subscription_requests ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE public.updates ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: user_browsing_history; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.user_browsing_history ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: user_roles; Type: ROW SECURITY; Schema: public; Owner: -
