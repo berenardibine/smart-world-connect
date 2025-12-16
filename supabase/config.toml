@@ -4,7 +4,7 @@ project_id = "kpgbdvptappmoxdzrkwp"
 verify_jwt = true
 
 [functions.product-recommendations]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-admin-notification]
 verify_jwt = true
@@ -13,4 +13,4 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.cleanup-expired]
-verify_jwt = false
+verify_jwt = true
