@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/lib/supaseClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Package, ShoppingCart, Megaphone, Briefcase, ArrowLeft, LogOut, MessageSquare } from "lucide-react";
+import { Users, Package, ShoppingCart, Megaphone, Briefcase, ArrowLeft, LogOut, MessageSquare, Image } from "lucide-react";
 
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
@@ -284,6 +284,21 @@ export default function AdminDashboard() {
             <CardContent>
               <Link to="/admin/messages">
                 <Button className="w-full">View Messages</Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Image className="h-5 w-5" />
+                Smart Ads
+              </CardTitle>
+              <CardDescription>Manage promotional ads</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link to="/admin/ads">
+                <Button className="w-full">Manage Ads</Button>
               </Link>
             </CardContent>
           </Card>
