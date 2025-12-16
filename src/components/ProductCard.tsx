@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Heart, MapPin, ChevronLeft, ChevronRight, Play, Shield } from "lucide-react";
+import { Heart, MapPin, ChevronLeft, ChevronRight, Play, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -206,15 +206,7 @@ export const ProductCard = ({
             </>
           )}
           
-          {/* Admin Product Badge */}
-          {isAdminProduct && (
-            <div className="absolute top-2 left-2">
-              <Badge variant="secondary" className="bg-orange-500 text-white text-xs">
-                <Shield className="h-3 w-3 mr-1" />
-                Admin Product
-              </Badge>
-            </div>
-          )}
+          {/* Views count */}
           
           <div className="absolute top-2 right-2 flex gap-1">
             <Button

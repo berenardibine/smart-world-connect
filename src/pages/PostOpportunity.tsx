@@ -25,6 +25,7 @@ const PostOpportunity = () => {
     requirements: "",
     contactEmail: "",
     applyLink: "",
+    expireDate: "",
   });
   const [images, setImages] = useState<File[]>([]);
   const [video, setVideo] = useState<File | null>(null);
@@ -153,6 +154,7 @@ const PostOpportunity = () => {
           requirements: formData.requirements || null,
           contact_email: formData.contactEmail || null,
           apply_link: formData.applyLink || null,
+          expire_date: formData.expireDate || null,
           images: imageUrls,
           video_url: videoUrl,
           status: 'approved'
@@ -301,6 +303,20 @@ const PostOpportunity = () => {
                   onChange={(e) => setFormData({ ...formData, applyLink: e.target.value })}
                   placeholder="e.g., https://example.com/apply"
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="expireDate">Expiration Date (Optional)</Label>
+                <Input
+                  id="expireDate"
+                  type="date"
+                  value={formData.expireDate}
+                  onChange={(e) => setFormData({ ...formData, expireDate: e.target.value })}
+                  min={new Date().toISOString().split('T')[0]}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  The opportunity will be automatically removed after this date
+                </p>
               </div>
 
               <div>

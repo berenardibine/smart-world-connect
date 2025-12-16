@@ -38,6 +38,61 @@ export type Database = {
         }
         Relationships: []
       }
+      comments: {
+        Row: {
+          comment: string
+          created_at: string | null
+          id: string
+          product_id: string | null
+          rating: number | null
+          seller_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          comment: string
+          created_at?: string | null
+          id?: string
+          product_id?: string | null
+          rating?: number | null
+          seller_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          comment?: string
+          created_at?: string | null
+          id?: string
+          product_id?: string | null
+          rating?: number | null
+          seller_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_messages: {
         Row: {
           created_at: string
@@ -226,6 +281,7 @@ export type Database = {
           contact_email: string | null
           created_at: string
           description: string
+          expire_date: string | null
           id: string
           images: string[] | null
           job_type: string
@@ -245,6 +301,7 @@ export type Database = {
           contact_email?: string | null
           created_at?: string
           description: string
+          expire_date?: string | null
           id?: string
           images?: string[] | null
           job_type: string
@@ -264,6 +321,7 @@ export type Database = {
           contact_email?: string | null
           created_at?: string
           description?: string
+          expire_date?: string | null
           id?: string
           images?: string[] | null
           job_type?: string
@@ -438,6 +496,8 @@ export type Database = {
           contact_whatsapp: string | null
           created_at: string | null
           description: string
+          discount: number | null
+          discount_expiry: string | null
           id: string
           images: string[]
           impressions: number | null
@@ -461,6 +521,8 @@ export type Database = {
           contact_whatsapp?: string | null
           created_at?: string | null
           description: string
+          discount?: number | null
+          discount_expiry?: string | null
           id?: string
           images: string[]
           impressions?: number | null
@@ -484,6 +546,8 @@ export type Database = {
           contact_whatsapp?: string | null
           created_at?: string | null
           description?: string
+          discount?: number | null
+          discount_expiry?: string | null
           id?: string
           images?: string[]
           impressions?: number | null
@@ -531,6 +595,7 @@ export type Database = {
           id_back_photo: string | null
           id_front_photo: string | null
           identity_verified: boolean | null
+          last_active: string | null
           location: string | null
           phone_number: string | null
           profile_image: string | null
@@ -555,6 +620,7 @@ export type Database = {
           id_back_photo?: string | null
           id_front_photo?: string | null
           identity_verified?: boolean | null
+          last_active?: string | null
           location?: string | null
           phone_number?: string | null
           profile_image?: string | null
@@ -579,6 +645,7 @@ export type Database = {
           id_back_photo?: string | null
           id_front_photo?: string | null
           identity_verified?: boolean | null
+          last_active?: string | null
           location?: string | null
           phone_number?: string | null
           profile_image?: string | null
