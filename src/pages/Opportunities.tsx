@@ -6,8 +6,10 @@ import { BottomNav } from "@/components/BottomNav";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Briefcase, Eye, Building2, Megaphone, ExternalLink } from "lucide-react";
+import { MapPin, Briefcase, Eye, Building2, Megaphone, ExternalLink, Calendar } from "lucide-react";
 import { toast } from "sonner";
+import { ShareButton } from "@/components/ShareButton";
+import { createOpportunityShareUrl, slugify } from "@/lib/seoUrls";
 
 interface Opportunity {
   id: string;
@@ -20,6 +22,8 @@ interface Opportunity {
   images: string[];
   views: number;
   created_at: string;
+  expire_date: string | null;
+  seller_id: string;
 }
 
 interface MarketingPost {
@@ -150,52 +154,73 @@ const Opportunities = () => {
             Job Opportunities
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {opportunities.map((opportunity) => (
-              <Card
-                key={opportunity.id}
-                className="cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => navigate(`/opportunities/${opportunity.id}`)}
-              >
-                {opportunity.images && opportunity.images.length > 0 && (
-                  <div className="h-48 overflow-hidden rounded-t-lg">
-                    <img
-                      src={opportunity.images[0]}
-                      alt={opportunity.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
-                <CardHeader>
-                  <div className="flex justify-between items-start mb-2">
-                    <CardTitle className="text-lg">{opportunity.title}</CardTitle>
-                    <Badge variant="secondary">{formatJobType(opportunity.job_type)}</Badge>
-                  </div>
-                  <CardDescription className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4" />
-                    {opportunity.company_name}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <MapPin className="h-4 w-4 mr-2" />
-                      {opportunity.location}
-                    </div>
-                    {opportunity.salary && (
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <Briefcase className="h-4 w-4 mr-2" />
-                        {opportunity.salary}
+            {opportunities.map((opportunity) => {
+              const shareUrl = createOpportunityShareUrl(opportunity.id, opportunity.title);
+              
+              return (
+                <Card
+                  key={opportunity.id}
+                  className="cursor-pointer hover:shadow-lg transition-shadow"
+                >
+                  <div onClick={() => navigate(`/opportunities/${opportunity.id}`)}>
+                    {opportunity.images && opportunity.images.length > 0 && (
+                      <div className="h-48 overflow-hidden rounded-t-lg">
+                        <img
+                          src={opportunity.images[0]}
+                          alt={opportunity.title}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
                     )}
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <Eye className="h-4 w-4 mr-2" />
-                      {opportunity.views} views
-                    </div>
-                    <p className="text-sm line-clamp-2 mt-2">{opportunity.description}</p>
+                    <CardHeader>
+                      <div className="flex justify-between items-start mb-2">
+                        <CardTitle className="text-lg">{opportunity.title}</CardTitle>
+                        <Badge variant="secondary">{formatJobType(opportunity.job_type)}</Badge>
+                      </div>
+                      <CardDescription className="flex items-center gap-2">
+                        <Building2 className="h-4 w-4" />
+                        {opportunity.company_name}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <MapPin className="h-4 w-4 mr-2" />
+                          {opportunity.location}
+                        </div>
+                        {opportunity.salary && (
+                          <div className="flex items-center text-sm text-muted-foreground">
+                            <Briefcase className="h-4 w-4 mr-2" />
+                            {opportunity.salary}
+                          </div>
+                        )}
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <Eye className="h-4 w-4 mr-2" />
+                          {opportunity.views} views
+                        </div>
+                        {opportunity.expire_date && (
+                          <div className="flex items-center text-sm text-orange-500">
+                            <Calendar className="h-4 w-4 mr-2" />
+                            Expires: {new Date(opportunity.expire_date).toLocaleDateString()}
+                          </div>
+                        )}
+                        <p className="text-sm line-clamp-2 mt-2">{opportunity.description}</p>
+                      </div>
+                    </CardContent>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
+                  <div className="px-6 pb-4">
+                    <ShareButton
+                      url={shareUrl}
+                      title={`${opportunity.title} at ${opportunity.company_name}`}
+                      description={opportunity.description?.substring(0, 100)}
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                    />
+                  </div>
+                </Card>
+              );
+            })}
           </div>
 
           {opportunities.length === 0 && (

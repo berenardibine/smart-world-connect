@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, Briefcase, Eye, Building2, Mail, ExternalLink, ArrowLeft } from "lucide-react";
+import { MapPin, Briefcase, Eye, Building2, Mail, ExternalLink, ArrowLeft, Calendar } from "lucide-react";
 import { toast } from "sonner";
+import { ShareButton } from "@/components/ShareButton";
+import { createOpportunityShareUrl } from "@/lib/seoUrls";
 
 interface Opportunity {
   id: string;
@@ -25,6 +27,7 @@ interface Opportunity {
   video_url: string | null;
   views: number;
   created_at: string;
+  expire_date: string | null;
 }
 
 const OpportunityDetail = () => {
@@ -99,6 +102,17 @@ const OpportunityDetail = () => {
           Back to Opportunities
         </Button>
 
+        {opportunity && (
+          <div className="mb-4">
+            <ShareButton
+              url={createOpportunityShareUrl(opportunity.id, opportunity.title)}
+              title={`${opportunity.title} at ${opportunity.company_name}`}
+              description={opportunity.description?.substring(0, 100)}
+              variant="outline"
+            />
+          </div>
+        )}
+
         <Card>
           <CardContent className="p-6">
             {/* Images */}
@@ -155,6 +169,12 @@ const OpportunityDetail = () => {
                   <Eye className="h-5 w-5" />
                   <span>{opportunity.views} views</span>
                 </div>
+                {opportunity.expire_date && (
+                  <div className="flex items-center gap-2 text-orange-500">
+                    <Calendar className="h-5 w-5" />
+                    <span>Expires: {new Date(opportunity.expire_date).toLocaleDateString()}</span>
+                  </div>
+                )}
               </div>
 
               <Separator />

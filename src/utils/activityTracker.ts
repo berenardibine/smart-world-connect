@@ -2,6 +2,53 @@
 import { User, PlanKey } from '@/type/subscription';
 import { PLANS } from '@/data/plans';
 import { mockApi } from '@/api/mockSubscriptionApi';
+import { supabase } from "@/lib/supaseClient";
+
+let lastActivityUpdate = 0;
+const UPDATE_INTERVAL = 60000; // Update every minute at most
+
+export const updateLastActive = async () => {
+  const now = Date.now();
+  
+  // Throttle updates to once per minute
+  if (now - lastActivityUpdate < UPDATE_INTERVAL) return;
+  
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user?.id) return;
+    
+    await supabase
+      .from("profiles")
+      .update({ last_active: new Date().toISOString() })
+      .eq("id", session.user.id);
+    
+    lastActivityUpdate = now;
+  } catch (error) {
+    console.error("Failed to update last_active:", error);
+  }
+};
+
+// Format relative time for activity status
+export const getActiveStatus = (lastActive: string | null): { text: string; color: string } => {
+  if (!lastActive) return { text: "Offline", color: "text-muted-foreground" };
+  
+  const now = new Date();
+  const last = new Date(lastActive);
+  const diffMs = now.getTime() - last.getTime();
+  const diffMinutes = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
+  
+  if (diffMinutes < 2) {
+    return { text: "Active now", color: "text-green-500" };
+  } else if (diffMinutes < 60) {
+    return { text: `Active ${diffMinutes}m ago`, color: "text-orange-500" };
+  } else if (diffHours < 24) {
+    return { text: `Active ${diffHours}h ago`, color: "text-muted-foreground" };
+  } else {
+    return { text: `Active ${diffDays}d ago`, color: "text-muted-foreground" };
+  }
+};
 
 /**
  * Returns plan meta by key

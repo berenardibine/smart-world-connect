@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Heart, Eye, MessageCircle, MapPin, ArrowLeft, Star, Phone, Shield } from "lucide-react";
+import { Heart, Eye, MessageCircle, MapPin, ArrowLeft, Star, Phone, Flag } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +25,8 @@ import { useBrowsingHistory } from "@/hooks/useBrowsingHistory";
 import { DashboardFloatingButton } from "@/components/DashboardFloatingButton";
 import { ShareButton } from "@/components/ShareButton";
 import { createProductShareUrl, isAdminPostedProduct, extractIdFromUrl } from "@/lib/seoUrls";
+import { ProductComments } from "@/components/ProductComments";
+import { ReportSellerModal } from "@/components/ReportSellerModal";
 import { z } from "zod";
 import { Helmet } from "react-helmet";
 import { extractProductId } from "@/lib/slugify";
@@ -61,6 +63,7 @@ export default function ProductDetail() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showFullScreen, setShowFullScreen] = useState(false);
   const [analyticsData, setAnalyticsData] = useState({ views: 0, impressions: 0 });
+  const [showReportModal, setShowReportModal] = useState(false);
   const productRef = useRef<HTMLDivElement>(null);
   const hasTrackedView = useRef(false);
   const hasTrackedImpression = useRef(false);
@@ -459,14 +462,6 @@ export default function ProductDetail() {
         <main className="container mx-auto px-4 py-6">
           <div className="grid md:grid-cols-2 gap-6">
             <div className="space-y-4">
-              {/* Admin Product Badge */}
-              {isAdminProduct && (
-                <Badge className="bg-orange-500 text-white mb-2">
-                  <Shield className="h-3 w-3 mr-1" />
-                  Admin Product
-                </Badge>
-              )}
-              
               {/* Main Image Display */}
               <div className="aspect-square bg-muted rounded-lg overflow-hidden border-2 border-border cursor-pointer"
                    onClick={() => product.images?.length > 0 && setShowFullScreen(true)}>
@@ -661,7 +656,25 @@ export default function ProductDetail() {
                   Call {isAdminProduct ? "Now" : "Seller"} Directly
                 </Button>
               )}
+
+              {/* Report Seller Button */}
+              {!isAdminProduct && currentUser && currentUser.id !== product.seller_id && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowReportModal(true)}
+                  className="w-full text-muted-foreground"
+                >
+                  <Flag className="h-4 w-4 mr-2" />
+                  Report Seller
+                </Button>
+              )}
             </div>
+          </div>
+
+          {/* Comments & Reviews Section */}
+          <div className="mt-8">
+            <ProductComments productId={id} sellerId={product.seller_id} />
           </div>
           
           {/* Recommended Products */}
@@ -674,6 +687,15 @@ export default function ProductDetail() {
             />
           </div>
         </main>
+
+        {/* Report Seller Modal */}
+        <ReportSellerModal
+          open={showReportModal}
+          onOpenChange={setShowReportModal}
+          sellerId={product.seller_id}
+          productId={id}
+          sellerName={sellerName}
+        />
 
         {product.images && product.images.length > 0 && (
           <FullScreenImageViewer
