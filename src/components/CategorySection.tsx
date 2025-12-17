@@ -12,6 +12,7 @@ interface Product {
   images: string[];
   location: string;
   likes: number;
+  views: number;
   is_negotiable: boolean;
   contact_whatsapp: string;
   contact_call: string;
@@ -50,7 +51,7 @@ export function CategorySection({ category, likedProducts }: CategorySectionProp
             scrollRef.current.scrollBy({ left: 200, behavior: 'smooth' });
           }
         }
-      }, 5000);
+      }, 2000);
     }
 
     return () => {
@@ -140,6 +141,7 @@ export function CategorySection({ category, likedProducts }: CategorySectionProp
               rentalRateType={product.rental_rate_type}
               contactWhatsapp={product.contact_whatsapp}
               contactCall={product.contact_call}
+              views={(product as any).views || 0}
             />
           </div>
         ))}

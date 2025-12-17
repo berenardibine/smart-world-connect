@@ -33,6 +33,7 @@ import AdminPostProduct from "./pages/AdminPostProduct";
 import SellerPlans from "./pages/SellerPlans";
 import AdminPlans from "./pages/AdminPlans";
 import MarketingPosts from "./pages/admin/MarketingPosts";
+import Marketing from "./pages/Marketing";
 import ContactMessages from "./pages/admin/ContactMessages";
 import AdsManagement from "./pages/admin/AdsManagement";
 import SellerAnalytics from "./pages/SellerAnalytics";
@@ -84,6 +85,7 @@ const App = () => (
           <Route path="/account" element={<Account />} />
           <Route path="/updates" element={<Updates />} />
           <Route path="/opportunities" element={<Opportunities />} />
+          <Route path="/marketing" element={<Marketing />} />
           <Route path="/post-opportunity" element={<PostOpportunity />} />
           <Route path="/seller/dashboard" element={<SellerDashboard />} />
           <Route path="/seller/products" element={<SellerProducts />} />

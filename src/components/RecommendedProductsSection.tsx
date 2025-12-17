@@ -108,7 +108,7 @@ export function RecommendedProductsSection() {
           scrollRef.current.scrollBy({ left: 220, behavior: 'smooth' });
         }
       }
-    }, 5000);
+    }, 2000);
 
     return () => clearInterval(interval);
   }, [products.length]);
@@ -171,6 +171,7 @@ export function RecommendedProductsSection() {
               isNegotiable={product.is_negotiable}
               contactWhatsapp={product.contact_whatsapp}
               contactCall={product.contact_call}
+              views={(product as any).views || 0}
             />
           </div>
         ))}

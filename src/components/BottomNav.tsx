@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Sprout, Tractor, Briefcase } from "lucide-react";
+import { Home, Sprout, Tractor, Megaphone } from "lucide-react";
 
 export function BottomNav() {
   const location = useLocation();
@@ -43,13 +43,13 @@ export function BottomNav() {
           <span className="text-xs mt-1">Equipment</span>
         </Link>
         <Link
-          to="/opportunities"
+          to="/marketing"
           className={`flex flex-col items-center justify-center flex-1 ${
-            isActive("/opportunities") ? "text-primary" : "text-muted-foreground"
+            isActive("/marketing") ? "text-primary" : "text-muted-foreground"
           }`}
         >
-          <Briefcase className="h-5 w-5" />
-          <span className="text-xs mt-1">Opportunity</span>
+          <Megaphone className="h-5 w-5" />
+          <span className="text-xs mt-1">Marketing</span>
         </Link>
       </div>
     </nav>

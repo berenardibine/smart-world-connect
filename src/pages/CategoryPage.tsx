@@ -14,6 +14,7 @@ interface Product {
   images: string[];
   location: string;
   likes: number;
+  views: number;
   is_negotiable: boolean;
   contact_whatsapp: string;
   contact_call: string;
@@ -111,6 +112,7 @@ export default function CategoryPage() {
                 rentalRateType={product.rental_rate_type}
                 contactWhatsapp={product.contact_whatsapp}
                 contactCall={product.contact_call}
+                views={product.views || 0}
               />
             ))}
           </div>
