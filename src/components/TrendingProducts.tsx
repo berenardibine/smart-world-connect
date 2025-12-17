@@ -145,6 +145,7 @@ export function TrendingProducts() {
               isNegotiable={product.is_negotiable}
               contactWhatsapp={product.contact_whatsapp}
               contactCall={product.contact_call}
+              views={product.views || 0}
             />
           </div>
         ))}

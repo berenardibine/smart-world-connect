@@ -134,6 +134,7 @@ export default function Home() {
                     rentalRateType={product.rental_rate_type}
                     contactWhatsapp={product.contact_whatsapp}
                     contactCall={product.contact_call}
+                    views={product.views || 0}
                   />
                 ))}
               </div>

@@ -29,7 +29,7 @@ export function SmartAdsCarousel() {
     
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % ads.length);
-    }, 5000);
+    }, 2000);
 
     return () => clearInterval(interval);
   }, [ads.length]);

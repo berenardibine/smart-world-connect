@@ -416,8 +416,8 @@ export default function ProductDetail() {
   const whatsappNumber = product.contact_whatsapp || seller?.whatsapp_number;
   const callNumber = product.contact_call || seller?.call_number;
 
-  // Generate WhatsApp message with product details
-  const whatsappMessage = `Hello, I'm interested in your product: ${product.title}\n\nProduct Link: ${shareUrl}\n\nProduct Image: ${product.images?.[0] || ''}`;
+  // Generate WhatsApp message with product link only (clean version)
+  const whatsappMessage = `Hello! I'm interested in your product "${product.title}" on Rwanda Smart Market:\n${shareUrl}`;
   const whatsappUrl = whatsappNumber 
     ? `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(whatsappMessage)}`
     : '';

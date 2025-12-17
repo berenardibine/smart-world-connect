@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Heart, MapPin, ChevronLeft, ChevronRight, Play, Eye } from "lucide-react";
+import { Heart, MapPin, ChevronLeft, ChevronRight, Play, Eye, Star, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +24,9 @@ interface ProductCardProps {
   rentalRateType?: string;
   contactWhatsapp?: string | null;
   contactCall?: string | null;
+  views?: number;
+  rating?: number;
+  commentCount?: number;
 }
 
 export const ProductCard = ({
@@ -40,6 +43,9 @@ export const ProductCard = ({
   rentalRateType,
   contactWhatsapp,
   contactCall,
+  views = 0,
+  rating = 0,
+  commentCount = 0,
 }: ProductCardProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [liked, setLiked] = useState(isLiked);
@@ -250,6 +256,27 @@ export const ProductCard = ({
             {location}
           </div>
         )}
+        
+        {/* Public stats: views, rating, comments */}
+        <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
+          <span className="flex items-center gap-1">
+            <Eye className="h-3 w-3" />
+            {views}
+          </span>
+          {rating > 0 && (
+            <span className="flex items-center gap-1">
+              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+              {rating.toFixed(1)}
+            </span>
+          )}
+          {commentCount > 0 && (
+            <span className="flex items-center gap-1">
+              <MessageCircle className="h-3 w-3" />
+              {commentCount}
+            </span>
+          )}
+        </div>
+        
         {/* Only show seller name for non-admin products */}
         {!isAdminProduct && (
           <div className="text-sm text-muted-foreground">
