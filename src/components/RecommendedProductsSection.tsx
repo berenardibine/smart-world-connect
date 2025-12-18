@@ -1,18 +1,20 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supaseClient";
-import { ProductCard } from "@/components/ProductCard";
+import { CompactProductCard } from "@/components/CompactProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { isAdminPostedProduct } from "@/lib/seoUrls";
 
 interface Product {
   id: string;
   title: string;
   price: number;
   images: string[];
-  location: string;
+  views: number;
   likes: number;
   is_negotiable: boolean;
+  rental_rate_type?: string;
   discount: number;
   discount_expiry: string | null;
   contact_whatsapp: string;
@@ -27,13 +29,13 @@ export function RecommendedProductsSection() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [likedProducts, setLikedProducts] = useState<Set<string>>(new Set());
+  const [productStats, setProductStats] = useState<Record<string, { rating: number; commentCount: number }>>({});
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchRecommendedProducts();
     fetchUserLikes();
     
-    // Auto-refresh every 5 minutes
     const interval = setInterval(fetchRecommendedProducts, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
@@ -52,18 +54,33 @@ export function RecommendedProductsSection() {
     }
   };
 
+  const fetchProductStats = async (productIds: string[]) => {
+    const { data: comments } = await supabase
+      .from("comments")
+      .select("product_id, rating")
+      .in("product_id", productIds);
+
+    if (comments) {
+      const stats: Record<string, { rating: number; commentCount: number }> = {};
+      
+      productIds.forEach(id => {
+        const productComments = comments.filter(c => c.product_id === id);
+        const avgRating = productComments.length > 0
+          ? productComments.reduce((sum, c) => sum + (c.rating || 0), 0) / productComments.length
+          : 0;
+        stats[id] = { rating: avgRating, commentCount: productComments.length };
+      });
+      
+      setProductStats(stats);
+    }
+  };
+
   const fetchRecommendedProducts = async () => {
-    // Get products with active discounts and high engagement
-    const now = new Date().toISOString();
-    
     const { data, error } = await supabase
       .from("products")
       .select(`
         *,
-        profiles:seller_id (
-          full_name,
-          business_name
-        )
+        profiles:seller_id (full_name, business_name)
       `)
       .eq("status", "approved")
       .or(`discount.gt.0,views.gt.10,likes.gt.5`)
@@ -71,7 +88,6 @@ export function RecommendedProductsSection() {
       .limit(15);
 
     if (!error && data) {
-      // Prioritize products with active discounts
       const sorted = data.sort((a, b) => {
         const aHasDiscount = a.discount > 0 && (!a.discount_expiry || new Date(a.discount_expiry) > new Date());
         const bHasDiscount = b.discount > 0 && (!b.discount_expiry || new Date(b.discount_expiry) > new Date());
@@ -81,21 +97,21 @@ export function RecommendedProductsSection() {
         return (b.views || 0) - (a.views || 0);
       });
       setProducts(sorted);
+      await fetchProductStats(sorted.map(p => p.id));
     }
     setLoading(false);
   };
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
-      const scrollAmount = 300;
       scrollRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        left: direction === 'left' ? -200 : 200,
         behavior: 'smooth'
       });
     }
   };
 
-  // Auto-scroll effect
+  // Auto-scroll
   useEffect(() => {
     if (products.length <= 4) return;
     
@@ -105,7 +121,7 @@ export function RecommendedProductsSection() {
         if (scrollLeft + clientWidth >= scrollWidth - 10) {
           scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
         } else {
-          scrollRef.current.scrollBy({ left: 220, behavior: 'smooth' });
+          scrollRef.current.scrollBy({ left: 160, behavior: 'smooth' });
         }
       }
     }, 2000);
@@ -115,17 +131,17 @@ export function RecommendedProductsSection() {
 
   if (loading) {
     return (
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-4">
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-3">
           <Sparkles className="h-5 w-5 text-primary" />
           <h2 className="text-lg font-bold">Recommended for You</h2>
         </div>
-        <div className="flex gap-4 overflow-hidden">
+        <div className="flex gap-3 overflow-hidden">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="min-w-[200px]">
-              <Skeleton className="h-48 w-full rounded-lg" />
+            <div key={i} className="min-w-[150px]">
+              <Skeleton className="aspect-[4/3] rounded-xl" />
               <Skeleton className="h-4 w-3/4 mt-2" />
-              <Skeleton className="h-4 w-1/2 mt-1" />
+              <Skeleton className="h-3 w-1/2 mt-1" />
             </div>
           ))}
         </div>
@@ -136,17 +152,17 @@ export function RecommendedProductsSection() {
   if (products.length === 0) return null;
 
   return (
-    <div className="mb-8 relative">
-      <div className="flex items-center justify-between mb-4">
+    <div className="mb-6 relative">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-primary" />
           <h2 className="text-lg font-bold">Recommended for You</h2>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="icon" onClick={() => scroll('left')}>
+        <div className="flex gap-1">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => scroll('left')}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="icon" onClick={() => scroll('right')}>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => scroll('right')}>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
@@ -154,27 +170,36 @@ export function RecommendedProductsSection() {
       
       <div 
         ref={scrollRef}
-        className="flex gap-4 overflow-x-auto scrollbar-hide pb-2"
+        className="flex gap-3 overflow-x-auto scrollbar-hide pb-2"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        {products.map((product) => (
-          <div key={product.id} className="min-w-[180px] md:min-w-[220px] flex-shrink-0">
-            <ProductCard
-              id={product.id}
-              title={product.title}
-              price={product.price}
-              images={product.images || []}
-              location={product.location}
-              sellerName={product.profiles?.business_name || product.profiles?.full_name || "Seller"}
-              likes={product.likes}
-              isLiked={likedProducts.has(product.id)}
-              isNegotiable={product.is_negotiable}
-              contactWhatsapp={product.contact_whatsapp}
-              contactCall={product.contact_call}
-              views={(product as any).views || 0}
-            />
-          </div>
-        ))}
+        {products.map((product) => {
+          const isAdmin = isAdminPostedProduct({
+            contact_whatsapp: product.contact_whatsapp,
+            contact_call: product.contact_call
+          });
+          const stats = productStats[product.id] || { rating: 0, commentCount: 0 };
+          
+          return (
+            <div key={product.id} className="min-w-[150px] w-[150px] md:min-w-[180px] md:w-[180px] flex-shrink-0">
+              <CompactProductCard
+                id={product.id}
+                title={product.title}
+                price={product.price}
+                images={product.images || []}
+                isNegotiable={product.is_negotiable}
+                rentalRateType={product.rental_rate_type}
+                views={product.views || 0}
+                rating={stats.rating}
+                commentCount={stats.commentCount}
+                likes={product.likes || 0}
+                isLiked={likedProducts.has(product.id)}
+                sellerName={product.profiles?.business_name || product.profiles?.full_name}
+                isAdminProduct={isAdmin}
+              />
+            </div>
+          );
+        })}
       </div>
     </div>
   );

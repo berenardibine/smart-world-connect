@@ -1,22 +1,21 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supaseClient";
-import { ProductCard } from "@/components/ProductCard";
+import { CompactProductCard } from "@/components/CompactProductCard";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { isAdminPostedProduct } from "@/lib/seoUrls";
 
 interface Product {
   id: string;
   title: string;
   price: number;
   images: string[];
-  location: string;
   likes: number;
   views: number;
   is_negotiable: boolean;
   contact_whatsapp: string;
   contact_call: string;
-  video_url?: string;
   rental_rate_type?: string;
   profiles: {
     full_name: string;
@@ -32,6 +31,7 @@ interface CategorySectionProps {
 export function CategorySection({ category, likedProducts }: CategorySectionProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [productStats, setProductStats] = useState<Record<string, { rating: number; commentCount: number }>>({});
   const scrollRef = useRef<HTMLDivElement>(null);
   const autoScrollRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -40,15 +40,14 @@ export function CategorySection({ category, likedProducts }: CategorySectionProp
   }, [category]);
 
   useEffect(() => {
-    // Auto-scroll every 5 seconds
-    if (products.length > 0) {
+    if (products.length > 4) {
       autoScrollRef.current = setInterval(() => {
         if (scrollRef.current) {
           const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
           if (scrollLeft + clientWidth >= scrollWidth - 10) {
             scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
           } else {
-            scrollRef.current.scrollBy({ left: 200, behavior: 'smooth' });
+            scrollRef.current.scrollBy({ left: 160, behavior: 'smooth' });
           }
         }
       }, 2000);
@@ -61,32 +60,50 @@ export function CategorySection({ category, likedProducts }: CategorySectionProp
     };
   }, [products]);
 
+  const fetchProductStats = async (productIds: string[]) => {
+    const { data: comments } = await supabase
+      .from("comments")
+      .select("product_id, rating")
+      .in("product_id", productIds);
+
+    if (comments) {
+      const stats: Record<string, { rating: number; commentCount: number }> = {};
+      
+      productIds.forEach(id => {
+        const productComments = comments.filter(c => c.product_id === id);
+        const avgRating = productComments.length > 0
+          ? productComments.reduce((sum, c) => sum + (c.rating || 0), 0) / productComments.length
+          : 0;
+        stats[id] = { rating: avgRating, commentCount: productComments.length };
+      });
+      
+      setProductStats(stats);
+    }
+  };
+
   const fetchProducts = async () => {
     const { data, error } = await supabase
       .from("products")
       .select(`
         *,
-        profiles:seller_id (
-          full_name,
-          business_name
-        )
+        profiles:seller_id (full_name, business_name)
       `)
       .eq("status", "approved")
       .eq("category", category)
-      .order("created_at", { ascending: false })
+      .order("views", { ascending: false })
       .limit(10);
 
     if (!error && data) {
       setProducts(data);
+      await fetchProductStats(data.map(p => p.id));
     }
     setLoading(false);
   };
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
-      const scrollAmount = 200;
       scrollRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        left: direction === 'left' ? -160 : 160,
         behavior: 'smooth'
       });
     }
@@ -97,24 +114,14 @@ export function CategorySection({ category, likedProducts }: CategorySectionProp
   const categorySlug = category.toLowerCase().replace(/\s+/g, '-').replace(/&/g, 'and');
 
   return (
-    <div className="mb-8">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold">{category}</h2>
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={() => scroll('left')}
-            className="h-8 w-8"
-          >
+    <div className="mb-6">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-base font-bold">{category}</h2>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" onClick={() => scroll('left')} className="h-7 w-7">
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={() => scroll('right')}
-            className="h-8 w-8"
-          >
+          <Button variant="ghost" size="icon" onClick={() => scroll('right')} className="h-7 w-7">
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
@@ -125,32 +132,39 @@ export function CategorySection({ category, likedProducts }: CategorySectionProp
         className="flex gap-3 overflow-x-auto scrollbar-hide pb-2"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        {products.map((product) => (
-          <div key={product.id} className="w-[calc(50%-6px)] min-w-[calc(50%-6px)] flex-shrink-0">
-            <ProductCard
-              id={product.id}
-              title={product.title}
-              price={product.price}
-              images={product.images || []}
-              video={product.video_url}
-              location={product.location}
-              sellerName={product.profiles?.business_name || product.profiles?.full_name || "Seller"}
-              likes={product.likes}
-              isLiked={likedProducts.has(product.id)}
-              isNegotiable={product.is_negotiable}
-              rentalRateType={product.rental_rate_type}
-              contactWhatsapp={product.contact_whatsapp}
-              contactCall={product.contact_call}
-              views={(product as any).views || 0}
-            />
-          </div>
-        ))}
+        {products.map((product) => {
+          const isAdmin = isAdminPostedProduct({
+            contact_whatsapp: product.contact_whatsapp,
+            contact_call: product.contact_call
+          });
+          const stats = productStats[product.id] || { rating: 0, commentCount: 0 };
+          
+          return (
+            <div key={product.id} className="min-w-[150px] w-[150px] md:min-w-[180px] md:w-[180px] flex-shrink-0">
+              <CompactProductCard
+                id={product.id}
+                title={product.title}
+                price={product.price}
+                images={product.images || []}
+                isNegotiable={product.is_negotiable}
+                rentalRateType={product.rental_rate_type}
+                views={product.views || 0}
+                rating={stats.rating}
+                commentCount={stats.commentCount}
+                likes={product.likes || 0}
+                isLiked={likedProducts.has(product.id)}
+                sellerName={product.profiles?.business_name || product.profiles?.full_name}
+                isAdminProduct={isAdmin}
+              />
+            </div>
+          );
+        })}
       </div>
 
-      <div className="mt-3 text-center">
+      <div className="mt-2 text-center">
         <Link to={`/category/${categorySlug}`}>
-          <Button variant="outline" size="sm" className="text-primary">
-            Explore More {category} →
+          <Button variant="link" size="sm" className="text-primary text-xs">
+            Explore More →
           </Button>
         </Link>
       </div>
