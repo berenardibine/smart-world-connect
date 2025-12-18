@@ -30,7 +30,6 @@ import OpportunityDetail from "./pages/OpportunityDetail";
 import PostOpportunity from "./pages/PostOpportunity";
 import AdminOpportunities from "./pages/AdminOpportunities";
 import AdminPostProduct from "./pages/AdminPostProduct";
-import SellerPlans from "./pages/SellerPlans";
 import AdminPlans from "./pages/AdminPlans";
 import MarketingPosts from "./pages/admin/MarketingPosts";
 import Marketing from "./pages/Marketing";
@@ -90,7 +89,6 @@ const App = () => (
           <Route path="/seller/dashboard" element={<SellerDashboard />} />
           <Route path="/seller/products" element={<SellerProducts />} />
           <Route path="/seller/updates" element={<SellerUpdates />} />
-          <Route path="/seller/plans" element={<SellerPlans />} />
           <Route path="/seller/analytics" element={<SellerAnalytics />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/products" element={<AdminProducts />} />
