@@ -17,6 +17,7 @@ interface Product {
   likes?: number;
   contact_whatsapp?: string;
   contact_call?: string;
+  discount?: number;
   profiles?: {
     full_name?: string;
     business_name?: string;
@@ -45,7 +46,7 @@ export const HomeProductGrid = ({
     const query = supabase
       .from("products")
       .select(`
-        id, title, price, images, is_negotiable, rental_rate_type, views, likes,
+        id, title, price, images, is_negotiable, rental_rate_type, views, likes, discount,
         contact_whatsapp, contact_call,
         profiles:seller_id (full_name, business_name)
       `)
@@ -214,6 +215,7 @@ export const HomeProductGrid = ({
               isLiked={likedProducts.has(product.id)}
               sellerName={product.profiles?.business_name || product.profiles?.full_name}
               isAdminProduct={isAdmin}
+              discount={product.discount || 0}
             />
           );
         })}
