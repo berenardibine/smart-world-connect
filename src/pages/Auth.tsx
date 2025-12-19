@@ -255,8 +255,7 @@ export default function Auth() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password<br>
-                <p>Mix capital letter,small letter,number and symbols. min 8 character</p></br></Label>
+                <Label htmlFor="password">Password(mix capital,small,number and symbol min 8 key)</Label>
                 <div className="relative">
                   <Input
                     id="password"
