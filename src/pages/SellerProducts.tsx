@@ -35,8 +35,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Eye, Heart, ArrowLeft } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Heart, ArrowLeft, Share2, Percent } from "lucide-react";
 import { z } from "zod";
+import { ShareButton } from "@/components/ShareButton";
+import { createProductUrl } from "@/lib/slugify";
 
 const rentalRateTypes = [
   { value: "per_hour", label: "Per Hour" },
@@ -86,6 +88,93 @@ const productSchema = z.object({
     .max(5, 'Maximum 5 images allowed'),
   video_url: z.string().url('Invalid video URL').optional().or(z.literal('')),
 });
+
+// Discount Dialog Component
+const DiscountDialog = ({ product, onSuccess }: { product: any; onSuccess: () => void }) => {
+  const [open, setOpen] = useState(false);
+  const [discount, setDiscount] = useState(product.discount?.toString() || "");
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+
+  const handleApplyDiscount = async () => {
+    setLoading(true);
+    const discountValue = parseInt(discount) || 0;
+    
+    const { error } = await supabase
+      .from("products")
+      .update({ discount: discountValue > 0 ? discountValue : null })
+      .eq("id", product.id);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to apply discount",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: discountValue > 0 ? `${discountValue}% discount applied` : "Discount removed",
+      });
+      setOpen(false);
+      onSuccess();
+    }
+    setLoading(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm" className="h-7 px-1">
+          <Percent className="h-3 w-3" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-xs">
+        <DialogHeader>
+          <DialogTitle>Set Discount</DialogTitle>
+          <DialogDescription>
+            Apply a discount percentage to "{product.title}"
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="discount">Discount %</Label>
+            <Input
+              id="discount"
+              type="number"
+              min="0"
+              max="100"
+              value={discount}
+              onChange={(e) => setDiscount(e.target.value)}
+              placeholder="e.g., 10"
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleApplyDiscount} 
+              disabled={loading}
+              className="flex-1"
+            >
+              {loading ? "Applying..." : "Apply"}
+            </Button>
+            {product.discount && (
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setDiscount("0");
+                  handleApplyDiscount();
+                }}
+                disabled={loading}
+              >
+                Remove
+              </Button>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 export default function SellerProducts() {
   const [loading, setLoading] = useState(true);
@@ -594,78 +683,91 @@ export default function SellerProducts() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {products.map((product) => (
-              <Card key={product.id} className="overflow-hidden">
-                <div className="aspect-video bg-muted relative">
-                  {product.images?.[0] && (
-                    <img
-                      src={product.images[0]}
-                      alt={product.title}
-                      className="object-cover w-full h-full"
-                    />
-                  )}
-                </div>
-                <CardContent className="p-4">
-                  <h3 className="font-semibold mb-1 line-clamp-1">
-                    {product.title}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-                    {product.description}
-                  </p>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-lg font-bold text-primary">
-                      {product.price} RWF
-                    </span>
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Eye className="h-3 w-3" />
-                        {product.views || 0}
+          <div className="grid gap-3 grid-cols-3">
+            {products.map((product) => {
+              const productUrl = `${window.location.origin}${createProductUrl(product.id, product.title)}`;
+              return (
+                <Card key={product.id} className="overflow-hidden">
+                  <div className="aspect-square bg-muted relative">
+                    {product.images?.[0] && (
+                      <img
+                        src={product.images[0]}
+                        alt={product.title}
+                        className="object-cover w-full h-full"
+                      />
+                    )}
+                    {product.discount && product.discount > 0 && (
+                      <div className="absolute top-1 left-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                        <Percent className="h-2.5 w-2.5" />
+                        {product.discount}%
+                      </div>
+                    )}
+                  </div>
+                  <CardContent className="p-2">
+                    <h3 className="font-medium text-xs line-clamp-1 mb-1">
+                      {product.title}
+                    </h3>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold text-primary">
+                        {product.price.toLocaleString()} RWF
                       </span>
-                      <span className="flex items-center gap-1">
-                        <Heart className="h-3 w-3" />
-                        {product.likes || 0}
-                      </span>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-0.5">
+                          <Eye className="h-2.5 w-2.5" />
+                          {product.views || 0}
+                        </span>
+                        <span className="flex items-center gap-0.5">
+                          <Heart className="h-2.5 w-2.5" />
+                          {product.likes || 0}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => handleEdit(product)}
-                    >
-                      <Edit className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Product?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This will permanently delete this product from the
-                            database. This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleDelete(product.id)}
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    <div className="flex gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 h-7 text-xs px-1"
+                        onClick={() => handleEdit(product)}
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                      <ShareButton
+                        url={productUrl}
+                        title={product.title}
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs px-1"
+                      />
+                      <DiscountDialog 
+                        product={product} 
+                        onSuccess={() => checkAuth()} 
+                      />
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" size="sm" className="h-7 px-1">
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Product?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will permanently delete this product.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(product.id)}>
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
       </main>

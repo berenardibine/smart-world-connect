@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supaseClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Eye, Heart, Trash2, ArrowLeft, Plus } from "lucide-react";
+import { Eye, Heart, Trash2, ArrowLeft, Plus, Percent } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ShareButton } from "@/components/ShareButton";
+import { createProductUrl } from "@/lib/slugify";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -127,75 +129,87 @@ export default function AdminProducts() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {products.map((product) => (
-              <Card key={product.id} className="overflow-hidden">
-                <div className="aspect-video bg-muted relative">
-                  {product.images && product.images[0] && (
-                    <img 
-                      src={product.images[0]} 
-                      alt={product.title}
-                      className="object-cover w-full h-full"
-                    />
-                  )}
-                  <div className={`absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-semibold ${
-                    product.status === 'approved' ? 'bg-green-500/80 text-white' :
-                    product.status === 'pending' ? 'bg-yellow-500/80 text-white' :
-                    'bg-red-500/80 text-white'
-                  }`}>
-                    {product.status}
-                  </div>
-                </div>
-                <CardContent className="p-4">
-                  <h3 className="font-semibold mb-1">{product.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-                    {product.description}
-                  </p>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-lg font-bold text-primary">
-                      {product.price} RWF
-                    </span>
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Eye className="h-3 w-3" />
-                        {product.views || 0}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Heart className="h-3 w-3" />
-                        {product.likes || 0}
-                      </span>
+          <div className="grid gap-3 grid-cols-3">
+            {products.map((product) => {
+              const productUrl = `${window.location.origin}${createProductUrl(product.id, product.title)}`;
+              return (
+                <Card key={product.id} className="overflow-hidden">
+                  <div className="aspect-square bg-muted relative">
+                    {product.images && product.images[0] && (
+                      <img 
+                        src={product.images[0]} 
+                        alt={product.title}
+                        className="object-cover w-full h-full"
+                      />
+                    )}
+                    <div className={`absolute top-1 right-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                      product.status === 'approved' ? 'bg-green-500/80 text-white' :
+                      product.status === 'pending' ? 'bg-yellow-500/80 text-white' :
+                      'bg-red-500/80 text-white'
+                    }`}>
+                      {product.status}
                     </div>
+                    {product.discount && product.discount > 0 && (
+                      <div className="absolute top-1 left-1 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                        <Percent className="h-2.5 w-2.5" />
+                        {product.discount}%
+                      </div>
+                    )}
                   </div>
-                  <div className="text-sm text-muted-foreground mb-3">
-                    <p>Seller: {product.profiles?.business_name || product.profiles?.full_name || "Unknown"}</p>
-                    <p>Category: {product.category || "Uncategorized"}</p>
-                    <p>Location: {product.location || "Not specified"}</p>
-                  </div>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="sm" className="w-full">
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete Product
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. This will permanently delete the product.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(product.id)}>
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </CardContent>
-              </Card>
-            ))}
+                  <CardContent className="p-2">
+                    <h3 className="font-medium text-xs line-clamp-1 mb-1">{product.title}</h3>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-bold text-primary">
+                        {product.price.toLocaleString()} RWF
+                      </span>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-0.5">
+                          <Eye className="h-2.5 w-2.5" />
+                          {product.views || 0}
+                        </span>
+                        <span className="flex items-center gap-0.5">
+                          <Heart className="h-2.5 w-2.5" />
+                          {product.likes || 0}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mb-2 truncate">
+                      {product.profiles?.business_name || product.profiles?.full_name || "Unknown"}
+                    </p>
+                    <div className="flex gap-1">
+                      <ShareButton
+                        url={productUrl}
+                        title={product.title}
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 h-6 text-xs px-1"
+                      />
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" size="sm" className="h-6 px-1">
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Product?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will permanently delete the product.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(product.id)}>
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
       </main>
