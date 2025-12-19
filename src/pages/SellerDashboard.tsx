@@ -2,9 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/lib/supaseClient";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { NotificationBell } from "@/components/NotificationBell";
-import { Package, Eye, Heart, TrendingUp, LayoutDashboard, ArrowLeft, LogOut } from "lucide-react";
+import { 
+  Package, Eye, Heart, TrendingUp, LayoutDashboard, 
+  ArrowLeft, LogOut, BarChart3, User 
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function SellerDashboard() {
@@ -70,111 +73,138 @@ export default function SellerDashboard() {
   };
 
   if (loading) {
-    return <div className="min-h-screen bg-background flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center">
+        <div className="animate-pulse text-primary">Loading...</div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="sticky top-0 z-40 bg-background border-b border-border">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Button variant="ghost" onClick={() => navigate("/")}>
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+      {/* Header */}
+      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-lg border-b border-border">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+          <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
+            Home
           </Button>
-          <h1 className="text-xl font-bold">Seller Dashboard</h1>
+          <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            Seller Dashboard
+          </h1>
           <div className="flex items-center gap-2">
             <NotificationBell />
             <Button variant="ghost" size="icon" onClick={handleLogout}>
-              <LogOut className="h-5 w-5" />
+              <LogOut className="h-4 w-4" />
             </Button>
           </div>
         </div>
-      </div>
+      </header>
 
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 py-6 space-y-6">
+        {/* Welcome Section */}
+        <div className="bg-gradient-to-r from-primary to-primary/80 rounded-2xl p-6 text-primary-foreground">
+          <div className="flex items-center gap-4">
+            <div className="h-14 w-14 rounded-full bg-white/20 flex items-center justify-center">
+              <User className="h-7 w-7" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold">
+                Welcome, {profile?.business_name || profile?.full_name}!
+              </h2>
+              <p className="text-sm opacity-90">Manage your products and track performance</p>
+            </div>
+          </div>
+        </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalProducts}</div>
-              <p className="text-xs text-muted-foreground">Active listings</p>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <Card className="bg-card/50 backdrop-blur border-border/50 hover:shadow-lg transition-shadow">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground font-medium">Products</p>
+                  <p className="text-2xl font-bold text-primary">{stats.totalProducts}</p>
+                </div>
+                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Package className="h-5 w-5 text-primary" />
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Views</CardTitle>
-              <Eye className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalViews}</div>
-              <p className="text-xs text-muted-foreground">Product impressions</p>
+          <Card className="bg-card/50 backdrop-blur border-border/50 hover:shadow-lg transition-shadow">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground font-medium">Views</p>
+                  <p className="text-2xl font-bold text-blue-500">{stats.totalViews}</p>
+                </div>
+                <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                  <Eye className="h-5 w-5 text-blue-500" />
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Likes</CardTitle>
-              <Heart className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalLikes}</div>
-              <p className="text-xs text-muted-foreground">Product favorites</p>
+          <Card className="bg-card/50 backdrop-blur border-border/50 hover:shadow-lg transition-shadow">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground font-medium">Likes</p>
+                  <p className="text-2xl font-bold text-red-500">{stats.totalLikes}</p>
+                </div>
+                <div className="h-10 w-10 rounded-xl bg-red-500/10 flex items-center justify-center">
+                  <Heart className="h-5 w-5 text-red-500" />
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Rating</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{profile?.rating || 0}⭐</div>
-              <p className="text-xs text-muted-foreground">
-                {profile?.rating_count || 0} reviews
-              </p>
+          <Card className="bg-card/50 backdrop-blur border-border/50 hover:shadow-lg transition-shadow">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground font-medium">Rating</p>
+                  <p className="text-2xl font-bold text-yellow-500">{profile?.rating || 0}⭐</p>
+                </div>
+                <div className="h-10 w-10 rounded-xl bg-yellow-500/10 flex items-center justify-center">
+                  <TrendingUp className="h-5 w-5 text-yellow-500" />
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Manage Products</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-muted-foreground text-sm">
-                View and manage all your product listings
-              </p>
-              <Link to="/seller/products">
-                <Button className="w-full">
-                  <LayoutDashboard className="mr-2 h-4 w-4" />
-                  Go to Products
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 gap-4">
+          <Link to="/seller/products" className="block">
+            <Card className="h-full bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer group">
+              <CardContent className="p-6 flex flex-col items-center justify-center text-center space-y-3">
+                <div className="h-14 w-14 rounded-2xl bg-primary/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <LayoutDashboard className="h-7 w-7 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-foreground">My Products</h3>
+                  <p className="text-xs text-muted-foreground">Manage listings</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Post Updates</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-muted-foreground text-sm">
-                Share news, promotions, and updates with your customers
-              </p>
-              <Link to="/seller/updates">
-                <Button className="w-full">
-                  <Package className="mr-2 h-4 w-4" />
-                  Create Update
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+          <Link to="/seller/analytics" className="block">
+            <Card className="h-full bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20 hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer group">
+              <CardContent className="p-6 flex flex-col items-center justify-center text-center space-y-3">
+                <div className="h-14 w-14 rounded-2xl bg-blue-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <BarChart3 className="h-7 w-7 text-blue-500" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-foreground">Analytics</h3>
+                  <p className="text-xs text-muted-foreground">View insights</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
       </main>
     </div>

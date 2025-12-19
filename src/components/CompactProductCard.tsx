@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Heart, Eye, Star, MessageCircle } from "lucide-react";
+import { Heart, Eye, Star, MessageCircle, Percent } from "lucide-react";
 import { supabase } from "@/lib/supaseClient";
 import { useToast } from "@/hooks/use-toast";
 import { createProductUrl } from "@/lib/slugify";
@@ -19,6 +19,7 @@ interface CompactProductCardProps {
   isLiked?: boolean;
   sellerName?: string;
   isAdminProduct?: boolean;
+  discount?: number;
 }
 
 export const CompactProductCard = ({
@@ -35,6 +36,7 @@ export const CompactProductCard = ({
   isLiked = false,
   sellerName,
   isAdminProduct = false,
+  discount = 0,
 }: CompactProductCardProps) => {
   const [liked, setLiked] = useState(isLiked);
   const [currentViews, setCurrentViews] = useState(views);
@@ -45,6 +47,10 @@ export const CompactProductCard = ({
 
   const productUrl = createProductUrl(id, title);
   const displayImage = images?.[0] || '/placeholder.svg';
+  
+  // Calculate discounted price
+  const hasDiscount = discount && discount > 0;
+  const discountedPrice = hasDiscount ? price - (price * discount / 100) : price;
 
   // Track view when card is visible for 2 seconds
   useEffect(() => {
@@ -174,10 +180,32 @@ export const CompactProductCard = ({
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
           
+          {/* Discount Badge */}
+          {hasDiscount && (
+            <div className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-0.5 font-semibold">
+              <Percent className="h-3 w-3" />
+              {discount}% OFF
+            </div>
+          )}
+          
           {/* Price Badge on Image */}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
             {isNegotiable ? (
               <span className="text-sm font-semibold text-orange-400">💬 Negotiable</span>
+            ) : hasDiscount ? (
+              <div className="flex flex-col">
+                <span className="text-xs text-gray-300 line-through">
+                  {price.toLocaleString()} RWF
+                </span>
+                <span className="text-sm font-bold text-green-400">
+                  {discountedPrice.toLocaleString()} RWF
+                  {rentalRateType && (
+                    <span className="text-xs font-normal opacity-80 ml-1">
+                      /{rentalRateType.replace("per_", "")}
+                    </span>
+                  )}
+                </span>
+              </div>
             ) : (
               <span className="text-sm font-bold text-white">
                 {price.toLocaleString()} RWF
