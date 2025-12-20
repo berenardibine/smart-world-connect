@@ -92,6 +92,81 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_manager_reports: {
+        Row: {
+          content: string
+          created_at: string | null
+          data: Json | null
+          id: string
+          is_read: boolean | null
+          report_type: string
+          title: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          is_read?: boolean | null
+          report_type: string
+          title: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          is_read?: boolean | null
+          report_type?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      ai_suggestions: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          seller_id: string | null
+          suggestion_type: string
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          seller_id?: string | null
+          suggestion_type: string
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          seller_id?: string | null
+          suggestion_type?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_suggestions_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_suggestions_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           comment: string
@@ -212,17 +287,84 @@ export type Database = {
           },
         ]
       }
+      marketing_analytics: {
+        Row: {
+          clicks: number | null
+          conversion_score: number | null
+          conversions: number | null
+          created_at: string | null
+          date: string | null
+          id: string
+          impressions: number | null
+          post_id: string | null
+          seller_id: string | null
+        }
+        Insert: {
+          clicks?: number | null
+          conversion_score?: number | null
+          conversions?: number | null
+          created_at?: string | null
+          date?: string | null
+          id?: string
+          impressions?: number | null
+          post_id?: string | null
+          seller_id?: string | null
+        }
+        Update: {
+          clicks?: number | null
+          conversion_score?: number | null
+          conversions?: number | null
+          created_at?: string | null
+          date?: string | null
+          id?: string
+          impressions?: number | null
+          post_id?: string | null
+          seller_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_analytics_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketing_analytics_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketing_analytics_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketing_posts: {
         Row: {
           admin_id: string
+          clicks: number | null
           content: string
+          conversion_score: number | null
           created_at: string
+          duration: string | null
+          end_date: string | null
           id: string
           images: string[] | null
+          impressions: number | null
           is_active: boolean | null
           link_text: string | null
           link_url: string | null
           post_type: string
+          product_id: string | null
+          seller_id: string | null
+          start_date: string | null
+          status: string | null
           title: string
           updated_at: string
           video_url: string | null
@@ -230,14 +372,23 @@ export type Database = {
         }
         Insert: {
           admin_id: string
+          clicks?: number | null
           content: string
+          conversion_score?: number | null
           created_at?: string
+          duration?: string | null
+          end_date?: string | null
           id?: string
           images?: string[] | null
+          impressions?: number | null
           is_active?: boolean | null
           link_text?: string | null
           link_url?: string | null
           post_type?: string
+          product_id?: string | null
+          seller_id?: string | null
+          start_date?: string | null
+          status?: string | null
           title: string
           updated_at?: string
           video_url?: string | null
@@ -245,20 +396,51 @@ export type Database = {
         }
         Update: {
           admin_id?: string
+          clicks?: number | null
           content?: string
+          conversion_score?: number | null
           created_at?: string
+          duration?: string | null
+          end_date?: string | null
           id?: string
           images?: string[] | null
+          impressions?: number | null
           is_active?: boolean | null
           link_text?: string | null
           link_url?: string | null
           post_type?: string
+          product_id?: string | null
+          seller_id?: string | null
+          start_date?: string | null
+          status?: string | null
           title?: string
           updated_at?: string
           video_url?: string | null
           views?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "marketing_posts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketing_posts_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketing_posts_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {
@@ -656,6 +838,7 @@ export type Database = {
           rating: number | null
           rating_count: number | null
           referral_code: string | null
+          referred_by: string | null
           status: string | null
           updated_at: string | null
           user_type: string
@@ -681,6 +864,7 @@ export type Database = {
           rating?: number | null
           rating_count?: number | null
           referral_code?: string | null
+          referred_by?: string | null
           status?: string | null
           updated_at?: string | null
           user_type: string
@@ -706,6 +890,7 @@ export type Database = {
           rating?: number | null
           rating_count?: number | null
           referral_code?: string | null
+          referred_by?: string | null
           status?: string | null
           updated_at?: string | null
           user_type?: string
@@ -713,6 +898,109 @@ export type Database = {
           whatsapp_number?: string | null
         }
         Relationships: []
+      }
+      referral_logs: {
+        Row: {
+          created_at: string | null
+          detected_by: string | null
+          id: string
+          reason: string | null
+          referral_code: string
+          referral_id: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string | null
+          detected_by?: string | null
+          id?: string
+          reason?: string | null
+          referral_code: string
+          referral_id?: string | null
+          status: string
+        }
+        Update: {
+          created_at?: string | null
+          detected_by?: string | null
+          id?: string
+          reason?: string | null
+          referral_code?: string
+          referral_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_logs_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "referrals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referrals: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_seller_referral: boolean | null
+          is_valid: boolean | null
+          referral_code: string
+          referred_user_id: string | null
+          referrer_id: string | null
+          status: string | null
+          validated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_seller_referral?: boolean | null
+          is_valid?: boolean | null
+          referral_code: string
+          referred_user_id?: string | null
+          referrer_id?: string | null
+          status?: string | null
+          validated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_seller_referral?: boolean | null
+          is_valid?: boolean | null
+          referral_code?: string
+          referred_user_id?: string | null
+          referrer_id?: string | null
+          status?: string | null
+          validated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_referred_user_id_fkey"
+            columns: ["referred_user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_referred_user_id_fkey"
+            columns: ["referred_user_id"]
+            isOneToOne: true
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       seller_activity: {
         Row: {
@@ -1024,6 +1312,10 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_engagement_score: {
+        Args: { p_clicks: number; p_impressions: number }
+        Returns: number
+      }
       can_user_perform_action: {
         Args: { _action_type: string; _user_id: string }
         Returns: boolean
@@ -1035,6 +1327,7 @@ export type Database = {
           status: string
         }[]
       }
+      expire_marketing_posts: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1049,6 +1342,10 @@ export type Database = {
       increment_product_view: {
         Args: { product_uuid: string }
         Returns: undefined
+      }
+      process_referral: {
+        Args: { p_referral_code: string; p_referred_user_id: string }
+        Returns: Json
       }
       record_user_action: {
         Args: { _action_type: string; _user_id: string }
