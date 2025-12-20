@@ -38,6 +38,10 @@ import ContactUs from "./pages/ContactUs";
 import NotFound from "./pages/NotFound";
 import VerifyEmail from "./pages/VerifyEmail";
 import CategoryPage from "./pages/CategoryPage";
+import SellerReferrals from "./pages/SellerReferrals";
+import SellerMarketing from "./pages/SellerMarketing";
+import AIManagerDashboard from "./pages/admin/AIManagerDashboard";
+import ReferralAnalytics from "./pages/admin/ReferralAnalytics";
 
 const queryClient = new QueryClient();
 
@@ -84,6 +88,8 @@ const App = () => (
           <Route path="/seller/dashboard" element={<SellerDashboard />} />
           <Route path="/seller/products" element={<SellerProducts />} />
           <Route path="/seller/analytics" element={<SellerAnalytics />} />
+          <Route path="/seller/referrals" element={<SellerReferrals />} />
+          <Route path="/seller/marketing" element={<SellerMarketing />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/products" element={<AdminProducts />} />
           <Route path="/admin/post-product" element={<AdminPostProduct />} />
@@ -96,6 +102,8 @@ const App = () => (
           <Route path="/admin/marketing" element={<MarketingPosts />} />
           <Route path="/admin/messages" element={<ContactMessages />} />
           <Route path="/admin/ads" element={<AdsManagement />} />
+          <Route path="/admin/ai-manager" element={<AIManagerDashboard />} />
+          <Route path="/admin/referrals" element={<ReferralAnalytics />} />
           <Route path="/contact" element={<ContactUs />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
