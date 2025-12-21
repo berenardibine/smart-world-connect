@@ -30,7 +30,47 @@ import { ReportSellerModal } from "@/components/ReportSellerModal";
 import { z } from "zod";
 import { Helmet } from "react-helmet";
 import { extractProductId } from "@/lib/slugify";
+import { Helmet } from "react-helmet-async";
+import React from "react";
 
+interface ProductProps {
+  product: {
+      id: string;
+          name: string;
+              description?: string;
+                  imageUrl?: string;
+                    };
+                    }
+
+                    export const ProductDetail: React.FC<ProductProps> = ({ product }) => {
+                      return (
+                          <>
+                                <Helmet>
+                                        <title>{product.name} | Rwanda Smart Market</title>
+                                                <meta property="og:title" content={product.name} />
+                                                        <meta
+                                                                  property="og:description"
+                                                                            content={
+                                                                                        product.description ||
+                                                                                                    "View this product on Rwanda Smart Market."
+                                                                                                              }
+                                                                                                                      />
+                                                                                                                              <meta property="og:image" content={product.imageUrl} />
+                                                                                                                                      <meta
+                                                                                                                                                property="og:url"
+                                                                                                                                                          content={`https://rwanda-smart-market.vercel.app/product/${product.id}`}
+                                                                                                                                                                  />
+                                                                                                                                                                        </Helmet>
+
+                                                                                                                                                                              {/* --- Rest of your product UI code --- */}
+                                                                                                                                                                                    <div className="product-detail">
+                                                                                                                                                                                            <img src={product.imageUrl} alt={product.name} />
+                                                                                                                                                                                                    <h1>{product.name}</h1>
+                                                                                                                                                                                                            <p>{product.description}</p>
+                                                                                                                                                                                                                  </div>
+                                                                                                                                                                                                                      </>
+                                                                                                                                                                                                                        );
+                                                                                                                                                                                                                        };
 // Message validation schema
 const messageSchema = z.object({
   content: z.string()
@@ -711,22 +751,6 @@ export default function ProductDetail() {
             )}
           />
         )}
-        import { Helmet } from "react-helmet-async";
-
-        export const ProductDetail = ({ product }) => {
-          return (
-              <>
-                    <Helmet>
-                            <title>{product.name} | Rwanda Smart Market</title>
-                                    <meta property="og:title" content={product.name} />
-                                            <meta property="og:description" content={product.description || "View this product on Rwanda Smart Market."} />
-                                                    <meta property="og:image" content={product.imageUrl} />
-                                                            <meta property="og:url" content={`https://rwanda-smart-market.vercel.app/product/${product.id}`} />
-                                                                  </Helmet>
-                                                                        {/* Rest of your product UI */}
-                                                                            </>
-                                                                              );
-                                                                              };
 
         <DashboardFloatingButton />
         <BottomNav />
