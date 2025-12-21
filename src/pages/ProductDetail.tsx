@@ -711,6 +711,22 @@ export default function ProductDetail() {
             )}
           />
         )}
+        import { Helmet } from "react-helmet-async";
+
+        export const ProductDetail = ({ product }) => {
+          return (
+              <>
+                    <Helmet>
+                            <title>{product.name} | Rwanda Smart Market</title>
+                                    <meta property="og:title" content={product.name} />
+                                            <meta property="og:description" content={product.description || "View this product on Rwanda Smart Market."} />
+                                                    <meta property="og:image" content={product.imageUrl} />
+                                                            <meta property="og:url" content={`https://rwanda-smart-market.vercel.app/product/${product.id}`} />
+                                                                  </Helmet>
+                                                                        {/* Rest of your product UI */}
+                                                                            </>
+                                                                              );
+                                                                              };
 
         <DashboardFloatingButton />
         <BottomNav />
