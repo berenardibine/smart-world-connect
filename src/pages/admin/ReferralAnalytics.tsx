@@ -2,12 +2,16 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Users, Check, X, AlertTriangle, TrendingUp } from "lucide-react";
+import { Users, Check, X, AlertTriangle, TrendingUp, Search, RefreshCw, Eye } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { BottomNav } from "@/components/BottomNav";
 import { DashboardFloatingButton } from "@/components/DashboardFloatingButton";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Referral {
   id: string;
@@ -18,15 +22,32 @@ interface Referral {
   status: string;
   created_at: string;
   referrer?: {
+    id: string;
     full_name: string;
     email: string;
     profile_image: string | null;
+    business_name: string | null;
   };
   referred?: {
+    id: string;
     full_name: string;
     email: string;
     profile_image: string | null;
   };
+}
+
+interface SellerReferralList {
+  seller: {
+    id: string;
+    full_name: string;
+    email: string;
+    profile_image: string | null;
+    business_name: string | null;
+    referral_code: string | null;
+  };
+  referrals: Referral[];
+  validCount: number;
+  invalidCount: number;
 }
 
 interface TopReferrer {
@@ -39,7 +60,9 @@ interface TopReferrer {
 const ReferralAnalytics = () => {
   const [loading, setLoading] = useState(true);
   const [referrals, setReferrals] = useState<Referral[]>([]);
+  const [sellerReferralLists, setSellerReferralLists] = useState<SellerReferralList[]>([]);
   const [topReferrers, setTopReferrers] = useState<TopReferrer[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [stats, setStats] = useState({
     total: 0,
     valid: 0,
@@ -61,13 +84,20 @@ const ReferralAnalytics = () => {
 
       if (referralsData) {
         // Fetch related profiles
-        const referrerIds = [...new Set(referralsData.map(r => r.referrer_id))];
-        const referredIds = [...new Set(referralsData.map(r => r.referred_user_id))];
+        const referrerIds = [...new Set(referralsData.map(r => r.referrer_id).filter(Boolean))];
+        const referredIds = [...new Set(referralsData.map(r => r.referred_user_id).filter(Boolean))];
+        const allUserIds = [...new Set([...referrerIds, ...referredIds])];
         
         const { data: profiles } = await supabase
           .from("profiles")
-          .select("id, full_name, email, profile_image")
-          .in("id", [...referrerIds, ...referredIds]);
+          .select("id, full_name, email, profile_image, business_name, referral_code, user_type")
+          .in("id", allUserIds);
+
+        // Get all sellers
+        const { data: allSellers } = await supabase
+          .from("profiles")
+          .select("id, full_name, email, profile_image, business_name, referral_code")
+          .eq("user_type", "seller");
 
         const referralsWithProfiles = referralsData.map(referral => ({
           ...referral,
@@ -76,6 +106,19 @@ const ReferralAnalytics = () => {
         }));
 
         setReferrals(referralsWithProfiles);
+
+        // Create seller referral lists
+        const sellerLists: SellerReferralList[] = (allSellers || []).map(seller => {
+          const sellerRefs = referralsWithProfiles.filter(r => r.referrer_id === seller.id);
+          return {
+            seller,
+            referrals: sellerRefs,
+            validCount: sellerRefs.filter(r => r.is_valid && r.status === "active").length,
+            invalidCount: sellerRefs.filter(r => !r.is_valid).length
+          };
+        }).sort((a, b) => b.referrals.length - a.referrals.length);
+
+        setSellerReferralLists(sellerLists);
 
         // Calculate stats
         setStats({
@@ -88,7 +131,7 @@ const ReferralAnalytics = () => {
         // Calculate top referrers
         const referrerCounts: { [key: string]: number } = {};
         referralsData.forEach(r => {
-          if (r.is_valid) {
+          if (r.is_valid && r.referrer_id) {
             referrerCounts[r.referrer_id] = (referrerCounts[r.referrer_id] || 0) + 1;
           }
         });
@@ -116,6 +159,12 @@ const ReferralAnalytics = () => {
     }
   };
 
+  const filteredSellerLists = sellerReferralLists.filter(item =>
+    item.seller.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.seller.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (item.seller.business_name && item.seller.business_name.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -138,7 +187,13 @@ const ReferralAnalytics = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="container mx-auto px-4 py-6 pb-24">
-        <h1 className="text-2xl font-bold mb-6">Referral Analytics</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold">Referral Analytics</h1>
+          <Button variant="outline" size="sm" onClick={fetchData}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -196,78 +251,189 @@ const ReferralAnalytics = () => {
           </Card>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Top Referrers */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Top Referrers
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {topReferrers.length === 0 ? (
-                <p className="text-muted-foreground text-center py-4">No referrers yet</p>
-              ) : (
-                <div className="space-y-3">
-                  {topReferrers.map((referrer, i) => (
-                    <div key={referrer.id} className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="font-bold text-primary w-6">#{i + 1}</span>
-                        <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center overflow-hidden">
-                          {referrer.profile_image ? (
-                            <img src={referrer.profile_image} alt="" className="w-8 h-8 object-cover" />
-                          ) : (
-                            <Users className="h-4 w-4" />
-                          )}
-                        </div>
-                        <span className="font-medium">{referrer.full_name}</span>
-                      </div>
-                      <Badge>{referrer.count} referrals</Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <Tabs defaultValue="all-sellers" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="all-sellers">
+              <Eye className="h-4 w-4 mr-2" />
+              All Sellers
+            </TabsTrigger>
+            <TabsTrigger value="top-referrers">
+              <TrendingUp className="h-4 w-4 mr-2" />
+              Top Referrers
+            </TabsTrigger>
+            <TabsTrigger value="recent">
+              <Users className="h-4 w-4 mr-2" />
+              Recent
+            </TabsTrigger>
+          </TabsList>
 
-          {/* Recent Referrals */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Referrals</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {referrals.length === 0 ? (
-                <p className="text-muted-foreground text-center py-4">No referrals yet</p>
-              ) : (
-                <div className="space-y-3 max-h-80 overflow-y-auto">
-                  {referrals.slice(0, 10).map((referral) => (
-                    <div key={referral.id} className="p-3 bg-muted/50 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-mono text-sm">{referral.referral_code}</span>
-                        <Badge variant={
-                          referral.status === "active" ? "default" :
-                          referral.status === "pending" ? "secondary" :
-                          "destructive"
-                        }>
-                          {referral.status}
-                        </Badge>
+          <TabsContent value="all-sellers">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>All Sellers' Referrals</span>
+                  <div className="relative w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search sellers..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9"
+                    />
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {filteredSellerLists.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">No sellers found</p>
+                ) : (
+                  <div className="space-y-4">
+                    {filteredSellerLists.map((item) => (
+                      <div key={item.seller.id} className="border rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <Avatar>
+                              <AvatarImage src={item.seller.profile_image || undefined} />
+                              <AvatarFallback>{item.seller.full_name[0]}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-semibold">{item.seller.business_name || item.seller.full_name}</p>
+                              <p className="text-sm text-muted-foreground">{item.seller.email}</p>
+                              {item.seller.referral_code && (
+                                <code className="text-xs bg-muted px-2 py-0.5 rounded">{item.seller.referral_code}</code>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline">{item.referrals.length} total</Badge>
+                            <Badge className="bg-green-500">{item.validCount} valid</Badge>
+                            {item.invalidCount > 0 && (
+                              <Badge variant="destructive">{item.invalidCount} invalid</Badge>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {item.referrals.length > 0 && (
+                          <div className="mt-3 pt-3 border-t space-y-2">
+                            <p className="text-sm font-medium text-muted-foreground">Referred Users:</p>
+                            <div className="grid gap-2 md:grid-cols-2">
+                              {item.referrals.slice(0, 6).map((ref) => (
+                                <div key={ref.id} className="flex items-center justify-between bg-muted/50 p-2 rounded">
+                                  <div className="flex items-center gap-2">
+                                    <Avatar className="h-6 w-6">
+                                      <AvatarImage src={ref.referred?.profile_image || undefined} />
+                                      <AvatarFallback className="text-xs">
+                                        {ref.referred?.full_name?.[0] || "?"}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <span className="text-sm">{ref.referred?.full_name || "Unknown"}</span>
+                                  </div>
+                                  <Badge 
+                                    variant={ref.is_valid ? "default" : "destructive"}
+                                    className="text-xs"
+                                  >
+                                    {ref.status}
+                                  </Badge>
+                                </div>
+                              ))}
+                            </div>
+                            {item.referrals.length > 6 && (
+                              <p className="text-xs text-muted-foreground text-center">
+                                +{item.referrals.length - 6} more referrals
+                              </p>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span>{referral.referrer?.full_name || "Unknown"}</span>
-                        <span>→</span>
-                        <span>{referral.referred?.full_name || "Unknown"}</span>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="top-referrers">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Top Referrers
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {topReferrers.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-4">No referrers yet</p>
+                ) : (
+                  <div className="space-y-3">
+                    {topReferrers.map((referrer, i) => (
+                      <div key={referrer.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <span className="font-bold text-primary w-8 text-center">#{i + 1}</span>
+                          <Avatar>
+                            <AvatarImage src={referrer.profile_image || undefined} />
+                            <AvatarFallback>{referrer.full_name[0]}</AvatarFallback>
+                          </Avatar>
+                          <span className="font-medium">{referrer.full_name}</span>
+                        </div>
+                        <Badge className="bg-primary">{referrer.count} referrals</Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {new Date(referral.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="recent">
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Referrals</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {referrals.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-4">No referrals yet</p>
+                ) : (
+                  <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                    {referrals.slice(0, 20).map((referral) => (
+                      <div key={referral.id} className="p-3 bg-muted/50 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-mono text-sm">{referral.referral_code}</span>
+                          <Badge variant={
+                            referral.status === "active" ? "default" :
+                            referral.status === "pending" ? "secondary" :
+                            "destructive"
+                          }>
+                            {referral.status}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <div className="flex items-center gap-1">
+                            <Avatar className="h-5 w-5">
+                              <AvatarImage src={referral.referrer?.profile_image || undefined} />
+                              <AvatarFallback className="text-xs">{referral.referrer?.full_name?.[0]}</AvatarFallback>
+                            </Avatar>
+                            <span>{referral.referrer?.full_name || "Unknown"}</span>
+                          </div>
+                          <span className="text-muted-foreground">→</span>
+                          <div className="flex items-center gap-1">
+                            <Avatar className="h-5 w-5">
+                              <AvatarImage src={referral.referred?.profile_image || undefined} />
+                              <AvatarFallback className="text-xs">{referral.referred?.full_name?.[0]}</AvatarFallback>
+                            </Avatar>
+                            <span>{referral.referred?.full_name || "Unknown"}</span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          {new Date(referral.created_at).toLocaleString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </main>
       <DashboardFloatingButton />
       <BottomNav />

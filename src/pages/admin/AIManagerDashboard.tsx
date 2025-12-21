@@ -175,16 +175,31 @@ ${marketingStats.lowPerformers.length > 0 ? `- ${marketingStats.lowPerformers.le
 ${referralStats.suspectedReferrals > 0 ? `- ${referralStats.suspectedReferrals} suspected fraudulent referrals` : "- No suspected fraud detected"}
       `.trim();
 
+      // Convert to JSON-compatible format
+      const jsonData = {
+        marketing: {
+          totalPosts: marketingStats.totalPosts,
+          activePosts: marketingStats.activePosts,
+          pendingPosts: marketingStats.pendingPosts,
+          totalImpressions: marketingStats.totalImpressions,
+          totalClicks: marketingStats.totalClicks,
+          avgEngagement: marketingStats.avgEngagement
+        },
+        referrals: {
+          totalReferrals: referralStats.totalReferrals,
+          validReferrals: referralStats.validReferrals,
+          invalidReferrals: referralStats.invalidReferrals,
+          suspectedReferrals: referralStats.suspectedReferrals
+        }
+      };
+
       const { error } = await supabase
         .from("ai_manager_reports")
         .insert([{
           report_type: "weekly_summary",
           title: "Weekly AI Manager Report",
           content: reportContent,
-          data: {
-            marketing: marketingStats,
-            referrals: referralStats
-          }
+          data: jsonData
         }]);
 
       if (error) throw error;
