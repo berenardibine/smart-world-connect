@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supaseClient";
 import { CompactProductCard } from "./CompactProductCard";
+import { InlineSellerAds } from "./InlineSellerAds";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
@@ -191,6 +192,9 @@ export const HomeProductGrid = ({
 
   return (
     <div className="space-y-4">
+      {/* Inline Seller Ads - appears at top */}
+      <InlineSellerAds />
+      
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {products.map((product) => {
           const isAdmin = isAdminPostedProduct({
