@@ -1,15 +1,19 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Copy, Users, Check, X, TrendingUp, Share2, Link } from "lucide-react";
+import { 
+  Copy, Users, Check, X, TrendingUp, Share2, Link, 
+  MessageCircle, Facebook, QrCode, Award, Clock
+} from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { BottomNav } from "@/components/BottomNav";
 import { DashboardFloatingButton } from "@/components/DashboardFloatingButton";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 
 interface Referral {
   id: string;
@@ -138,6 +142,21 @@ const SellerReferrals = () => {
     }
   };
 
+  const shareOnWhatsApp = () => {
+    const link = `${window.location.origin}/auth?ref=${referralCode}`;
+    const message = encodeURIComponent(`🛒 Join Rwanda Smart Market!\n\nSign up using my referral code and start shopping or selling today!\n\n👉 ${link}\n\nCode: ${referralCode}`);
+    window.open(`https://wa.me/?text=${message}`, '_blank');
+    toast.success("Opening WhatsApp...");
+  };
+
+  const shareOnFacebook = () => {
+    const link = `${window.location.origin}/auth?ref=${referralCode}`;
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}&quote=${encodeURIComponent(`Join Rwanda Smart Market using my referral code: ${referralCode}`)}`, '_blank');
+    toast.success("Opening Facebook...");
+  };
+
+  const referralLink = `${window.location.origin}/auth?ref=${referralCode}`;
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -220,37 +239,66 @@ const SellerReferrals = () => {
         </div>
 
         {/* Referral Code Card */}
-        <Card className="mb-6 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
+        <Card className="mb-6 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-primary/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Link className="h-5 w-5" />
+              <Award className="h-5 w-5 text-primary" />
               Your Referral Code
             </CardTitle>
+            <CardDescription>
+              Share your unique code and earn rewards when new users join!
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex gap-2">
-              <Input
-                value={referralCode}
-                readOnly
-                className="font-mono text-lg font-bold"
-              />
-              <Button variant="outline" size="icon" onClick={copyReferralCode}>
-                <Copy className="h-4 w-4" />
-              </Button>
+            {/* Referral Code Display */}
+            <div className="p-4 bg-background rounded-lg border-2 border-dashed border-primary/30 text-center">
+              <p className="text-sm text-muted-foreground mb-1">Your Code</p>
+              <p className="text-3xl font-bold font-mono tracking-wider text-primary">{referralCode}</p>
             </div>
-            <div className="flex gap-2">
-              <Button onClick={copyReferralLink} className="flex-1">
-                <Copy className="h-4 w-4 mr-2" />
-                Copy Link
-              </Button>
-              <Button onClick={shareReferralLink} variant="secondary" className="flex-1">
-                <Share2 className="h-4 w-4 mr-2" />
-                Share
-              </Button>
+
+            {/* Referral Link */}
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Referral Link</p>
+              <div className="flex gap-2">
+                <Input
+                  value={referralLink}
+                  readOnly
+                  className="font-mono text-sm"
+                />
+                <Button variant="outline" size="icon" onClick={copyReferralLink}>
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Share your referral code with other sellers. When they sign up using your code, you'll earn rewards!
-            </p>
+
+            {/* Share Buttons */}
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Share via</p>
+              <div className="grid grid-cols-2 gap-2">
+                <Button onClick={shareOnWhatsApp} className="bg-green-600 hover:bg-green-700">
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  WhatsApp
+                </Button>
+                <Button onClick={shareOnFacebook} className="bg-blue-600 hover:bg-blue-700">
+                  <Facebook className="h-4 w-4 mr-2" />
+                  Facebook
+                </Button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Button onClick={copyReferralCode} variant="outline">
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy Code
+                </Button>
+                <Button onClick={shareReferralLink} variant="outline">
+                  <Share2 className="h-4 w-4 mr-2" />
+                  More Options
+                </Button>
+              </div>
+            </div>
+
+            <div className="bg-muted/50 rounded-lg p-3 text-sm text-muted-foreground">
+              💡 <strong>Tip:</strong> Share your referral code with friends and family. When they sign up using your code, both of you benefit!
+            </div>
           </CardContent>
         </Card>
 

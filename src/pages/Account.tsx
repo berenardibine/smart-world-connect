@@ -17,6 +17,9 @@ import {
   LogOut,
   Camera,
   LayoutDashboard,
+  Gift,
+  Check,
+  Loader2,
 } from "lucide-react";
 import { useUserStatus } from "@/hooks/useUserStatus";
 
@@ -27,6 +30,8 @@ export default function Account() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [editing, setEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [referralCodeInput, setReferralCodeInput] = useState("");
+  const [applyingReferral, setApplyingReferral] = useState(false);
   const [formData, setFormData] = useState({
     full_name: "",
     business_name: "",
@@ -145,6 +150,66 @@ export default function Account() {
       });
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleApplyReferralCode = async () => {
+    if (!referralCodeInput.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a referral code",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    // Check if user already has a referral
+    if (profile?.referred_by) {
+      toast({
+        title: "Already Used",
+        description: "You've already used a referral code.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setApplyingReferral(true);
+
+    try {
+      const { data, error } = await supabase.rpc('process_referral', {
+        p_referral_code: referralCodeInput.trim().toUpperCase(),
+        p_referred_user_id: session.user.id
+      });
+
+      if (error) throw error;
+
+      const result = data as { success?: boolean; error?: string } | null;
+      
+      if (result?.success) {
+        toast({
+          title: "✅ Referral code accepted successfully!",
+          description: "Thank you for using a referral code.",
+        });
+        setReferralCodeInput("");
+        checkAuth(); // Refresh profile
+      } else {
+        toast({
+          title: "⚠️ Referral code not found or expired",
+          description: result?.error || "Please check the code and try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to apply referral code",
+        variant: "destructive",
+      });
+    } finally {
+      setApplyingReferral(false);
     }
   };
 
@@ -342,6 +407,55 @@ export default function Account() {
             )}
           </CardContent>
         </Card>
+
+        {/* Referral Code Section */}
+        {!profile?.referred_by && (
+          <Card className="border-dashed border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Gift className="h-5 w-5 text-primary" />
+                Add Referral Code
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Were you referred by someone? Enter their code to connect with them.
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter referral code (e.g., RSM12345678)"
+                  value={referralCodeInput}
+                  onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())}
+                  className="font-mono"
+                />
+                <Button
+                  onClick={handleApplyReferralCode}
+                  disabled={applyingReferral}
+                >
+                  {applyingReferral ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Check className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {profile?.referred_by && (
+          <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="p-2 bg-green-500/20 rounded-full">
+                <Check className="h-5 w-5 text-green-600" />
+              </div>
+              <div>
+                <p className="font-medium text-green-800 dark:text-green-200">Referral Applied</p>
+                <p className="text-sm text-green-600 dark:text-green-400">Code: {profile.referred_by}</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Quick Actions */}
         {profile?.user_type === "seller" && (
