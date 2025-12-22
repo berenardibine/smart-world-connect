@@ -4,6 +4,8 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto" WITH SCHEMA "extensions";
 CREATE EXTENSION IF NOT EXISTS "plpgsql" WITH SCHEMA "pg_catalog";
 CREATE EXTENSION IF NOT EXISTS "supabase_vault" WITH SCHEMA "vault";
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
+BEGIN;
+
 --
 -- PostgreSQL database dump
 --
@@ -59,6 +61,23 @@ CREATE TYPE public.product_category AS ENUM (
     'Agriculture Product',
     'Equipment for Lent'
 );
+
+
+--
+-- Name: calculate_engagement_score(integer, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.calculate_engagement_score(p_impressions integer, p_clicks integer) RETURNS numeric
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF p_impressions = 0 THEN
+    RETURN 0;
+  END IF;
+  RETURN ROUND((p_clicks::numeric / p_impressions::numeric) * 100, 2);
+END;
+$$;
 
 
 --
@@ -143,6 +162,22 @@ $$;
 
 
 --
+-- Name: expire_marketing_posts(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.expire_marketing_posts() RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  UPDATE marketing_posts
+  SET is_active = false, status = 'expired'
+  WHERE end_date < now() AND is_active = true;
+END;
+$$;
+
+
+--
 -- Name: handle_new_user(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -222,6 +257,68 @@ $$;
 
 
 --
+-- Name: process_referral(text, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.process_referral(p_referral_code text, p_referred_user_id uuid) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_referrer_id uuid;
+  v_referrer_type text;
+  v_referral_id uuid;
+  v_result jsonb;
+BEGIN
+  -- Find the referrer by code
+  SELECT id, user_type INTO v_referrer_id, v_referrer_type
+  FROM profiles
+  WHERE referral_code = p_referral_code;
+  
+  -- Check if referral code exists
+  IF v_referrer_id IS NULL THEN
+    INSERT INTO referral_logs (referral_code, status, reason)
+    VALUES (p_referral_code, 'invalid', 'Referral code not found');
+    RETURN jsonb_build_object('success', false, 'error', 'Invalid referral code');
+  END IF;
+  
+  -- Check if referrer is a seller
+  IF v_referrer_type != 'seller' THEN
+    INSERT INTO referral_logs (referral_code, status, reason)
+    VALUES (p_referral_code, 'invalid', 'Referrer is not a seller');
+    RETURN jsonb_build_object('success', false, 'error', 'Only sellers can refer new users');
+  END IF;
+  
+  -- Check for self-referral
+  IF v_referrer_id = p_referred_user_id THEN
+    INSERT INTO referral_logs (referral_code, status, reason)
+    VALUES (p_referral_code, 'suspected', 'Self-referral detected');
+    RETURN jsonb_build_object('success', false, 'error', 'Self-referral not allowed');
+  END IF;
+  
+  -- Check if user already has a referral
+  IF EXISTS (SELECT 1 FROM referrals WHERE referred_user_id = p_referred_user_id) THEN
+    RETURN jsonb_build_object('success', false, 'error', 'User already has a referral');
+  END IF;
+  
+  -- Create the referral
+  INSERT INTO referrals (referrer_id, referred_user_id, referral_code, is_seller_referral, status)
+  VALUES (v_referrer_id, p_referred_user_id, p_referral_code, true, 'active')
+  RETURNING id INTO v_referral_id;
+  
+  -- Update the referred user's profile
+  UPDATE profiles SET referred_by = p_referral_code WHERE id = p_referred_user_id;
+  
+  -- Log successful referral
+  INSERT INTO referral_logs (referral_id, referral_code, status, reason)
+  VALUES (v_referral_id, p_referral_code, 'valid', 'Referral successfully processed');
+  
+  RETURN jsonb_build_object('success', true, 'referral_id', v_referral_id);
+END;
+$$;
+
+
+--
 -- Name: record_user_action(uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -269,6 +366,25 @@ BEGIN
     edits_this_month = 0,
     last_reset_date = date_trunc('month', now())
   WHERE last_reset_date < date_trunc('month', now());
+END;
+$$;
+
+
+--
+-- Name: sync_product_views(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.sync_product_views() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF NEW.type = 'view' THEN
+    UPDATE products
+    SET views = COALESCE(views, 0) + 1
+    WHERE id = NEW.product_id;
+  END IF;
+  RETURN NEW;
 END;
 $$;
 
@@ -400,6 +516,60 @@ CREATE TABLE public.admin_messages (
 
 
 --
+-- Name: ads; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.ads (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    type text NOT NULL,
+    title text NOT NULL,
+    description text,
+    image_url text,
+    bg_color text DEFAULT '#f97316'::text,
+    text_color text DEFAULT '#ffffff'::text,
+    font_size text DEFAULT 'medium'::text,
+    link text,
+    start_date timestamp with time zone DEFAULT now() NOT NULL,
+    end_date timestamp with time zone NOT NULL,
+    priority integer DEFAULT 0,
+    is_active boolean DEFAULT true,
+    created_at timestamp with time zone DEFAULT now(),
+    created_by uuid,
+    CONSTRAINT ads_type_check CHECK ((type = ANY (ARRAY['image'::text, 'text'::text])))
+);
+
+
+--
+-- Name: ai_manager_reports; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.ai_manager_reports (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    report_type text NOT NULL,
+    title text NOT NULL,
+    content text NOT NULL,
+    data jsonb,
+    is_read boolean DEFAULT false,
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: ai_suggestions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.ai_suggestions (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    seller_id uuid,
+    suggestion_type text NOT NULL,
+    title text NOT NULL,
+    message text NOT NULL,
+    is_read boolean DEFAULT false,
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
 -- Name: comments; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -446,6 +616,23 @@ CREATE TABLE public.conversations (
 
 
 --
+-- Name: marketing_analytics; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.marketing_analytics (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    post_id uuid,
+    seller_id uuid,
+    date date DEFAULT CURRENT_DATE,
+    impressions integer DEFAULT 0,
+    clicks integer DEFAULT 0,
+    conversions integer DEFAULT 0,
+    conversion_score numeric DEFAULT 0,
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
 -- Name: marketing_posts; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -462,7 +649,16 @@ CREATE TABLE public.marketing_posts (
     is_active boolean DEFAULT true,
     views integer DEFAULT 0,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    seller_id uuid,
+    product_id uuid,
+    duration text DEFAULT 'week'::text,
+    start_date timestamp with time zone DEFAULT now(),
+    end_date timestamp with time zone,
+    impressions integer DEFAULT 0,
+    clicks integer DEFAULT 0,
+    conversion_score numeric DEFAULT 0,
+    status text DEFAULT 'pending'::text
 );
 
 
@@ -648,6 +844,7 @@ CREATE TABLE public.profiles (
     identity_verified boolean DEFAULT false,
     verification_notes text,
     last_active timestamp with time zone DEFAULT now(),
+    referred_by text,
     CONSTRAINT profiles_status_check CHECK ((status = ANY (ARRAY['active'::text, 'blocked'::text, 'banned'::text]))),
     CONSTRAINT profiles_user_type_check CHECK ((user_type = ANY (ARRAY['buyer'::text, 'seller'::text])))
 );
@@ -670,6 +867,38 @@ CREATE VIEW public.public_profiles WITH (security_invoker='true') AS
     created_at,
     referral_code
    FROM public.profiles;
+
+
+--
+-- Name: referral_logs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.referral_logs (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    referral_id uuid,
+    referral_code text NOT NULL,
+    status text NOT NULL,
+    reason text,
+    detected_by text DEFAULT 'AI Manager'::text,
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: referrals; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.referrals (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    referrer_id uuid,
+    referred_user_id uuid,
+    referral_code text NOT NULL,
+    is_valid boolean DEFAULT true,
+    is_seller_referral boolean DEFAULT false,
+    status text DEFAULT 'pending'::text,
+    created_at timestamp with time zone DEFAULT now(),
+    validated_at timestamp with time zone
+);
 
 
 --
@@ -793,6 +1022,30 @@ ALTER TABLE ONLY public.admin_messages
 
 
 --
+-- Name: ads ads_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ads
+    ADD CONSTRAINT ads_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: ai_manager_reports ai_manager_reports_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ai_manager_reports
+    ADD CONSTRAINT ai_manager_reports_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: ai_suggestions ai_suggestions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ai_suggestions
+    ADD CONSTRAINT ai_suggestions_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: comments comments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -814,6 +1067,22 @@ ALTER TABLE ONLY public.contact_messages
 
 ALTER TABLE ONLY public.conversations
     ADD CONSTRAINT conversations_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: marketing_analytics marketing_analytics_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.marketing_analytics
+    ADD CONSTRAINT marketing_analytics_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: marketing_analytics marketing_analytics_post_id_date_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.marketing_analytics
+    ADD CONSTRAINT marketing_analytics_post_id_date_key UNIQUE (post_id, date);
 
 
 --
@@ -929,6 +1198,30 @@ ALTER TABLE ONLY public.profiles
 
 
 --
+-- Name: referral_logs referral_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.referral_logs
+    ADD CONSTRAINT referral_logs_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: referrals referrals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.referrals
+    ADD CONSTRAINT referrals_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: referrals referrals_referred_user_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.referrals
+    ADD CONSTRAINT referrals_referred_user_id_key UNIQUE (referred_user_id);
+
+
+--
 -- Name: seller_activity seller_activity_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1033,6 +1326,20 @@ ALTER TABLE ONLY public.user_subscriptions
 
 
 --
+-- Name: idx_ads_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_ads_active ON public.ads USING btree (is_active, start_date, end_date);
+
+
+--
+-- Name: idx_ads_priority; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_ads_priority ON public.ads USING btree (priority DESC);
+
+
+--
 -- Name: idx_browsing_history_product; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1124,6 +1431,13 @@ CREATE TRIGGER enforce_safe_profile_updates BEFORE UPDATE ON public.profiles FOR
 
 
 --
+-- Name: product_analytics trigger_sync_product_views; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trigger_sync_product_views AFTER INSERT ON public.product_analytics FOR EACH ROW EXECUTE FUNCTION public.sync_product_views();
+
+
+--
 -- Name: messages update_conversation_on_message; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -1195,6 +1509,22 @@ ALTER TABLE ONLY public.admin_messages
 
 
 --
+-- Name: ads ads_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ads
+    ADD CONSTRAINT ads_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id);
+
+
+--
+-- Name: ai_suggestions ai_suggestions_seller_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ai_suggestions
+    ADD CONSTRAINT ai_suggestions_seller_id_fkey FOREIGN KEY (seller_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+
+
+--
 -- Name: comments comments_product_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1216,6 +1546,38 @@ ALTER TABLE ONLY public.comments
 
 ALTER TABLE ONLY public.conversations
     ADD CONSTRAINT conversations_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE CASCADE;
+
+
+--
+-- Name: marketing_analytics marketing_analytics_post_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.marketing_analytics
+    ADD CONSTRAINT marketing_analytics_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.marketing_posts(id) ON DELETE CASCADE;
+
+
+--
+-- Name: marketing_analytics marketing_analytics_seller_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.marketing_analytics
+    ADD CONSTRAINT marketing_analytics_seller_id_fkey FOREIGN KEY (seller_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+
+
+--
+-- Name: marketing_posts marketing_posts_product_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.marketing_posts
+    ADD CONSTRAINT marketing_posts_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE SET NULL;
+
+
+--
+-- Name: marketing_posts marketing_posts_seller_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.marketing_posts
+    ADD CONSTRAINT marketing_posts_seller_id_fkey FOREIGN KEY (seller_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
 
 
 --
@@ -1296,6 +1658,30 @@ ALTER TABLE ONLY public.products
 
 ALTER TABLE ONLY public.profiles
     ADD CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: referral_logs referral_logs_referral_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.referral_logs
+    ADD CONSTRAINT referral_logs_referral_id_fkey FOREIGN KEY (referral_id) REFERENCES public.referrals(id) ON DELETE CASCADE;
+
+
+--
+-- Name: referrals referrals_referred_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.referrals
+    ADD CONSTRAINT referrals_referred_user_id_fkey FOREIGN KEY (referred_user_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+
+
+--
+-- Name: referrals referrals_referrer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.referrals
+    ADD CONSTRAINT referrals_referrer_id_fkey FOREIGN KEY (referrer_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
 
 
 --
@@ -1428,6 +1814,13 @@ CREATE POLICY "Admins can insert site settings" ON public.site_settings FOR INSE
 
 
 --
+-- Name: ads Admins can manage ads; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Admins can manage ads" ON public.ads USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
 -- Name: marketing_posts Admins can manage marketing posts; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -1446,6 +1839,13 @@ CREATE POLICY "Admins can manage plans" ON public.plans USING (public.has_role(a
 --
 
 CREATE POLICY "Admins can manage subscriptions" ON public.user_subscriptions USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
+-- Name: ai_manager_reports Admins can update AI reports; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Admins can update AI reports" ON public.ai_manager_reports FOR UPDATE USING (public.has_role(auth.uid(), 'admin'::public.app_role));
 
 
 --
@@ -1477,6 +1877,13 @@ CREATE POLICY "Admins can update contact messages" ON public.contact_messages FO
 
 
 --
+-- Name: referrals Admins can update referrals; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Admins can update referrals" ON public.referrals FOR UPDATE USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
 -- Name: subscription_requests Admins can update requests; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -1488,6 +1895,13 @@ CREATE POLICY "Admins can update requests" ON public.subscription_requests FOR U
 --
 
 CREATE POLICY "Admins can update site settings" ON public.site_settings FOR UPDATE USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
+-- Name: ai_manager_reports Admins can view AI reports; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Admins can view AI reports" ON public.ai_manager_reports FOR SELECT USING (public.has_role(auth.uid(), 'admin'::public.app_role));
 
 
 --
@@ -1505,10 +1919,24 @@ CREATE POLICY "Admins can view all admin messages" ON public.admin_messages FOR 
 
 
 --
+-- Name: marketing_analytics Admins can view all analytics; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Admins can view all analytics" ON public.marketing_analytics FOR SELECT USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
 -- Name: product_analytics Admins can view all analytics; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY "Admins can view all analytics" ON public.product_analytics FOR SELECT USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
+-- Name: referrals Admins can view all referrals; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Admins can view all referrals" ON public.referrals FOR SELECT USING (public.has_role(auth.uid(), 'admin'::public.app_role));
 
 
 --
@@ -1533,6 +1961,13 @@ CREATE POLICY "Admins can view contact messages" ON public.contact_messages FOR 
 
 
 --
+-- Name: referral_logs Admins can view referral logs; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Admins can view referral logs" ON public.referral_logs FOR SELECT USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
 -- Name: product_analytics Anyone can insert analytics; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -1544,6 +1979,13 @@ CREATE POLICY "Anyone can insert analytics" ON public.product_analytics FOR INSE
 --
 
 CREATE POLICY "Anyone can submit contact messages" ON public.contact_messages FOR INSERT WITH CHECK (true);
+
+
+--
+-- Name: ads Anyone can view active ads; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Anyone can view active ads" ON public.ads FOR SELECT USING (((is_active = true) AND (start_date <= now()) AND (end_date > now())));
 
 
 --
@@ -1687,6 +2129,13 @@ CREATE POLICY "Sellers can insert their own products" ON public.products FOR INS
 
 
 --
+-- Name: marketing_posts Sellers can manage their own marketing posts; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Sellers can manage their own marketing posts" ON public.marketing_posts USING ((auth.uid() = seller_id));
+
+
+--
 -- Name: products Sellers can update their own products; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -1694,10 +2143,38 @@ CREATE POLICY "Sellers can update their own products" ON public.products FOR UPD
 
 
 --
+-- Name: ai_suggestions Sellers can update their own suggestions; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Sellers can update their own suggestions" ON public.ai_suggestions FOR UPDATE USING ((auth.uid() = seller_id));
+
+
+--
 -- Name: updates Sellers can update their own updates; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY "Sellers can update their own updates" ON public.updates FOR UPDATE USING ((auth.uid() = seller_id));
+
+
+--
+-- Name: marketing_analytics Sellers can view their own analytics; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Sellers can view their own analytics" ON public.marketing_analytics FOR SELECT USING ((auth.uid() = seller_id));
+
+
+--
+-- Name: referrals Sellers can view their own referrals; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Sellers can view their own referrals" ON public.referrals FOR SELECT USING ((auth.uid() = referrer_id));
+
+
+--
+-- Name: ai_suggestions Sellers can view their own suggestions; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Sellers can view their own suggestions" ON public.ai_suggestions FOR SELECT USING ((auth.uid() = seller_id));
 
 
 --
@@ -1710,10 +2187,45 @@ CREATE POLICY "Sellers can view their product analytics" ON public.product_analy
 
 
 --
+-- Name: ai_manager_reports System can insert AI reports; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "System can insert AI reports" ON public.ai_manager_reports FOR INSERT WITH CHECK (true);
+
+
+--
 -- Name: seller_activity System can insert activity; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY "System can insert activity" ON public.seller_activity FOR INSERT WITH CHECK ((auth.uid() = user_id));
+
+
+--
+-- Name: referral_logs System can insert referral logs; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "System can insert referral logs" ON public.referral_logs FOR INSERT WITH CHECK (true);
+
+
+--
+-- Name: referrals System can insert referrals; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "System can insert referrals" ON public.referrals FOR INSERT WITH CHECK (true);
+
+
+--
+-- Name: ai_suggestions System can insert suggestions; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "System can insert suggestions" ON public.ai_suggestions FOR INSERT WITH CHECK (true);
+
+
+--
+-- Name: marketing_analytics System can manage analytics; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "System can manage analytics" ON public.marketing_analytics USING (true);
 
 
 --
@@ -1849,6 +2361,13 @@ CREATE POLICY "Users can view messages in their conversations" ON public.message
 
 
 --
+-- Name: referrals Users can view referrals where they are referred; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can view referrals where they are referred" ON public.referrals FOR SELECT USING ((auth.uid() = referred_user_id));
+
+
+--
 -- Name: conversations Users can view their conversations; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -1904,6 +2423,24 @@ CREATE POLICY "Users can view their own subscription" ON public.user_subscriptio
 ALTER TABLE public.admin_messages ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: ads; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.ads ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: ai_manager_reports; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.ai_manager_reports ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: ai_suggestions; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.ai_suggestions ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: comments; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -1920,6 +2457,12 @@ ALTER TABLE public.contact_messages ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: marketing_analytics; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.marketing_analytics ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: marketing_posts; Type: ROW SECURITY; Schema: public; Owner: -
@@ -1982,6 +2525,18 @@ ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: referral_logs; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.referral_logs ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: referrals; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.referrals ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: seller_activity; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -2028,3 +2583,6 @@ ALTER TABLE public.user_subscriptions ENABLE ROW LEVEL SECURITY;
 --
 
 
+
+
+COMMIT;
