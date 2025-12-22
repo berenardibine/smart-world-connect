@@ -44,7 +44,9 @@ export default function ProductDetail() {
   const [searchParams] = useSearchParams();
   
   // Extract ID from either slug format or query param
-  const id = slugId ? extractProductId(slugId) : extractIdFromUrl(searchParams.toString()) || '';
+  // Priority: 1) query param 'id', 2) slugId with UUID extraction
+  const queryId = searchParams.get('id');
+  const id = queryId || (slugId ? extractProductId(slugId) : '') || '';
   
   useBrowsingHistory(id);
   const navigate = useNavigate();

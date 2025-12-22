@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/lib/supaseClient";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Gift } from "lucide-react";
 import { z } from "zod";
 
 const authSchema = z.object({
@@ -31,8 +31,43 @@ export default function Auth() {
   const [userType, setUserType] = useState("buyer");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [referralCode, setReferralCode] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Get referral code from URL on mount
+  useEffect(() => {
+    const ref = searchParams.get('ref');
+    if (ref) {
+      setReferralCode(ref);
+      setIsLogin(false); // Switch to signup mode if coming from referral link
+    }
+  }, [searchParams]);
+
+  const processReferral = async (userId: string, code: string) => {
+    try {
+      const { data, error } = await supabase.rpc('process_referral', {
+        p_referral_code: code,
+        p_referred_user_id: userId
+      });
+      
+      if (error) {
+        console.error("Referral processing error:", error);
+        return;
+      }
+      
+      // Cast data to check success property
+      const result = data as { success?: boolean } | null;
+      if (result?.success) {
+        toast({
+          title: "Referral Applied!",
+          description: "You've been registered with a referral code.",
+        });
+      }
+    } catch (error) {
+      console.error("Error processing referral:", error);
+    }
+  };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +93,17 @@ export default function Auth() {
           password: validated.password,
         });
         if (error) throw error;
+
+        // Check if email is verified
+        if (!data.user.email_confirmed_at) {
+          toast({
+            title: "Email not verified",
+            description: "Please verify your email to continue.",
+            variant: "destructive",
+          });
+          navigate("/verify-email");
+          return;
+        }
 
         // Check user status
         const { data: profile } = await supabase
@@ -110,24 +156,17 @@ export default function Auth() {
         });
         if (error) throw error;
 
-        if (data.user && !data.user.confirmed_at) {
-          toast({
-            title: "Verify your email",
-            description: "Please check your email to verify your account.",
-          });
-          navigate("/verify-email");
-        } else {
-        toast({
-            title: "Account created!",
-            description: "You can now start using Rwanda Smart Market.",
-          });
-          
-          if (userType === "seller") {
-            navigate("/identity-verification");
-          } else {
-            navigate("/");
-          }
+        // Process referral if code exists
+        if (data.user && referralCode) {
+          await processReferral(data.user.id, referralCode);
         }
+
+        // Always redirect to verify email page after signup
+        toast({
+          title: "Account Created",
+          description: "Please check your email to verify your account.",
+        });
+        navigate("/verify-email");
       }
     } catch (error: any) {
       if (error instanceof z.ZodError) {
@@ -156,8 +195,11 @@ export default function Auth() {
           Back to home
         </Link>
 
-        <Card>
-          <CardHeader className="space-y-1">
+        <Card className="border-0 shadow-xl">
+          <CardHeader className="space-y-1 text-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary-dark rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl font-bold text-primary-foreground">RSM</span>
+            </div>
             <CardTitle className="text-2xl font-bold">
               {isLogin ? "Welcome back" : "Create an account"}
             </CardTitle>
@@ -168,6 +210,17 @@ export default function Auth() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Referral Code Badge */}
+            {referralCode && !isLogin && (
+              <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-center gap-2">
+                <Gift className="h-5 w-5 text-green-600" />
+                <div>
+                  <p className="text-sm font-medium text-green-800 dark:text-green-200">Referral Code Applied</p>
+                  <p className="text-xs text-green-600 dark:text-green-400">{referralCode}</p>
+                </div>
+              </div>
+            )}
+
             <form onSubmit={handleAuth} className="space-y-4">
               {!isLogin && (
                 <>
@@ -175,10 +228,11 @@ export default function Auth() {
                     <Label htmlFor="fullName">Full Name</Label>
                     <Input
                       id="fullName"
-                      placeholder="singham barau"
+                      placeholder="John Doe"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       required
+                      className="h-12"
                     />
                   </div>
 
@@ -191,21 +245,22 @@ export default function Auth() {
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
                       required
+                      className="h-12"
                     />
                   </div>
 
                   <div className="space-y-2">
                     <Label>I want to</Label>
-                    <RadioGroup value={userType} onValueChange={setUserType}>
-                      <div className="flex items-center space-x-2">
+                    <RadioGroup value={userType} onValueChange={setUserType} className="flex gap-4">
+                      <div className="flex items-center space-x-2 flex-1 p-3 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
                         <RadioGroupItem value="buyer" id="buyer" />
-                        <Label htmlFor="buyer" className="font-normal cursor-pointer">
+                        <Label htmlFor="buyer" className="font-normal cursor-pointer flex-1">
                           Buy products
                         </Label>
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 flex-1 p-3 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
                         <RadioGroupItem value="seller" id="seller" />
-                        <Label htmlFor="seller" className="font-normal cursor-pointer">
+                        <Label htmlFor="seller" className="font-normal cursor-pointer flex-1">
                           Sell products
                         </Label>
                       </div>
@@ -213,9 +268,9 @@ export default function Auth() {
                   </div>
 
                   {userType === "seller" && (
-                    <>
+                    <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
-                        <Label htmlFor="whatsappNumber">WhatsApp Number</Label>
+                        <Label htmlFor="whatsappNumber">WhatsApp</Label>
                         <Input
                           id="whatsappNumber"
                           type="tel"
@@ -223,6 +278,7 @@ export default function Auth() {
                           value={whatsappNumber}
                           onChange={(e) => setWhatsappNumber(e.target.value)}
                           required
+                          className="h-12"
                         />
                       </div>
 
@@ -235,9 +291,10 @@ export default function Auth() {
                           value={callNumber}
                           onChange={(e) => setCallNumber(e.target.value)}
                           required
+                          className="h-12"
                         />
                       </div>
-                    </>
+                    </div>
                   )}
                 </>
               )}
@@ -251,11 +308,12 @@ export default function Auth() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  className="h-12"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password(mix capital,small,number and symbol min 8 key)</Label>
+                <Label htmlFor="password">Password {!isLogin && "(min 8 characters)"}</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -264,6 +322,7 @@ export default function Auth() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     minLength={8}
+                    className="h-12 pr-10"
                   />
                   <button
                     type="button"
@@ -283,12 +342,12 @@ export default function Auth() {
                 </div>
               )}
 
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="w-full h-12 text-base font-semibold" disabled={loading}>
                 {loading ? "Loading..." : isLogin ? "Sign In" : "Create Account"}
               </Button>
             </form>
 
-            <div className="mt-4 text-center text-sm">
+            <div className="mt-6 text-center text-sm">
               {isLogin ? (
                 <>
                   Don't have an account?{" "}

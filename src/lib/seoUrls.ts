@@ -48,7 +48,7 @@ export function extractIdFromUrl(search: string): string | null {
   return params.get('id');
 }
 
-// Extract product ID from slug format (e.g., "product-name-abc123" -> "abc123")
+// Extract product ID from slug format (e.g., "product-name-uuid" -> "uuid")
 export function extractProductId(slugId: string): string {
   // If it's already a UUID, return it
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -60,6 +60,16 @@ export function extractProductId(slugId: string): string {
   if (slugId.includes('?id=')) {
     const id = slugId.split('?id=')[1];
     if (id) return id.split('&')[0];
+  }
+  
+  // Extract UUID from end of slug (format: slug-uuid where uuid has 5 parts)
+  const parts = slugId.split('-');
+  if (parts.length >= 5) {
+    // UUID has format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (5 parts)
+    const potentialUuid = parts.slice(-5).join('-');
+    if (uuidRegex.test(potentialUuid)) {
+      return potentialUuid;
+    }
   }
   
   // Otherwise, return the slugId as-is (might be just the ID)
