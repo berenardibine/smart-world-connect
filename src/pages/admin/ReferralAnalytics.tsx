@@ -1,17 +1,31 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Users, Check, X, AlertTriangle, TrendingUp, Search, RefreshCw, Eye } from "lucide-react";
+import { 
+  Users, Check, X, AlertTriangle, TrendingUp, Search, RefreshCw, Eye,
+  Shield, Ban, CheckCircle, Clock, AlertCircle
+} from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { BottomNav } from "@/components/BottomNav";
 import { DashboardFloatingButton } from "@/components/DashboardFloatingButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Referral {
   id: string;
@@ -57,17 +71,28 @@ interface TopReferrer {
   count: number;
 }
 
+interface ReferralLog {
+  id: string;
+  referral_code: string;
+  status: string;
+  reason: string | null;
+  detected_by: string | null;
+  created_at: string;
+}
+
 const ReferralAnalytics = () => {
   const [loading, setLoading] = useState(true);
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [sellerReferralLists, setSellerReferralLists] = useState<SellerReferralList[]>([]);
   const [topReferrers, setTopReferrers] = useState<TopReferrer[]>([]);
+  const [referralLogs, setReferralLogs] = useState<ReferralLog[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [stats, setStats] = useState({
     total: 0,
     valid: 0,
     invalid: 0,
-    pending: 0
+    pending: 0,
+    suspected: 0
   });
 
   useEffect(() => {
@@ -76,11 +101,17 @@ const ReferralAnalytics = () => {
 
   const fetchData = async () => {
     try {
-      // Fetch all referrals
-      const { data: referralsData } = await supabase
-        .from("referrals")
-        .select("*")
-        .order("created_at", { ascending: false });
+      // Fetch all referrals and referral logs
+      const [referralsResult, logsResult] = await Promise.all([
+        supabase.from("referrals").select("*").order("created_at", { ascending: false }),
+        supabase.from("referral_logs").select("*").order("created_at", { ascending: false }).limit(50)
+      ]);
+      
+      const referralsData = referralsResult.data;
+      
+      if (logsResult.data) {
+        setReferralLogs(logsResult.data);
+      }
 
       if (referralsData) {
         // Fetch related profiles
@@ -125,7 +156,8 @@ const ReferralAnalytics = () => {
           total: referralsData.length,
           valid: referralsData.filter(r => r.is_valid && r.status === "active").length,
           invalid: referralsData.filter(r => !r.is_valid).length,
-          pending: referralsData.filter(r => r.status === "pending").length
+          pending: referralsData.filter(r => r.status === "pending").length,
+          suspected: referralsData.filter(r => r.status === "suspected").length
         });
 
         // Calculate top referrers
@@ -251,8 +283,30 @@ const ReferralAnalytics = () => {
           </Card>
         </div>
 
+        {/* AI Suspected Stats */}
+        {stats.suspected > 0 && (
+          <Card className="mb-6 border-orange-500/50 bg-orange-50 dark:bg-orange-900/20">
+            <CardContent className="p-4 flex items-center gap-4">
+              <div className="p-3 bg-orange-500/20 rounded-full">
+                <AlertCircle className="h-6 w-6 text-orange-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-orange-800 dark:text-orange-200">
+                  {stats.suspected} Suspected Referrals Detected
+                </p>
+                <p className="text-sm text-orange-600 dark:text-orange-400">
+                  AI Manager has flagged these referrals for review
+                </p>
+              </div>
+              <Button variant="outline" size="sm" className="border-orange-500 text-orange-700">
+                Review
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         <Tabs defaultValue="all-sellers" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="all-sellers">
               <Eye className="h-4 w-4 mr-2" />
               All Sellers
@@ -260,6 +314,10 @@ const ReferralAnalytics = () => {
             <TabsTrigger value="top-referrers">
               <TrendingUp className="h-4 w-4 mr-2" />
               Top Referrers
+            </TabsTrigger>
+            <TabsTrigger value="fraud-logs">
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              Fraud Logs
             </TabsTrigger>
             <TabsTrigger value="recent">
               <Users className="h-4 w-4 mr-2" />
@@ -376,6 +434,65 @@ const ReferralAnalytics = () => {
                           <span className="font-medium">{referrer.full_name}</span>
                         </div>
                         <Badge className="bg-primary">{referrer.count} referrals</Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="fraud-logs">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-orange-500" />
+                  AI Fraud Detection Logs
+                </CardTitle>
+                <CardDescription>
+                  Referrals flagged by AI Manager for suspicious activity
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {referralLogs.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Shield className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No fraud logs detected</p>
+                    <p className="text-sm">AI Manager is actively monitoring for suspicious activity</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                    {referralLogs.map((log) => (
+                      <div 
+                        key={log.id} 
+                        className={`p-4 rounded-lg border ${
+                          log.status === "suspected" 
+                            ? "bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800"
+                            : log.status === "invalid"
+                            ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
+                            : "bg-muted/50"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <code className="font-mono text-sm font-bold">{log.referral_code}</code>
+                          <Badge variant={
+                            log.status === "valid" ? "default" :
+                            log.status === "suspected" ? "secondary" :
+                            "destructive"
+                          }>
+                            {log.status}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {log.reason || "No reason provided"}
+                        </p>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Shield className="h-3 w-3" />
+                            {log.detected_by || "System"}
+                          </span>
+                          <span>{new Date(log.created_at).toLocaleString()}</span>
+                        </div>
                       </div>
                     ))}
                   </div>
