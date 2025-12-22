@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom";
+import { Helmet } from "react-helmet";
 import { supabase } from "@/lib/supaseClient";
 import { BottomNav } from "@/components/BottomNav";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -24,7 +25,7 @@ import { RecommendedProducts } from "@/components/RecommendedProducts";
 import { useBrowsingHistory } from "@/hooks/useBrowsingHistory";
 import { DashboardFloatingButton } from "@/components/DashboardFloatingButton";
 import { ShareButton } from "@/components/ShareButton";
-import { createProductShareUrl, isAdminPostedProduct, extractIdFromUrl } from "@/lib/seoUrls";
+import { createProductShareUrl, isAdminPostedProduct, extractIdFromUrl, extractProductId } from "@/lib/seoUrls";
 import { ProductComments } from "@/components/ProductComments";
 import { ReportSellerModal } from "@/components/ReportSellerModal";
 import { z } from "zod";

@@ -42,56 +42,7 @@ import SellerReferrals from "./pages/SellerReferrals";
 import SellerMarketing from "./pages/SellerMarketing";
 import AIManagerDashboard from "./pages/admin/AIManagerDashboard";
 import ReferralAnalytics from "./pages/admin/ReferralAnalytics";
-import { Helmet } from "react-helmet-async";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Home from "./pages/Home";
-import ProductDetail from "./pages/ProductDetail";
-import Marketing from "./pages/Marketing";
 
-function App() {
-  return (
-      <BrowserRouter>
-            {/* 🧠 Global Meta Defaults */}
-                  <Helmet>
-                          <title>Rwanda Smart Market – Smart Shopping, Smarter Business</title>
-                                  <meta
-                                            name="description"
-                                                      content="Shop, sell, and advertise smarter on Rwanda Smart Market — Rwanda’s leading digital marketplace."
-                                                              />
-                                                                      <meta property="og:type" content="website" />
-                                                                              <meta property="og:url" content="https://rwanda-smart-market.vercel.app/" />
-                                                                                      <meta
-                                                                                                property="og:image"
-                                                                                                          content="https://rwanda-smart-market.vercel.app/favicon.png"
-                                                                                                                  />
-                                                                                                                          <meta property="og:title" content="Rwanda Smart Market" />
-                                                                                                                                  <meta
-                                                                                                                                            property="og:description"
-                                                                                                                                                      content="Discover the smart way to trade, advertise, and grow your business in Rwanda."
-                                                                                                                                                              />
-                                                                                                                                                                      <meta property="twitter:card" content="summary_large_image" />
-                                                                                                                                                                              <meta property="twitter:title" content="Rwanda Smart Market" />
-                                                                                                                                                                                      <meta
-                                                                                                                                                                                                property="twitter:description"
-                                                                                                                                                                                                          content="Smart shopping, smarter business — built for Rwanda’s digital generation."
-                                                                                                                                                                                                                  />
-                                                                                                                                                                                                                          <meta
-                                                                                                                                                                                                                                    property="twitter:image"
-                                                                                                                                                                                                                                              content="https://rwanda-smart-market.vercel.app/favicon.png"
-                                                                                                                                                                                                                                                      />
-                                                                                                                                                                                                                                                            </Helmet>
-
-                                                                                                                                                                                                                                                                  {/* 🚀 Routing */}
-                                                                                                                                                                                                                                                                        <Routes>
-                                                                                                                                                                                                                                                                                <Route path="/" element={<Home />} />
-                                                                                                                                                                                                                                                                                        <Route path="/product/:slugId" element={<ProductDetail />} />
-                                                                                                                                                                                                                                                                                                <Route path="/marketing" element={<Marketing />} />
-                                                                                                                                                                                                                                                                                                      </Routes>
-                                                                                                                                                                                                                                                                                                          </BrowserRouter>
-                                                                                                                                                                                                                                                                                                            );
-                                                                                                                                                                                                                                                                                                            }
-
-                                                                                                                                                                                                                                                                                                            export default App;
 const queryClient = new QueryClient();
 
 const App = () => (

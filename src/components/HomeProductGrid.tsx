@@ -1,10 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supaseClient";
 import { CompactProductCard } from "./CompactProductCard";
 import { InlineSellerAds } from "./InlineSellerAds";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
 import { isAdminPostedProduct } from "@/lib/seoUrls";
 
 interface Product {
@@ -28,13 +26,11 @@ interface Product {
 interface HomeProductGridProps {
   category?: string;
   limit?: number;
-  showLoadMore?: boolean;
 }
 
 export const HomeProductGrid = ({ 
   category, 
-  limit = 12,
-  showLoadMore = true 
+  limit = 12
 }: HomeProductGridProps) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,6 +38,8 @@ export const HomeProductGrid = ({
   const [hasMore, setHasMore] = useState(true);
   const [likedProducts, setLikedProducts] = useState<Set<string>>(new Set());
   const [productStats, setProductStats] = useState<Record<string, { rating: number; commentCount: number }>>({});
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   const fetchProducts = useCallback(async (offset = 0) => {
     const query = supabase
@@ -53,7 +51,7 @@ export const HomeProductGrid = ({
       `)
       .eq("status", "approved")
       .not("category", "in", '("Agriculture Product","Equipment for Lent")')
-      .order("views", { ascending: false })
+      .order("views", { ascending: true }) // Least views first
       .range(offset, offset + limit - 1);
 
     if (category && category !== "All") {
@@ -123,13 +121,30 @@ export const HomeProductGrid = ({
     fetchUserLikes();
   }, [category, fetchProducts]);
 
-  // Auto-refresh every 5 minutes
+  // Infinite scroll observer
   useEffect(() => {
-    const interval = setInterval(() => {
-      fetchProducts(0);
-    }, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [fetchProducts]);
+    if (loading) return;
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore) {
+          setLoadingMore(true);
+          fetchProducts(products.length);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loadMoreRef.current) {
+      observerRef.current.observe(loadMoreRef.current);
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [loading, hasMore, loadingMore, products.length, fetchProducts]);
 
   // Subscribe to realtime product updates
   useEffect(() => {
@@ -154,16 +169,6 @@ export const HomeProductGrid = ({
     };
   }, [fetchProducts]);
 
-  const loadMore = async () => {
-    setLoadingMore(true);
-    await fetchProducts(products.length);
-  };
-
-  const refresh = async () => {
-    setLoading(true);
-    await fetchProducts(0);
-  };
-
   if (loading) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -182,10 +187,6 @@ export const HomeProductGrid = ({
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground">No products found</p>
-        <Button variant="outline" onClick={refresh} className="mt-4">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
       </div>
     );
   }
@@ -225,23 +226,20 @@ export const HomeProductGrid = ({
         })}
       </div>
 
-      {showLoadMore && hasMore && (
-        <div className="flex justify-center pt-4">
-          <Button 
-            variant="outline" 
-            onClick={loadMore}
-            disabled={loadingMore}
-            className="min-w-[140px]"
-          >
-            {loadingMore ? (
-              <>
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                Loading...
-              </>
-            ) : (
-              'Load More'
-            )}
-          </Button>
+      {/* Infinite scroll trigger */}
+      {hasMore && (
+        <div ref={loadMoreRef} className="flex justify-center py-4">
+          {loadingMore && (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 w-full">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="aspect-[4/3] rounded-xl" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
