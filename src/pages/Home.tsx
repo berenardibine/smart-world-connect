@@ -38,7 +38,6 @@ export default function Home() {
         <HomeProductGrid 
           category={activeCategory === "All" ? undefined : activeCategory}
           limit={12}
-          showLoadMore={true}
         />
       </main>
 

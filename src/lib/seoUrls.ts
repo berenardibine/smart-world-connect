@@ -43,10 +43,27 @@ export function createOpportunityShareUrl(
   const posterSlug = slugify(posterName);
   return `${baseUrl}/opportunities/${slug}/by/${posterSlug}?id=${opportunityId}`;
 }
-
 export function extractIdFromUrl(search: string): string | null {
   const params = new URLSearchParams(search);
   return params.get('id');
+}
+
+// Extract product ID from slug format (e.g., "product-name-abc123" -> "abc123")
+export function extractProductId(slugId: string): string {
+  // If it's already a UUID, return it
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (uuidRegex.test(slugId)) {
+    return slugId;
+  }
+  
+  // Check if there's an id query parameter
+  if (slugId.includes('?id=')) {
+    const id = slugId.split('?id=')[1];
+    if (id) return id.split('&')[0];
+  }
+  
+  // Otherwise, return the slugId as-is (might be just the ID)
+  return slugId;
 }
 
 // Check if a product is posted by admin (has manual contact numbers)
