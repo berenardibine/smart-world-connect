@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { isAdminPostedProduct } from "@/lib/seoUrls";
+import { shuffleArray } from "@/lib/shuffleArray";
 
 interface Product {
   id: string;
@@ -33,32 +34,10 @@ export function CategorySection({ category, likedProducts }: CategorySectionProp
   const [loading, setLoading] = useState(true);
   const [productStats, setProductStats] = useState<Record<string, { rating: number; commentCount: number }>>({});
   const scrollRef = useRef<HTMLDivElement>(null);
-  const autoScrollRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     fetchProducts();
   }, [category]);
-
-  useEffect(() => {
-    if (products.length > 4) {
-      autoScrollRef.current = setInterval(() => {
-        if (scrollRef.current) {
-          const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-          if (scrollLeft + clientWidth >= scrollWidth - 10) {
-            scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
-          } else {
-            scrollRef.current.scrollBy({ left: 160, behavior: 'smooth' });
-          }
-        }
-      }, 2000);
-    }
-
-    return () => {
-      if (autoScrollRef.current) {
-        clearInterval(autoScrollRef.current);
-      }
-    };
-  }, [products]);
 
   const fetchProductStats = async (productIds: string[]) => {
     const { data: comments } = await supabase
@@ -94,8 +73,10 @@ export function CategorySection({ category, likedProducts }: CategorySectionProp
       .limit(10);
 
     if (!error && data) {
-      setProducts(data);
-      await fetchProductStats(data.map(p => p.id));
+      // Shuffle products randomly for fresh experience each visit
+      const shuffled = shuffleArray(data);
+      setProducts(shuffled);
+      await fetchProductStats(shuffled.map(p => p.id));
     }
     setLoading(false);
   };

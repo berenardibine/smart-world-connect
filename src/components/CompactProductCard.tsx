@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Heart, Eye, Star, MessageCircle, Percent } from "lucide-react";
+import { Heart, Eye, Star, MessageCircle, Percent, Share2 } from "lucide-react";
 import { supabase } from "@/lib/supaseClient";
 import { useToast } from "@/hooks/use-toast";
 import { createProductUrl } from "@/lib/slugify";
+import { createProductShareUrl } from "@/lib/seoUrls";
 
 interface CompactProductCardProps {
   id: string;
@@ -168,6 +169,61 @@ export const CompactProductCard = ({
     }
   };
 
+  const handleShare = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const shareUrl = createProductShareUrl(id, title, sellerName || '', isAdminProduct);
+    
+    // Track share
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const { data: product } = await supabase
+        .from("products")
+        .select("share_count")
+        .eq("id", id)
+        .single();
+      
+      await supabase
+        .from("products")
+        .update({ share_count: (product?.share_count || 0) + 1 })
+        .eq("id", id);
+
+      await supabase.from("product_analytics").insert({
+        product_id: id,
+        viewer_id: session?.user?.id || null,
+        type: "share",
+      });
+    } catch (error) {
+      // Silently fail
+    }
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${title} | Rwanda Smart Market`,
+          url: shareUrl,
+        });
+      } catch (error) {
+        // User cancelled
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        toast({
+          title: "Link copied!",
+          description: "Product link copied to clipboard",
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to copy link",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   return (
     <Link to={productUrl} ref={cardRef as any}>
       <article className="bg-card rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden border border-border/50 group">
@@ -226,14 +282,23 @@ export const CompactProductCard = ({
             )}
           </div>
 
-          {/* Like Button */}
-          <button
-            onClick={handleLike}
-            className="absolute top-2 right-2 p-2 rounded-full bg-white/90 dark:bg-black/50 backdrop-blur-sm hover:bg-white dark:hover:bg-black/70 transition-all duration-200 shadow-lg hover:scale-110"
-            aria-label={liked ? "Unlike product" : "Like product"}
-          >
-            <Heart className={`h-4 w-4 transition-colors ${liked ? 'fill-red-500 text-red-500' : 'text-gray-600 dark:text-gray-300'}`} />
-          </button>
+          {/* Action Buttons */}
+          <div className="absolute top-2 right-2 flex flex-col gap-1.5">
+            <button
+              onClick={handleLike}
+              className="p-2 rounded-full bg-white/90 dark:bg-black/50 backdrop-blur-sm hover:bg-white dark:hover:bg-black/70 transition-all duration-200 shadow-lg hover:scale-110"
+              aria-label={liked ? "Unlike product" : "Like product"}
+            >
+              <Heart className={`h-4 w-4 transition-colors ${liked ? 'fill-red-500 text-red-500' : 'text-gray-600 dark:text-gray-300'}`} />
+            </button>
+            <button
+              onClick={handleShare}
+              className="p-2 rounded-full bg-white/90 dark:bg-black/50 backdrop-blur-sm hover:bg-white dark:hover:bg-black/70 transition-all duration-200 shadow-lg hover:scale-110"
+              aria-label="Share product"
+            >
+              <Share2 className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+            </button>
+          </div>
         </div>
 
         {/* Content */}
