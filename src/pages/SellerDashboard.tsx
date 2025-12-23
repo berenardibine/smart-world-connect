@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { NotificationBell } from "@/components/NotificationBell";
 import { 
   Package, Eye, Heart, TrendingUp, LayoutDashboard, 
-  ArrowLeft, LogOut, BarChart3, User 
+  ArrowLeft, LogOut, BarChart3, User, Users, Megaphone
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -201,6 +201,34 @@ export default function SellerDashboard() {
                 <div>
                   <h3 className="font-bold text-foreground">Analytics</h3>
                   <p className="text-xs text-muted-foreground">View insights</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to="/seller/referrals" className="block">
+            <Card className="h-full bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20 hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer group">
+              <CardContent className="p-6 flex flex-col items-center justify-center text-center space-y-3">
+                <div className="h-14 w-14 rounded-2xl bg-green-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Users className="h-7 w-7 text-green-500" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-foreground">My Referrals</h3>
+                  <p className="text-xs text-muted-foreground">Invite & earn</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to="/seller/marketing" className="block">
+            <Card className="h-full bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/20 hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer group">
+              <CardContent className="p-6 flex flex-col items-center justify-center text-center space-y-3">
+                <div className="h-14 w-14 rounded-2xl bg-orange-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Megaphone className="h-7 w-7 text-orange-500" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-foreground">Marketing</h3>
+                  <p className="text-xs text-muted-foreground">Promotions</p>
                 </div>
               </CardContent>
             </Card>

@@ -41,6 +41,21 @@ export function RecommendedProductsSection() {
     return () => clearInterval(interval);
   }, []);
 
+  // Auto-scroll every 2 seconds
+  useEffect(() => {
+    const autoScroll = setInterval(() => {
+      if (scrollRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+        if (scrollLeft + clientWidth >= scrollWidth - 10) {
+          scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          scrollRef.current.scrollBy({ left: 160, behavior: 'smooth' });
+        }
+      }
+    }, 2000);
+    return () => clearInterval(autoScroll);
+  }, [products]);
+
   const fetchUserLikes = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
