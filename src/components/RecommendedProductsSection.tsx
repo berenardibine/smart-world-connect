@@ -1,10 +1,11 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { supabase } from "@/lib/supaseClient";
 import { CompactProductCard } from "@/components/CompactProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { isAdminPostedProduct } from "@/lib/seoUrls";
+import { shuffleArray } from "@/lib/shuffleArray";
 
 interface Product {
   id: string;
@@ -88,16 +89,10 @@ export function RecommendedProductsSection() {
       .limit(15);
 
     if (!error && data) {
-      const sorted = data.sort((a, b) => {
-        const aHasDiscount = a.discount > 0 && (!a.discount_expiry || new Date(a.discount_expiry) > new Date());
-        const bHasDiscount = b.discount > 0 && (!b.discount_expiry || new Date(b.discount_expiry) > new Date());
-        
-        if (aHasDiscount && !bHasDiscount) return -1;
-        if (!aHasDiscount && bHasDiscount) return 1;
-        return (b.views || 0) - (a.views || 0);
-      });
-      setProducts(sorted);
-      await fetchProductStats(sorted.map(p => p.id));
+      // Shuffle products randomly for fresh experience each visit
+      const shuffled = shuffleArray(data);
+      setProducts(shuffled);
+      await fetchProductStats(shuffled.map(p => p.id));
     }
     setLoading(false);
   };
@@ -110,24 +105,6 @@ export function RecommendedProductsSection() {
       });
     }
   };
-
-  // Auto-scroll
-  useEffect(() => {
-    if (products.length <= 4) return;
-    
-    const interval = setInterval(() => {
-      if (scrollRef.current) {
-        const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-        if (scrollLeft + clientWidth >= scrollWidth - 10) {
-          scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
-        } else {
-          scrollRef.current.scrollBy({ left: 160, behavior: 'smooth' });
-        }
-      }
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, [products.length]);
 
   if (loading) {
     return (

@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, ChevronRight, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { isAdminPostedProduct } from "@/lib/seoUrls";
+import { shuffleArray } from "@/lib/shuffleArray";
 
 interface Product {
   id: string;
@@ -83,13 +84,10 @@ export function TrendingProducts() {
       .limit(12);
 
     if (!error && data) {
-      const sorted = data.sort((a, b) => {
-        const scoreA = (a.views || 0) + (a.impressions || 0) * 2 + (a.likes || 0) * 3;
-        const scoreB = (b.views || 0) + (b.impressions || 0) * 2 + (b.likes || 0) * 3;
-        return scoreB - scoreA;
-      });
-      setProducts(sorted);
-      await fetchProductStats(sorted.map(p => p.id));
+      // Shuffle products randomly for fresh experience each visit
+      const shuffled = shuffleArray(data);
+      setProducts(shuffled);
+      await fetchProductStats(shuffled.map(p => p.id));
     }
     setLoading(false);
   };
@@ -102,24 +100,6 @@ export function TrendingProducts() {
       });
     }
   };
-
-  // Auto-scroll
-  useEffect(() => {
-    if (products.length <= 4) return;
-    
-    const interval = setInterval(() => {
-      if (scrollRef.current) {
-        const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-        if (scrollLeft + clientWidth >= scrollWidth - 10) {
-          scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
-        } else {
-          scrollRef.current.scrollBy({ left: 160, behavior: 'smooth' });
-        }
-      }
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, [products.length]);
 
   if (loading) {
     return (

@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom";
-import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet-async";
 import { supabase } from "@/lib/supaseClient";
 import { BottomNav } from "@/components/BottomNav";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -24,7 +24,7 @@ import { FullScreenImageViewer } from "@/components/FullScreenImageViewer";
 import { RecommendedProducts } from "@/components/RecommendedProducts";
 import { useBrowsingHistory } from "@/hooks/useBrowsingHistory";
 import { DashboardFloatingButton } from "@/components/DashboardFloatingButton";
-import { ShareButton } from "@/components/ShareButton";
+import { SocialShareButtons } from "@/components/SocialShareButtons";
 import { createProductShareUrl, isAdminPostedProduct, extractIdFromUrl, extractProductId } from "@/lib/seoUrls";
 import { ProductComments } from "@/components/ProductComments";
 import { ReportSellerModal } from "@/components/ReportSellerModal";
@@ -416,6 +416,33 @@ export default function ProductDetail() {
   const shareUrl = createProductShareUrl(id, product.title, sellerName, isAdminProduct);
   const whatsappNumber = product.contact_whatsapp || seller?.whatsapp_number;
   const callNumber = product.contact_call || seller?.call_number;
+  
+  // Generate SEO-friendly meta description
+  const metaDescription = product.description 
+    ? product.description.substring(0, 155).trim() + (product.description.length > 155 ? "..." : "")
+    : `Discover ${product.title} on Rwanda Smart Market. Best prices and quality products.`;
+  
+  // Use product image or fallback
+  const metaImage = product.images?.[0] || "https://rwanda-smart-market.vercel.app/favicon.ico";
+  
+  // Product structured data for SEO
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.title,
+    description: product.description,
+    image: product.images || [],
+    offers: {
+      "@type": "Offer",
+      price: product.price,
+      priceCurrency: "RWF",
+      availability: product.quantity > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+    },
+    brand: {
+      "@type": "Brand",
+      name: "Rwanda Smart Market",
+    },
+  };
 
   // Generate WhatsApp message with product link only (clean version)
   const whatsappMessage = `Hello! I'm interested in your product "${product.title}" on Rwanda Smart Market:\n${shareUrl}`;
@@ -426,19 +453,36 @@ export default function ProductDetail() {
   return (
     <>
       <Helmet>
-        <title>{product.title} - Rwanda Smart Market</title>
-        <meta name="description" content={product.description?.substring(0, 160)} />
-        <meta property="og:title" content={`${product.title} - Rwanda Smart Market`} />
-        <meta property="og:description" content={product.description?.substring(0, 160)} />
-        <meta property="og:image" content={product.images?.[0] || '/placeholder.svg'} />
+        <title>{product.title} | Rwanda Smart Market</title>
+        <meta name="description" content={metaDescription} />
+        <meta name="keywords" content={`${product.title}, ${product.category || "products"}, Rwanda Smart Market, online shopping Rwanda, buy in Rwanda`} />
+        <link rel="canonical" href={shareUrl} />
+        
+        {/* Open Graph / Facebook */}
         <meta property="og:type" content="product" />
         <meta property="og:url" content={shareUrl} />
+        <meta property="og:title" content={`${product.title} | Rwanda Smart Market`} />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:image" content={metaImage} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:site_name" content="Rwanda Smart Market" />
+        <meta property="og:locale" content="en_RW" />
+        <meta property="product:price:amount" content={product.price?.toString()} />
+        <meta property="product:price:currency" content="RWF" />
+        
+        {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={`${product.title} - Rwanda Smart Market`} />
-        <meta name="twitter:description" content={product.description?.substring(0, 160)} />
-        <meta name="twitter:image" content={product.images?.[0] || '/placeholder.svg'} />
-        <link rel="canonical" href={shareUrl} />
+        <meta name="twitter:url" content={shareUrl} />
+        <meta name="twitter:title" content={`${product.title} | Rwanda Smart Market`} />
+        <meta name="twitter:description" content={metaDescription} />
+        <meta name="twitter:image" content={metaImage} />
+        <meta name="twitter:site" content="@RwandaSmartMkt" />
+        
+        {/* Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify(productJsonLd)}
+        </script>
       </Helmet>
       <div className="min-h-screen bg-background pb-20" ref={productRef}>
         <div className="sticky top-0 z-40 bg-background border-b border-border">
@@ -447,12 +491,12 @@ export default function ProductDetail() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex items-center gap-2">
-              <ShareButton
+              <SocialShareButtons
                 url={shareUrl}
-                title={`${product.title} - Rwanda Smart Market`}
-                description={product.description?.substring(0, 100)}
-                variant="outline"
-                size="sm"
+                title={`${product.title} | Rwanda Smart Market`}
+                description={metaDescription}
+                image={metaImage}
+                productId={id}
               />
               <NotificationBell />
               <UserMenu />
