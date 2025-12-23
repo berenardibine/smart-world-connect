@@ -296,6 +296,26 @@ export default function Auth() {
                       </div>
                     </div>
                   )}
+
+                  {/* Referral Code Input */}
+                  <div className="space-y-2">
+                    <Label htmlFor="referralCode" className="flex items-center gap-2">
+                      <Gift className="h-4 w-4 text-primary" />
+                      Referral Code (Optional)
+                    </Label>
+                    <Input
+                      id="referralCode"
+                      placeholder="Enter referral code (e.g., RSM12345678)"
+                      value={referralCode}
+                      onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                      className="h-12 font-mono"
+                    />
+                    {referralCode && (
+                      <p className="text-xs text-green-600 dark:text-green-400">
+                        ✓ Referral code will be applied after signup
+                      </p>
+                    )}
+                  </div>
                 </>
               )}
 

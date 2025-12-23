@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
   Users, Package, ShoppingCart, Briefcase, ArrowLeft, LogOut, 
-  MessageSquare, Image, Bell, BarChart3, Settings, Megaphone, Shield
+  MessageSquare, Image, Bell, BarChart3, Settings, Megaphone, Shield,
+  Link2, Bot
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -97,6 +98,8 @@ export default function AdminDashboard() {
     { icon: Megaphone, label: "Marketing", desc: "Promotions", to: "/admin/marketing", color: "orange" },
     { icon: Bell, label: "Notifications", desc: "Send alerts", to: "/admin/notifications", color: "red" },
     { icon: BarChart3, label: "Analytics", desc: "View stats", to: "/admin/analytics", color: "cyan" },
+    { icon: Link2, label: "Referrals", desc: "Referral analytics", to: "/admin/referrals", color: "teal" },
+    { icon: Bot, label: "AI Manager", desc: "AI reports", to: "/admin/ai-manager", color: "violet" },
     { icon: MessageSquare, label: "Messages", desc: "Contact inbox", to: "/admin/messages", color: "pink" },
     { icon: Image, label: "Smart Ads", desc: "Manage ads", to: "/admin/ads", color: "indigo" },
     { icon: Settings, label: "Settings", desc: "Configure", to: "/admin/settings", color: "gray" },
@@ -113,6 +116,8 @@ export default function AdminDashboard() {
       pink: { bg: "bg-pink-500/10", icon: "text-pink-500", border: "border-pink-500/20" },
       indigo: { bg: "bg-indigo-500/10", icon: "text-indigo-500", border: "border-indigo-500/20" },
       gray: { bg: "bg-gray-500/10", icon: "text-gray-500", border: "border-gray-500/20" },
+      teal: { bg: "bg-teal-500/10", icon: "text-teal-500", border: "border-teal-500/20" },
+      violet: { bg: "bg-violet-500/10", icon: "text-violet-500", border: "border-violet-500/20" },
     };
     return colors[color] || colors.blue;
   };
