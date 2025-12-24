@@ -74,8 +74,27 @@ export default function ProductDetail() {
       checkAuth();
       fetchProduct();
       trackImpression();
+      trackLinkView();
     }
   }, [id]);
+
+  // Track link view for analytics
+  const trackLinkView = async () => {
+    try {
+      const source = searchParams.get('source') || 'direct';
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      await supabase.from("link_analytics").insert({
+        product_id: id,
+        user_id: session?.user?.id || null,
+        source,
+        event: "view",
+        referrer: document.referrer || null,
+      });
+    } catch (error) {
+      console.error("Link analytics tracking error:", error);
+    }
+  };
 
   // Track view with intersection observer
   useEffect(() => {

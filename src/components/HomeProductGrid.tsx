@@ -4,6 +4,7 @@ import { CompactProductCard } from "./CompactProductCard";
 import { InlineSellerAds } from "./InlineSellerAds";
 import { Skeleton } from "@/components/ui/skeleton";
 import { isAdminPostedProduct } from "@/lib/seoUrls";
+import { shuffleArray } from "@/lib/shuffleArray";
 
 interface Product {
   id: string;
@@ -51,7 +52,6 @@ export const HomeProductGrid = ({
       `)
       .eq("status", "approved")
       .not("category", "in", '("Agriculture Product","Equipment for Lent")')
-      .order("views", { ascending: true }) // Least views first
       .range(offset, offset + limit - 1);
 
     if (category && category !== "All") {
@@ -61,10 +61,12 @@ export const HomeProductGrid = ({
     const { data, error } = await query;
 
     if (!error && data) {
+      // Shuffle products for random display
+      const shuffledData = shuffleArray(data);
       if (offset === 0) {
-        setProducts(data);
+        setProducts(shuffledData);
       } else {
-        setProducts(prev => [...prev, ...data]);
+        setProducts(prev => [...prev, ...shuffledData]);
       }
       setHasMore(data.length === limit);
       
