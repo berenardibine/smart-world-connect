@@ -43,6 +43,7 @@ import SellerReferrals from "./pages/SellerReferrals";
 import SellerMarketing from "./pages/SellerMarketing";
 import AIManagerDashboard from "./pages/admin/AIManagerDashboard";
 import ReferralAnalytics from "./pages/admin/ReferralAnalytics";
+import LinkAnalytics from "./pages/admin/LinkAnalytics";
 
 const queryClient = new QueryClient();
 
@@ -106,6 +107,7 @@ const App = () => (
           <Route path="/admin/ads" element={<AdsManagement />} />
           <Route path="/admin/ai-manager" element={<AIManagerDashboard />} />
           <Route path="/admin/referrals" element={<ReferralAnalytics />} />
+          <Route path="/admin/link-analytics" element={<LinkAnalytics />} />
           <Route path="/contact" element={<ContactUs />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

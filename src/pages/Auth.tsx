@@ -161,11 +161,7 @@ export default function Auth() {
           await processReferral(data.user.id, referralCode);
         }
 
-        // Always redirect to verify email page after signup
-        toast({
-          title: "Account Created",
-          description: "Please check your email to verify your account.",
-        });
+        // Redirect to verification pending page (no toast, just redirect)
         navigate("/verify-email");
       }
     } catch (error: any) {

@@ -50,6 +50,14 @@ export function SocialShareButtons({
           viewer_id: session?.user?.id || null,
           type: `share_${platform}`,
         });
+
+        // Also log to link_analytics for the new analytics system
+        await supabase.from("link_analytics").insert({
+          product_id: productId,
+          user_id: session?.user?.id || null,
+          source: platform,
+          event: "click",
+        });
       } catch (error) {
         console.error("Share tracking error:", error);
       }
@@ -58,30 +66,32 @@ export function SocialShareButtons({
 
   const shareToWhatsApp = () => {
     trackShare("whatsapp");
-    const text = `${title}\n\n${description || ""}\n\n${url}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+    // Only share the URL - no auto text, let meta tags handle preview
+    window.open(`https://wa.me/?text=${encodeURIComponent(url)}`, "_blank");
   };
 
   const shareToFacebook = () => {
     trackShare("facebook");
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(title)}`, "_blank");
+    // Facebook reads OG meta tags automatically
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, "_blank");
   };
 
   const shareToTwitter = () => {
     trackShare("twitter");
-    const text = `${title}\n\n${url}`;
-    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, "_blank");
+    // Twitter reads meta tags automatically
+    window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}`, "_blank");
   };
 
   const shareToLinkedIn = () => {
     trackShare("linkedin");
+    // LinkedIn reads OG meta tags automatically
     window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, "_blank");
   };
 
   const shareToTelegram = () => {
     trackShare("telegram");
-    const text = `${title}\n\n${description || ""}\n\n${url}`;
-    window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, "_blank");
+    // Only share the URL - Telegram reads meta tags
+    window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}`, "_blank");
   };
 
   const copyLink = async () => {

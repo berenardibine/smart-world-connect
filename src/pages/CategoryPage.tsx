@@ -93,7 +93,6 @@ export default function CategoryPage() {
       `)
       .eq("status", "approved")
       .eq("category", categoryName)
-      .order("views", { ascending: false })
       .range(offset, offset + 11);
 
     if (!error && data) {
