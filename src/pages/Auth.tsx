@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supaseClient";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Eye, EyeOff, Gift } from "lucide-react";
 import { z } from "zod";
+import { LocationSelector } from "@/components/LocationSelector";
 
 const authSchema = z.object({
   email: z.string().email("Invalid email address").max(255),
@@ -32,6 +33,9 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [referralCode, setReferralCode] = useState("");
+  const [provinceId, setProvinceId] = useState("");
+  const [districtId, setDistrictId] = useState("");
+  const [sectorId, setSectorId] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -155,6 +159,18 @@ export default function Auth() {
           },
         });
         if (error) throw error;
+
+        // Update profile with location if selected
+        if (data.user && (provinceId || districtId || sectorId)) {
+          await supabase
+            .from("profiles")
+            .update({
+              province_id: provinceId || null,
+              district_id: districtId || null,
+              sector_id: sectorId || null,
+            })
+            .eq("id", data.user.id);
+        }
 
         // Process referral if code exists
         if (data.user && referralCode) {
@@ -292,6 +308,18 @@ export default function Auth() {
                       </div>
                     </div>
                   )}
+
+                  {/* Location Selection */}
+                  <div className="space-y-2 p-4 bg-muted/50 rounded-lg">
+                    <LocationSelector
+                      provinceId={provinceId}
+                      districtId={districtId}
+                      sectorId={sectorId}
+                      onProvinceChange={setProvinceId}
+                      onDistrictChange={setDistrictId}
+                      onSectorChange={setSectorId}
+                    />
+                  </div>
 
                   {/* Referral Code Input */}
                   <div className="space-y-2">
