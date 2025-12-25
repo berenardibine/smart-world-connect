@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { Navbar } from "@/components/Navbar";
 import { DashboardFloatingButton } from "@/components/DashboardFloatingButton";
@@ -7,10 +7,48 @@ import { TrendingProducts } from "@/components/TrendingProducts";
 import { RecommendedProductsSection } from "@/components/RecommendedProductsSection";
 import { CategoryTabs } from "@/components/CategoryTabs";
 import { HomeProductGrid } from "@/components/HomeProductGrid";
+import { LocationFilter } from "@/components/LocationFilter";
 import { Helmet } from "react-helmet";
+import { supabase } from "@/lib/supaseClient";
 
 export default function Home() {
   const [activeCategory, setActiveCategory] = useState("All");
+  const [provinceId, setProvinceId] = useState<string>("");
+  const [districtId, setDistrictId] = useState<string>("");
+  const [sectorId, setSectorId] = useState<string>("");
+
+  // Load user's saved location on mount
+  useEffect(() => {
+    const loadUserLocation = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("province_id, district_id, sector_id")
+          .eq("id", session.user.id)
+          .maybeSingle();
+        
+        if (profile) {
+          if (profile.province_id) setProvinceId(profile.province_id);
+          if (profile.district_id) setDistrictId(profile.district_id);
+          if (profile.sector_id) setSectorId(profile.sector_id);
+        }
+      }
+    };
+    loadUserLocation();
+  }, []);
+
+  const handleLocationApply = (pId: string, dId: string, sId: string) => {
+    setProvinceId(pId);
+    setDistrictId(dId);
+    setSectorId(sId);
+  };
+
+  const handleLocationClear = () => {
+    setProvinceId("");
+    setDistrictId("");
+    setSectorId("");
+  };
 
   return (
     <>
@@ -49,6 +87,13 @@ export default function Home() {
                 <h2 className="text-xl sm:text-2xl font-bold text-foreground">Browse Products</h2>
                 <p className="text-sm text-muted-foreground mt-0.5">Discover amazing deals from verified sellers</p>
               </div>
+              <LocationFilter
+                provinceId={provinceId}
+                districtId={districtId}
+                sectorId={sectorId}
+                onApply={handleLocationApply}
+                onClear={handleLocationClear}
+              />
             </div>
             
             {/* Category Filter */}
@@ -63,6 +108,9 @@ export default function Home() {
             <HomeProductGrid 
               category={activeCategory === "All" ? undefined : activeCategory}
               limit={12}
+              provinceId={provinceId}
+              districtId={districtId}
+              sectorId={sectorId}
             />
           </section>
         </main>
