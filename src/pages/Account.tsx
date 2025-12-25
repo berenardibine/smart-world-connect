@@ -20,8 +20,11 @@ import {
   Gift,
   Check,
   Loader2,
+  MapPin,
 } from "lucide-react";
 import { useUserStatus } from "@/hooks/useUserStatus";
+import { LocationSelector } from "@/components/LocationSelector";
+import { useLocationNames } from "@/hooks/useLocations";
 
 export default function Account() {
   useUserStatus();
@@ -32,6 +35,9 @@ export default function Account() {
   const [uploading, setUploading] = useState(false);
   const [referralCodeInput, setReferralCodeInput] = useState("");
   const [applyingReferral, setApplyingReferral] = useState(false);
+  const [provinceId, setProvinceId] = useState("");
+  const [districtId, setDistrictId] = useState("");
+  const [sectorId, setSectorId] = useState("");
   const [formData, setFormData] = useState({
     full_name: "",
     business_name: "",
@@ -40,6 +46,8 @@ export default function Account() {
   });
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  const locationNames = useLocationNames(profile?.province_id, profile?.district_id, profile?.sector_id);
 
   useEffect(() => {
     checkAuth();
@@ -66,6 +74,9 @@ export default function Account() {
       bio: profileData?.bio || "",
       location: profileData?.location || "",
     });
+    setProvinceId(profileData?.province_id || "");
+    setDistrictId(profileData?.district_id || "");
+    setSectorId(profileData?.sector_id || "");
 
     const { data: roleData } = await supabase
       .from("user_roles")
@@ -84,7 +95,12 @@ export default function Account() {
 
     const { error } = await supabase
       .from("profiles")
-      .update(formData)
+      .update({
+        ...formData,
+        province_id: provinceId || null,
+        district_id: districtId || null,
+        sector_id: sectorId || null,
+      })
       .eq("id", session.user.id);
 
     if (error) {
@@ -362,14 +378,14 @@ export default function Account() {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="location">Location</Label>
-                  <Input
-                    id="location"
-                    value={formData.location}
-                    onChange={(e) =>
-                      setFormData({ ...formData, location: e.target.value })
-                    }
+                <div className="space-y-2 p-4 bg-muted/50 rounded-lg">
+                  <LocationSelector
+                    provinceId={provinceId}
+                    districtId={districtId}
+                    sectorId={sectorId}
+                    onProvinceChange={setProvinceId}
+                    onDistrictChange={setDistrictId}
+                    onSectorChange={setSectorId}
                   />
                 </div>
 
@@ -398,8 +414,14 @@ export default function Account() {
                     <p className="font-medium">{profile?.bio || "Not set"}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Location</p>
-                    <p className="font-medium">{profile?.location || "Not set"}</p>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      <MapPin className="h-3 w-3" /> Location
+                    </p>
+                    <p className="font-medium">
+                      {locationNames.sector || locationNames.district || locationNames.province || "Not set"}
+                      {locationNames.district && locationNames.sector && `, ${locationNames.district}`}
+                      {locationNames.province && (locationNames.district || locationNames.sector) && ` - ${locationNames.province}`}
+                    </p>
                   </div>
                 </div>
                 <Button onClick={() => setEditing(true)}>Edit Profile</Button>

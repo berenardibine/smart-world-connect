@@ -287,6 +287,35 @@ export type Database = {
           },
         ]
       }
+      districts: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          province_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          province_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          province_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "districts_province_id_fkey"
+            columns: ["province_id"]
+            isOneToOne: false
+            referencedRelation: "provinces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       link_analytics: {
         Row: {
           created_at: string
@@ -866,6 +895,7 @@ export type Database = {
           business_name: string | null
           call_number: string | null
           created_at: string | null
+          district_id: string | null
           email: string
           full_name: string
           id: string
@@ -876,10 +906,12 @@ export type Database = {
           location: string | null
           phone_number: string | null
           profile_image: string | null
+          province_id: string | null
           rating: number | null
           rating_count: number | null
           referral_code: string | null
           referred_by: string | null
+          sector_id: string | null
           status: string | null
           updated_at: string | null
           user_type: string
@@ -892,6 +924,7 @@ export type Database = {
           business_name?: string | null
           call_number?: string | null
           created_at?: string | null
+          district_id?: string | null
           email: string
           full_name: string
           id: string
@@ -902,10 +935,12 @@ export type Database = {
           location?: string | null
           phone_number?: string | null
           profile_image?: string | null
+          province_id?: string | null
           rating?: number | null
           rating_count?: number | null
           referral_code?: string | null
           referred_by?: string | null
+          sector_id?: string | null
           status?: string | null
           updated_at?: string | null
           user_type: string
@@ -918,6 +953,7 @@ export type Database = {
           business_name?: string | null
           call_number?: string | null
           created_at?: string | null
+          district_id?: string | null
           email?: string
           full_name?: string
           id?: string
@@ -928,15 +964,57 @@ export type Database = {
           location?: string | null
           phone_number?: string | null
           profile_image?: string | null
+          province_id?: string | null
           rating?: number | null
           rating_count?: number | null
           referral_code?: string | null
           referred_by?: string | null
+          sector_id?: string | null
           status?: string | null
           updated_at?: string | null
           user_type?: string
           verification_notes?: string | null
           whatsapp_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_district_id_fkey"
+            columns: ["district_id"]
+            isOneToOne: false
+            referencedRelation: "districts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_province_id_fkey"
+            columns: ["province_id"]
+            isOneToOne: false
+            referencedRelation: "provinces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "sectors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provinces: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
         }
         Relationships: []
       }
@@ -1039,6 +1117,35 @@ export type Database = {
             columns: ["referrer_id"]
             isOneToOne: false
             referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sectors: {
+        Row: {
+          created_at: string | null
+          district_id: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          district_id: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          district_id?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sectors_district_id_fkey"
+            columns: ["district_id"]
+            isOneToOne: false
+            referencedRelation: "districts"
             referencedColumns: ["id"]
           },
         ]
