@@ -18,20 +18,30 @@ interface Product {
   contact_whatsapp?: string;
   contact_call?: string;
   discount?: number;
+  seller_id?: string;
   profiles?: {
     full_name?: string;
     business_name?: string;
+    province_id?: string;
+    district_id?: string;
+    sector_id?: string;
   };
 }
 
 interface HomeProductGridProps {
   category?: string;
   limit?: number;
+  provinceId?: string;
+  districtId?: string;
+  sectorId?: string;
 }
 
 export const HomeProductGrid = ({ 
   category, 
-  limit = 12
+  limit = 12,
+  provinceId,
+  districtId,
+  sectorId
 }: HomeProductGridProps) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,40 +53,57 @@ export const HomeProductGrid = ({
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   const fetchProducts = useCallback(async (offset = 0) => {
-    const query = supabase
+    let query = supabase
       .from("products")
       .select(`
         id, title, price, images, is_negotiable, rental_rate_type, views, likes, discount,
-        contact_whatsapp, contact_call,
-        profiles:seller_id (full_name, business_name)
+        contact_whatsapp, contact_call, seller_id,
+        profiles:seller_id (full_name, business_name, province_id, district_id, sector_id)
       `)
       .eq("status", "approved")
-      .not("category", "in", '("Agriculture Product","Equipment for Lent")')
-      .range(offset, offset + limit - 1);
+      .not("category", "in", '("Agriculture Product","Equipment for Lent")');
 
     if (category && category !== "All") {
-      query.eq("category", category);
+      query = query.eq("category", category);
     }
 
-    const { data, error } = await query;
+    const { data, error } = await query.range(offset, offset + (limit * 3) - 1); // Fetch more to filter
 
     if (!error && data) {
-      // Shuffle products for random display
-      const shuffledData = shuffleArray(data);
-      if (offset === 0) {
-        setProducts(shuffledData);
+      let filteredData = data;
+      
+      // Apply location-based filtering with priority: sector > district > province
+      if (sectorId || districtId || provinceId) {
+        const sectorMatches = data.filter(p => p.profiles?.sector_id === sectorId);
+        const districtMatches = data.filter(p => p.profiles?.district_id === districtId && !sectorMatches.includes(p));
+        const provinceMatches = data.filter(p => p.profiles?.province_id === provinceId && !sectorMatches.includes(p) && !districtMatches.includes(p));
+        const otherProducts = data.filter(p => !sectorMatches.includes(p) && !districtMatches.includes(p) && !provinceMatches.includes(p));
+        
+        // Priority order: same sector first, then district, then province, then others
+        filteredData = [...sectorMatches, ...districtMatches, ...provinceMatches, ...otherProducts];
       } else {
-        setProducts(prev => [...prev, ...shuffledData]);
+        // Shuffle products for random display when no location filter
+        filteredData = shuffleArray(data);
       }
-      setHasMore(data.length === limit);
+
+      // Limit to requested amount
+      const limitedData = filteredData.slice(0, offset === 0 ? limit : limit);
+      
+      if (offset === 0) {
+        setProducts(limitedData);
+      } else {
+        setProducts(prev => [...prev, ...limitedData]);
+      }
+      setHasMore(data.length >= limit);
       
       // Fetch stats for these products
-      await fetchProductStats(data.map(p => p.id));
+      await fetchProductStats(limitedData.map(p => p.id));
     }
     
     setLoading(false);
     setLoadingMore(false);
-  }, [category, limit]);
+  }, [category, limit, provinceId, districtId, sectorId]);
+
 
   const fetchProductStats = async (productIds: string[]) => {
     const { data: comments } = await supabase

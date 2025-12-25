@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { 
   Users, Package, ShoppingCart, Briefcase, ArrowLeft, LogOut, 
   MessageSquare, Image, Bell, BarChart3, Settings, Megaphone, Shield,
-  Link2, Bot
+  Link2, Bot, MapPin
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -95,6 +95,7 @@ export default function AdminDashboard() {
     { icon: Users, label: "Users", desc: "Manage users", to: "/admin/users", color: "blue" },
     { icon: Package, label: "Products", desc: "All products", to: "/admin/products", color: "green" },
     { icon: Briefcase, label: "Opportunities", desc: "Jobs & internships", to: "/admin/opportunities", color: "purple" },
+    { icon: MapPin, label: "Locations", desc: "Manage locations", to: "/admin/locations", color: "lime" },
     { icon: Megaphone, label: "Marketing", desc: "Promotions", to: "/admin/marketing", color: "orange" },
     { icon: Bell, label: "Notifications", desc: "Send alerts", to: "/admin/notifications", color: "red" },
     { icon: BarChart3, label: "Analytics", desc: "View stats", to: "/admin/analytics", color: "cyan" },
@@ -120,6 +121,7 @@ export default function AdminDashboard() {
       teal: { bg: "bg-teal-500/10", icon: "text-teal-500", border: "border-teal-500/20" },
       violet: { bg: "bg-violet-500/10", icon: "text-violet-500", border: "border-violet-500/20" },
       emerald: { bg: "bg-emerald-500/10", icon: "text-emerald-500", border: "border-emerald-500/20" },
+      lime: { bg: "bg-lime-500/10", icon: "text-lime-500", border: "border-lime-500/20" },
     };
     return colors[color] || colors.blue;
   };
