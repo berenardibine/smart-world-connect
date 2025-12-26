@@ -7,7 +7,7 @@ const corsHeaders = {
 
 const SITE_URL = 'https://rwanda-smart-market.vercel.app';
 const DEFAULT_IMAGE = `${SITE_URL}/og-default.png`;
-const SITE_NAME = 'Rwanda Smart Market';
+const SITE_NAME = 'Smart Market';
 
 Deno.serve(async (req) => {
   // Handle CORS preflight requests

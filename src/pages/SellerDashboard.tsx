@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { NotificationBell } from "@/components/NotificationBell";
 import { 
   Package, Eye, Heart, TrendingUp, LayoutDashboard, 
-  ArrowLeft, LogOut, BarChart3, User, Users, Megaphone
+  ArrowLeft, LogOut, BarChart3, User, Users, Megaphone, Store
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -177,7 +177,21 @@ export default function SellerDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          <Link to="/seller/shop" className="block">
+            <Card className="h-full bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20 hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer group">
+              <CardContent className="p-6 flex flex-col items-center justify-center text-center space-y-3">
+                <div className="h-14 w-14 rounded-2xl bg-purple-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Store className="h-7 w-7 text-purple-500" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-foreground">My Shop</h3>
+                  <p className="text-xs text-muted-foreground">Manage your shop</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
           <Link to="/seller/products" className="block">
             <Card className="h-full bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer group">
               <CardContent className="p-6 flex flex-col items-center justify-center text-center space-y-3">

@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Sprout, Tractor, Megaphone } from "lucide-react";
+import { Home, Sprout, Store, Megaphone, Briefcase } from "lucide-react";
 
 export function BottomNav() {
   const location = useLocation();
@@ -25,22 +25,31 @@ export function BottomNav() {
           <span className="text-xs mt-1">Home</span>
         </Link>
         <Link
+          to="/shops"
+          className={`flex flex-col items-center justify-center flex-1 ${
+            isActive("/shops") ? "text-primary" : "text-muted-foreground"
+          }`}
+        >
+          <Store className="h-5 w-5" />
+          <span className="text-xs mt-1">Shops</span>
+        </Link>
+        <Link
           to="/agriculture"
           className={`flex flex-col items-center justify-center flex-1 ${
             isActive("/agriculture") ? "text-primary" : "text-muted-foreground"
           }`}
         >
           <Sprout className="h-5 w-5" />
-          <span className="text-xs mt-1">Agriculture</span>
+          <span className="text-xs mt-1">Agri</span>
         </Link>
         <Link
-          to="/equipment"
+          to="/opportunities"
           className={`flex flex-col items-center justify-center flex-1 ${
-            isActive("/equipment") ? "text-primary" : "text-muted-foreground"
+            isActive("/opportunities") ? "text-primary" : "text-muted-foreground"
           }`}
         >
-          <Tractor className="h-5 w-5" />
-          <span className="text-xs mt-1">Equipment</span>
+          <Briefcase className="h-5 w-5" />
+          <span className="text-xs mt-1">Jobs</span>
         </Link>
         <Link
           to="/marketing"
@@ -49,7 +58,7 @@ export function BottomNav() {
           }`}
         >
           <Megaphone className="h-5 w-5" />
-          <span className="text-xs mt-1">Marketing</span>
+          <span className="text-xs mt-1">Updates</span>
         </Link>
       </div>
     </nav>

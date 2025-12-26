@@ -185,8 +185,8 @@ export default function VerifyEmail() {
   return (
     <>
       <Helmet>
-        <title>Verify Email - Rwanda Smart Market</title>
-        <meta name="description" content="Verify your email to access all features of Rwanda Smart Market" />
+        <title>Verify Email - Smart Market</title>
+        <meta name="description" content="Verify your email to access all features of Smart Market" />
       </Helmet>
       
       <div className="min-h-screen bg-gradient-to-br from-primary/10 via-primary/5 to-background flex items-center justify-center p-4">

@@ -13,6 +13,7 @@ import IdentityVerification from "./pages/IdentityVerification";
 import SellerDashboard from "./pages/SellerDashboard";
 import SellerProducts from "./pages/SellerProducts";
 import SellerProfile from "./pages/SellerProfile";
+import SellerShop from "./pages/SellerShop";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminProducts from "./pages/AdminProducts";
 import AdminUsers from "./pages/AdminUsers";
@@ -45,6 +46,8 @@ import AIManagerDashboard from "./pages/admin/AIManagerDashboard";
 import ReferralAnalytics from "./pages/admin/ReferralAnalytics";
 import LinkAnalytics from "./pages/admin/LinkAnalytics";
 import LocationManagement from "./pages/admin/LocationManagement";
+import Shops from "./pages/Shops";
+import ShopDetail from "./pages/ShopDetail";
 
 const queryClient = new QueryClient();
 
@@ -88,9 +91,12 @@ const App = () => (
           <Route path="/account" element={<Account />} />
           <Route path="/opportunities" element={<Opportunities />} />
           <Route path="/marketing" element={<Marketing />} />
+          <Route path="/shops" element={<Shops />} />
+          <Route path="/shop/:id" element={<ShopDetail />} />
           <Route path="/post-opportunity" element={<PostOpportunity />} />
           <Route path="/seller/dashboard" element={<SellerDashboard />} />
           <Route path="/seller/products" element={<SellerProducts />} />
+          <Route path="/seller/shop" element={<SellerShop />} />
           <Route path="/seller/analytics" element={<SellerAnalytics />} />
           <Route path="/seller/referrals" element={<SellerReferrals />} />
           <Route path="/seller/marketing" element={<SellerMarketing />} />
