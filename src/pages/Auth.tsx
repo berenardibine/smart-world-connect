@@ -98,13 +98,8 @@ export default function Auth() {
         });
         if (error) throw error;
 
-        // Check if email is verified
+        // Check if email is verified - redirect to verify page without toast
         if (!data.user.email_confirmed_at) {
-          toast({
-            title: "Email not verified",
-            description: "Please verify your email to continue.",
-            variant: "destructive",
-          });
           navigate("/verify-email");
           return;
         }
