@@ -815,6 +815,7 @@ export type Database = {
           rental_rate_type: string | null
           seller_id: string
           share_count: number | null
+          shop_id: string | null
           status: string | null
           title: string
           updated_at: string | null
@@ -840,6 +841,7 @@ export type Database = {
           rental_rate_type?: string | null
           seller_id: string
           share_count?: number | null
+          shop_id?: string | null
           status?: string | null
           title: string
           updated_at?: string | null
@@ -865,6 +867,7 @@ export type Database = {
           rental_rate_type?: string | null
           seller_id?: string
           share_count?: number | null
+          shop_id?: string | null
           status?: string | null
           title?: string
           updated_at?: string | null
@@ -886,6 +889,13 @@ export type Database = {
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "products_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
@@ -902,6 +912,8 @@ export type Database = {
           id_back_photo: string | null
           id_front_photo: string | null
           identity_verified: boolean | null
+          installed_at: string | null
+          installed_pwa: boolean | null
           last_active: string | null
           location: string | null
           phone_number: string | null
@@ -931,6 +943,8 @@ export type Database = {
           id_back_photo?: string | null
           id_front_photo?: string | null
           identity_verified?: boolean | null
+          installed_at?: string | null
+          installed_pwa?: boolean | null
           last_active?: string | null
           location?: string | null
           phone_number?: string | null
@@ -960,6 +974,8 @@ export type Database = {
           id_back_photo?: string | null
           id_front_photo?: string | null
           identity_verified?: boolean | null
+          installed_at?: string | null
+          installed_pwa?: boolean | null
           last_active?: string | null
           location?: string | null
           phone_number?: string | null
@@ -1017,6 +1033,84 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string | null
+          endpoint: string
+          id: string
+          p256dh: string
+          user_id: string | null
+        }
+        Insert: {
+          auth: string
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          p256dh: string
+          user_id?: string | null
+        }
+        Update: {
+          auth?: string
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pwa_installs_log: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pwa_installs_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pwa_installs_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       referral_logs: {
         Row: {
@@ -1182,6 +1276,90 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      shops: {
+        Row: {
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string | null
+          description: string | null
+          district_id: string | null
+          id: string
+          is_active: boolean | null
+          logo_url: string | null
+          name: string
+          province_id: string | null
+          sector_id: string | null
+          seller_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          description?: string | null
+          district_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name: string
+          province_id?: string | null
+          sector_id?: string | null
+          seller_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          description?: string | null
+          district_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name?: string
+          province_id?: string | null
+          sector_id?: string | null
+          seller_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shops_district_id_fkey"
+            columns: ["district_id"]
+            isOneToOne: false
+            referencedRelation: "districts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shops_province_id_fkey"
+            columns: ["province_id"]
+            isOneToOne: false
+            referencedRelation: "provinces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shops_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "sectors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shops_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shops_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       site_settings: {
         Row: {
@@ -1500,6 +1678,10 @@ export type Database = {
         Returns: undefined
       }
       reset_monthly_activity: { Args: never; Returns: undefined }
+      validate_referral_code: {
+        Args: { p_referral_code: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
