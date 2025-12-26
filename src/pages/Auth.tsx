@@ -139,6 +139,17 @@ export default function Auth() {
           navigate("/");
         }
       } else {
+        // Validate location is selected for signup
+        if (!provinceId || !districtId || !sectorId) {
+          toast({
+            title: "Location Required",
+            description: "Please select your province, district, and sector to continue.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+
         const { data, error } = await supabase.auth.signUp({
           email: validated.email,
           password: validated.password,
@@ -205,14 +216,14 @@ export default function Auth() {
         <Card className="border-0 shadow-xl">
           <CardHeader className="space-y-1 text-center">
             <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary-dark rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl font-bold text-primary-foreground">RSM</span>
+              <span className="text-2xl font-bold text-primary-foreground">SM</span>
             </div>
             <CardTitle className="text-2xl font-bold">
               {isLogin ? "Welcome back" : "Create an account"}
             </CardTitle>
             <CardDescription>
               {isLogin
-                ? "Sign in to your Rwanda Smart Market account"
+                ? "Sign in to your Smart Market account"
                 : "Join Rwanda's premier online marketplace"}
             </CardDescription>
           </CardHeader>
@@ -304,8 +315,12 @@ export default function Auth() {
                     </div>
                   )}
 
-                  {/* Location Selection */}
+                  {/* Location Selection - Required */}
                   <div className="space-y-2 p-4 bg-muted/50 rounded-lg">
+                    <p className="text-sm font-medium text-foreground mb-2">Your Location *</p>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      We'll show you shops and products near you
+                    </p>
                     <LocationSelector
                       provinceId={provinceId}
                       districtId={districtId}
@@ -313,6 +328,7 @@ export default function Auth() {
                       onProvinceChange={setProvinceId}
                       onDistrictChange={setDistrictId}
                       onSectorChange={setSectorId}
+                      required
                     />
                   </div>
 

@@ -40,7 +40,7 @@ export const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center flex-shrink-0">
             <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-primary whitespace-nowrap">
-              Rwanda Smart Market
+              Smart Market
             </div>
           </Link>
 

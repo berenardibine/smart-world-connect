@@ -8,6 +8,7 @@ import { RecommendedProductsSection } from "@/components/RecommendedProductsSect
 import { CategoryTabs } from "@/components/CategoryTabs";
 import { HomeProductGrid } from "@/components/HomeProductGrid";
 import { LocationFilter } from "@/components/LocationFilter";
+import { InstallPrompt } from "@/components/InstallPrompt";
 import { Helmet } from "react-helmet";
 import { supabase } from "@/lib/supaseClient";
 
@@ -53,11 +54,12 @@ export default function Home() {
   return (
     <>
       <Helmet>
-        <title>Rwanda Smart Market - Buy & Sell Products Online</title>
+        <title>Smart Market - Buy & Sell Products Online in Rwanda</title>
         <meta name="description" content="Rwanda's premier online marketplace. Buy and sell electronics, fashion, agriculture products, and more. Join thousands of buyers and sellers today." />
-        <meta property="og:title" content="Rwanda Smart Market - Buy & Sell Products Online" />
+        <meta property="og:title" content="Smart Market - Buy & Sell Products Online in Rwanda" />
         <meta property="og:description" content="Rwanda's premier online marketplace. Buy and sell products easily." />
         <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Smart Market" />
         <link rel="canonical" href={typeof window !== 'undefined' ? window.location.origin : ''} />
       </Helmet>
 
@@ -112,9 +114,10 @@ export default function Home() {
               districtId={districtId}
               sectorId={sectorId}
             />
-          </section>
+        </section>
         </main>
 
+        <InstallPrompt />
         <DashboardFloatingButton />
         <BottomNav />
       </div>
