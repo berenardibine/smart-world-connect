@@ -222,6 +222,200 @@ export type Database = {
           },
         ]
       }
+      communities: {
+        Row: {
+          cover_image: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_public: boolean | null
+          logo_image: string | null
+          member_count: number | null
+          name: string
+          seller_id: string
+          updated_at: string
+        }
+        Insert: {
+          cover_image?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          logo_image?: string | null
+          member_count?: number | null
+          name: string
+          seller_id: string
+          updated_at?: string
+        }
+        Update: {
+          cover_image?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          logo_image?: string | null
+          member_count?: number | null
+          name?: string
+          seller_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communities_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communities_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_members: {
+        Row: {
+          community_id: string
+          id: string
+          joined_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          community_id: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          community_id?: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_members_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_post_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_post_likes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_posts: {
+        Row: {
+          author_id: string
+          comments_count: number | null
+          community_id: string
+          content: string
+          created_at: string
+          id: string
+          images: string[] | null
+          likes_count: number | null
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          author_id: string
+          comments_count?: number | null
+          community_id: string
+          content: string
+          created_at?: string
+          id?: string
+          images?: string[] | null
+          likes_count?: number | null
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          author_id?: string
+          comments_count?: number | null
+          community_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          images?: string[] | null
+          likes_count?: number | null
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_posts_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_messages: {
         Row: {
           created_at: string
@@ -315,6 +509,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      learning_posts: {
+        Row: {
+          author_id: string
+          category: string
+          content: string | null
+          cover_image: string | null
+          created_at: string
+          description: string
+          duration_minutes: number | null
+          id: string
+          is_free: boolean | null
+          is_published: boolean | null
+          title: string
+          updated_at: string
+          video_url: string | null
+          view_count: number | null
+        }
+        Insert: {
+          author_id: string
+          category: string
+          content?: string | null
+          cover_image?: string | null
+          created_at?: string
+          description: string
+          duration_minutes?: number | null
+          id?: string
+          is_free?: boolean | null
+          is_published?: boolean | null
+          title: string
+          updated_at?: string
+          video_url?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          author_id?: string
+          category?: string
+          content?: string | null
+          cover_image?: string | null
+          created_at?: string
+          description?: string
+          duration_minutes?: number | null
+          id?: string
+          is_free?: boolean | null
+          is_published?: boolean | null
+          title?: string
+          updated_at?: string
+          video_url?: string | null
+          view_count?: number | null
+        }
+        Relationships: []
       }
       link_analytics: {
         Row: {
@@ -1215,6 +1460,54 @@ export type Database = {
           },
         ]
       }
+      reward_tasks: {
+        Row: {
+          color: string | null
+          created_at: string
+          created_by: string | null
+          description: string
+          expires_at: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          requirement_count: number | null
+          reward_coins: number
+          reward_points: number
+          task_type: string
+          title: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          description: string
+          expires_at?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          requirement_count?: number | null
+          reward_coins?: number
+          reward_points?: number
+          task_type: string
+          title: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          expires_at?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          requirement_count?: number | null
+          reward_coins?: number
+          reward_points?: number
+          task_type?: string
+          title?: string
+        }
+        Relationships: []
+      }
       sectors: {
         Row: {
           created_at: string | null
@@ -1530,6 +1823,39 @@ export type Database = {
           },
         ]
       }
+      user_rewards: {
+        Row: {
+          coins: number | null
+          id: string
+          last_login_date: string | null
+          level: number | null
+          points: number | null
+          streak_days: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          coins?: number | null
+          id?: string
+          last_login_date?: string | null
+          level?: number | null
+          points?: number | null
+          streak_days?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          coins?: number | null
+          id?: string
+          last_login_date?: string | null
+          level?: number | null
+          points?: number | null
+          streak_days?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -1588,6 +1914,50 @@ export type Database = {
             columns: ["plan_id"]
             isOneToOne: false
             referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_task_progress: {
+        Row: {
+          claimed: boolean | null
+          claimed_at: string | null
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          progress: number | null
+          task_id: string
+          user_id: string
+        }
+        Insert: {
+          claimed?: boolean | null
+          claimed_at?: string | null
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          progress?: number | null
+          task_id: string
+          user_id: string
+        }
+        Update: {
+          claimed?: boolean | null
+          claimed_at?: string | null
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          progress?: number | null
+          task_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_task_progress_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "reward_tasks"
             referencedColumns: ["id"]
           },
         ]
