@@ -17,6 +17,7 @@ import { SmartAcademy } from "@/components/home/SmartAcademy";
 import { AIChatBox } from "@/components/AIChatBox";
 import { Helmet } from "react-helmet";
 import { supabase } from "@/lib/supaseClient";
+import { Sparkles, TrendingUp, ShoppingBag, Heart, Star, Zap } from "lucide-react";
 
 export default function Home() {
   const [activeCategory, setActiveCategory] = useState("All");
@@ -69,13 +70,55 @@ export default function Home() {
         <link rel="canonical" href={typeof window !== 'undefined' ? window.location.origin : ''} />
       </Helmet>
 
-      <div className="min-h-screen bg-background pb-24">
+      <div className="min-h-screen bg-gradient-to-b from-background via-background to-secondary/20 pb-24">
         <Navbar />
 
-        <main className="pt-[120px] md:pt-20 space-y-8 sm:space-y-12">
-          {/* AI Greeting Section */}
+        <main className="pt-[120px] md:pt-20 space-y-10 sm:space-y-14">
+          {/* AI Greeting Section with Enhanced Design */}
           <section className="container mx-auto px-4 lg:px-6">
             <AIGreeting />
+          </section>
+
+          {/* Quick Stats Banner */}
+          <section className="container mx-auto px-4 lg:px-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              <div className="glass-card p-4 flex items-center gap-3 group hover:border-primary/40 transition-all">
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 group-hover:scale-110 transition-transform">
+                  <ShoppingBag className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Products</p>
+                  <p className="font-bold text-lg text-foreground">1000+</p>
+                </div>
+              </div>
+              <div className="glass-card p-4 flex items-center gap-3 group hover:border-success/40 transition-all">
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-success/20 to-success/5 group-hover:scale-110 transition-transform">
+                  <Star className="h-5 w-5 text-success" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Sellers</p>
+                  <p className="font-bold text-lg text-foreground">500+</p>
+                </div>
+              </div>
+              <div className="glass-card p-4 flex items-center gap-3 group hover:border-info/40 transition-all">
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-info/20 to-info/5 group-hover:scale-110 transition-transform">
+                  <Heart className="h-5 w-5 text-info" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Happy Buyers</p>
+                  <p className="font-bold text-lg text-foreground">10K+</p>
+                </div>
+              </div>
+              <div className="glass-card p-4 flex items-center gap-3 group hover:border-warning/40 transition-all">
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-warning/20 to-warning/5 group-hover:scale-110 transition-transform">
+                  <Zap className="h-5 w-5 text-warning" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Daily Deals</p>
+                  <p className="font-bold text-lg text-foreground">50+</p>
+                </div>
+              </div>
+            </div>
           </section>
 
           {/* Hero Smart Ads */}
@@ -83,18 +126,31 @@ export default function Home() {
             <SmartAdsCarousel />
           </section>
 
-          {/* Quick Categories */}
+          {/* Quick Categories with Icons */}
           <section className="container mx-auto px-4 lg:px-6">
             <QuickCategories />
           </section>
 
           {/* Recommended Products - Personalized */}
           <section className="container mx-auto px-4 lg:px-6">
+            <div className="flex items-center gap-2 mb-6">
+              <Sparkles className="h-5 w-5 text-primary" />
+              <h2 className="section-header">Recommended For You</h2>
+            </div>
             <RecommendedProductsSection />
           </section>
           
           {/* Trending Products - Horizontal Scroll */}
           <section>
+            <div className="container mx-auto px-4 lg:px-6 mb-4">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-destructive" />
+                <h2 className="section-header">Trending Now</h2>
+                <span className="px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-xs font-semibold animate-pulse">
+                  🔥 HOT
+                </span>
+              </div>
+            </div>
             <TrendingProducts />
           </section>
 
@@ -117,7 +173,10 @@ export default function Home() {
           <section className="container mx-auto px-4 lg:px-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div>
-                <h2 className="section-header">Browse Products</h2>
+                <h2 className="section-header flex items-center gap-2">
+                  <ShoppingBag className="h-6 w-6 text-primary" />
+                  Browse Products
+                </h2>
                 <p className="section-subheader">Discover amazing deals from verified sellers</p>
               </div>
               <LocationFilter
@@ -151,12 +210,15 @@ export default function Home() {
           <footer className="container mx-auto px-4 lg:px-6 pt-8 pb-4 border-t border-border">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-6">
-                <a href="/about" className="hover:text-foreground transition-colors">About</a>
-                <a href="/contact" className="hover:text-foreground transition-colors">Help</a>
-                <a href="/contact" className="hover:text-foreground transition-colors">Contact</a>
-                <a href="/privacy" className="hover:text-foreground transition-colors">Privacy</a>
+                <a href="/about" className="hover:text-primary transition-colors">About</a>
+                <a href="/contact" className="hover:text-primary transition-colors">Help</a>
+                <a href="/contact" className="hover:text-primary transition-colors">Contact</a>
+                <a href="/privacy" className="hover:text-primary transition-colors">Privacy</a>
               </div>
-              <p>© 2024 Smart Market. Shop Smart. Live Smart.</p>
+              <p className="flex items-center gap-1">
+                © 2024 Smart Market. 
+                <span className="text-primary font-medium">Shop Smart. Live Smart.</span>
+              </p>
             </div>
           </footer>
         </main>
