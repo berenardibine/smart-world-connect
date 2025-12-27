@@ -9,6 +9,12 @@ import { CategoryTabs } from "@/components/CategoryTabs";
 import { HomeProductGrid } from "@/components/HomeProductGrid";
 import { LocationFilter } from "@/components/LocationFilter";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { AIGreeting } from "@/components/home/AIGreeting";
+import { QuickCategories } from "@/components/home/QuickCategories";
+import { SmartChallenges } from "@/components/home/SmartChallenges";
+import { MotivationBanner } from "@/components/home/MotivationBanner";
+import { SmartAcademy } from "@/components/home/SmartAcademy";
+import { AIChatBox } from "@/components/AIChatBox";
 import { Helmet } from "react-helmet";
 import { supabase } from "@/lib/supaseClient";
 
@@ -54,10 +60,10 @@ export default function Home() {
   return (
     <>
       <Helmet>
-        <title>Smart Market - Buy & Sell Products Online in Rwanda</title>
-        <meta name="description" content="Rwanda's premier online marketplace. Buy and sell electronics, fashion, agriculture products, and more. Join thousands of buyers and sellers today." />
-        <meta property="og:title" content="Smart Market - Buy & Sell Products Online in Rwanda" />
-        <meta property="og:description" content="Rwanda's premier online marketplace. Buy and sell products easily." />
+        <title>Smart Market - Shop Smart. Live Smart.</title>
+        <meta name="description" content="Smart Market — your trusted online marketplace for shopping, marketing, and business in Rwanda. Find the best deals from local sellers." />
+        <meta property="og:title" content="Smart Market - Shop Smart. Live Smart." />
+        <meta property="og:description" content="Your trusted online marketplace for shopping, marketing, and business." />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Smart Market" />
         <link rel="canonical" href={typeof window !== 'undefined' ? window.location.origin : ''} />
@@ -66,28 +72,53 @@ export default function Home() {
       <div className="min-h-screen bg-background pb-24">
         <Navbar />
 
-        <main className="pt-[120px] sm:pt-20">
+        <main className="pt-[120px] md:pt-20 space-y-8 sm:space-y-12">
+          {/* AI Greeting Section */}
+          <section className="container mx-auto px-4 lg:px-6">
+            <AIGreeting />
+          </section>
+
           {/* Hero Smart Ads */}
-          <section className="container mx-auto px-3 sm:px-4 lg:px-6">
+          <section className="container mx-auto px-4 lg:px-6">
             <SmartAdsCarousel />
           </section>
 
+          {/* Quick Categories */}
+          <section className="container mx-auto px-4 lg:px-6">
+            <QuickCategories />
+          </section>
+
           {/* Recommended Products - Personalized */}
-          <section className="container mx-auto px-3 sm:px-4 lg:px-6 mt-6">
+          <section className="container mx-auto px-4 lg:px-6">
             <RecommendedProductsSection />
           </section>
           
           {/* Trending Products - Horizontal Scroll */}
-          <section className="mt-8">
+          <section>
             <TrendingProducts />
+          </section>
+
+          {/* Smart Challenges & Rewards */}
+          <section className="container mx-auto px-4 lg:px-6">
+            <SmartChallenges />
+          </section>
+
+          {/* Smart Academy */}
+          <section className="container mx-auto px-4 lg:px-6">
+            <SmartAcademy />
+          </section>
+
+          {/* Motivation Banner */}
+          <section className="container mx-auto px-4 lg:px-6">
+            <MotivationBanner />
           </section>
           
           {/* Browse All Products Section */}
-          <section className="container mx-auto px-3 sm:px-4 lg:px-6 mt-8">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <section className="container mx-auto px-4 lg:px-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-foreground">Browse Products</h2>
-                <p className="text-sm text-muted-foreground mt-0.5">Discover amazing deals from verified sellers</p>
+                <h2 className="section-header">Browse Products</h2>
+                <p className="section-subheader">Discover amazing deals from verified sellers</p>
               </div>
               <LocationFilter
                 provinceId={provinceId}
@@ -114,10 +145,24 @@ export default function Home() {
               districtId={districtId}
               sectorId={sectorId}
             />
-        </section>
+          </section>
+
+          {/* Footer */}
+          <footer className="container mx-auto px-4 lg:px-6 pt-8 pb-4 border-t border-border">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-6">
+                <a href="/about" className="hover:text-foreground transition-colors">About</a>
+                <a href="/contact" className="hover:text-foreground transition-colors">Help</a>
+                <a href="/contact" className="hover:text-foreground transition-colors">Contact</a>
+                <a href="/privacy" className="hover:text-foreground transition-colors">Privacy</a>
+              </div>
+              <p>© 2024 Smart Market. Shop Smart. Live Smart.</p>
+            </div>
+          </footer>
         </main>
 
         <InstallPrompt />
+        <AIChatBox />
         <DashboardFloatingButton />
         <BottomNav />
       </div>
