@@ -48,6 +48,9 @@ import LinkAnalytics from "./pages/admin/LinkAnalytics";
 import LocationManagement from "./pages/admin/LocationManagement";
 import Shops from "./pages/Shops";
 import ShopDetail from "./pages/ShopDetail";
+import Community from "./pages/Community";
+import Rewards from "./pages/Rewards";
+import Academy from "./pages/Academy";
 
 const queryClient = new QueryClient();
 
@@ -93,6 +96,9 @@ const App = () => (
           <Route path="/marketing" element={<Marketing />} />
           <Route path="/shops" element={<Shops />} />
           <Route path="/shop/:id" element={<ShopDetail />} />
+          <Route path="/community" element={<Community />} />
+          <Route path="/rewards" element={<Rewards />} />
+          <Route path="/academy" element={<Academy />} />
           <Route path="/post-opportunity" element={<PostOpportunity />} />
           <Route path="/seller/dashboard" element={<SellerDashboard />} />
           <Route path="/seller/products" element={<SellerProducts />} />
