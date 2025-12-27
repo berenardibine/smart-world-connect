@@ -27,11 +27,11 @@ const NotFound = () => {
 
                                                                                                         {/* Headline */}
                                                                                                               <h1 className="text-[80px] sm:text-[100px] font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-amber-400 to-yellow-400 drop-shadow-lg">
-                                                                                                                      404
+                                                                                                                      SMART MARKET
                                                                                                                             </h1>
 
                                                                                                                                   <h2 className="text-2xl sm:text-3xl font-semibold mt-2 text-gray-700 dark:text-gray-200">
-                                                                                                                                          Oops! Page Not Found 🚧
+                                                                                                                                          Page under construction 🚧
                                                                                                                                                 </h2>
 
                                                                                                                                                       {/* Subtext */}
