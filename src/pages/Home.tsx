@@ -199,7 +199,7 @@ export default function Home() {
             {/* Product Grid with Infinite Scroll */}
             <HomeProductGrid 
               category={activeCategory === "All" ? undefined : activeCategory}
-              limit={12}
+              limit={120000}
               provinceId={provinceId}
               districtId={districtId}
               sectorId={sectorId}
@@ -216,7 +216,7 @@ export default function Home() {
                 <a href="/privacy" className="hover:text-primary transition-colors">Privacy</a>
               </div>
               <p className="flex items-center gap-1">
-                © 2024 Smart Market. 
+                © 2025 Smart Market. 
                 <span className="text-primary font-medium">Shop Smart. Live Smart.</span>
               </p>
             </div>
