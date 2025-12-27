@@ -36,7 +36,7 @@ const NotFound = () => {
 
                                                                                                                                                       {/* Subtext */}
                                                                                                                                                             <p className="text-gray-600 dark:text-gray-400 mt-4 max-w-lg leading-relaxed">
-                                                                                                                                                                    The page you’re looking for is under .  
+                                                                                                                                                                    The page you’re looking for is under construction .  
                                                                                                                                                                             Our <span className="text-orange-500 font-semibold">Smart Market</span> team is working hard to make sure everything runs perfectly again.
                                                                                                                                                                                   </p>
 
