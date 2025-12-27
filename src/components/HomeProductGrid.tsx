@@ -38,15 +38,15 @@ interface HomeProductGridProps {
 
 export const HomeProductGrid = ({ 
   category, 
-  limit = 12,
+  limit = 120000,
   provinceId,
   districtId,
   sectorId
 }: HomeProductGridProps) => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
   const [likedProducts, setLikedProducts] = useState<Set<string>>(new Set());
   const [productStats, setProductStats] = useState<Record<string, { rating: number; commentCount: number }>>({});
   const observerRef = useRef<IntersectionObserver | null>(null);
