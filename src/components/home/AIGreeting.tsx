@@ -114,12 +114,6 @@ export function AIGreeting() {
           </Link>
         </div>
       </div>
-
-      {/* AI Badge */}
-      <div className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/20 backdrop-blur-sm text-primary text-xs font-semibold">
-        <Sparkles className="h-3.5 w-3.5" />
-        AI Powered
-      </div>
     </div>
   );
 }
