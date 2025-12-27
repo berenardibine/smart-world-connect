@@ -1,65 +1,24 @@
-import { link } from "react-router-dom"
-import {uselocation} from "react-router-dom";
-import { Wrench, Sparkles, Rocket, ShoppingBag } from "lucide-react";
+import { useLocation } from "react-router-dom";
+import { useEffect } from "react";
 
-export default function UnderConstruction() {
+const NotFound = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    console.error("404 Error: User attempted to access non-existent route:", location.pathname);
+  }, [location.pathname]);
+
   return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-orange-50 via-white to-amber-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-center px-6 transition-all duration-700">
-            
-                  {/* Floating Background Glow */}
-                        <div className="absolute inset-0 -z-10 overflow-hidden">
-                                <div className="absolute w-72 h-72 bg-gradient-to-r from-orange-300 to-yellow-400 opacity-30 blur-3xl top-20 left-10 animate-pulse" />
-                                        <div className="absolute w-60 h-60 bg-gradient-to-r from-amber-400 to-orange-600 opacity-25 blur-3xl bottom-20 right-10 animate-pulse" />
-                                              </div>
+    <div className="flex min-h-screen items-center justify-center bg-gray-100">
+      <div className="text-center">
+        <h1 className="mb-4 text-4xl font-bold">404</h1>
+        <p className="mb-4 text-xl text-gray-600">Oops! Page not found</p>
+        <a href="/" className="text-blue-500 underline hover:text-blue-700">
+          Return to Home
+        </a>
+      </div>
+    </div>
+  );
+};
 
-                                                    {/* Main Illustration */}
-                                                          <div className="relative mb-8">
-                                                                  <div className="flex justify-center items-center space-x-5">
-                                                                            <Wrench className="w-12 h-12 text-orange-500 dark:text-amber-400 animate-spin-slow" />
-                                                                                      <ShoppingBag className="w-14 h-14 text-orange-600 dark:text-amber-500 animate-bounce" />
-                                                                                                <Sparkles className="w-12 h-12 text-yellow-500 dark:text-amber-300 animate-pulse" />
-                                                                                                        </div>
-                                                                                                              </div>
-
-                                                                                                                    {/* Headline */}
-                                                                                                                          <h1 className="text-5xl sm:text-6xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-orange-600 via-amber-500 to-yellow-400 drop-shadow-md">
-                                                                                                                                  🚧 Page Under Construction
-                                                                                                                                        </h1>
-
-                                                                                                                                              {/* Subtext */}
-                                                                                                                                                    <p className="mt-5 text-gray-700 dark:text-gray-300 text-lg max-w-2xl leading-relaxed">
-                                                                                                                                                            Our <span className="text-orange-500 font-semibold">Smart Market Team</span> is working day and night 
-                                                                                                                                                                    <br /> to bring you something <span className="text-amber-500 font-bold">amazing</span> 💡  
-                                                                                                                                                                            <br /> We’re upgrading your experience so that shopping feels even smarter, faster, and more fun.
-                                                                                                                                                                                  </p>
-
-                                                                                                                                                                                        <p className="mt-4 text-gray-500 italic dark:text-gray-400">
-                                                                                                                                                                                                “Innovation takes time — and we’re crafting perfection for you 💛”
-                                                                                                                                                                                                      </p>
-
-                                                                                                                                                                                                            {/* Call to Action Buttons */}
-                                                                                                                                                                                                                  <div className="mt-8 flex flex-col sm:flex-row gap-4">
-                                                                                                                                                                                                                          <Link
-                                                                                                                                                                                                                                    to="/"
-                                                                                                                                                                                                                                              className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-full font-semibold shadow-lg transition-all duration-300 flex items-center justify-center space-x-2"
-                                                                                                                                                                                                                                                      >
-                                                                                                                                                                                                                                                                <Rocket className="w-5 h-5" />
-                                                                                                                                                                                                                                                                          <span>Go Back Home</span>
-                                                                                                                                                                                                                                                                                  </Link>
-
-                                                                                                                                                                                                                                                                                          <Link
-                                                                                                                                                                                                                                                                                                    to="/products"
-                                                                                                                                                                                                                                                                                                              className="border border-orange-400 text-orange-600 dark:text-amber-400 hover:bg-orange-50 dark:hover:bg-gray-800 px-6 py-3 rounded-full font-semibold shadow-md transition-all duration-300"
-                                                                                                                                                                                                                                                                                                                      >
-                                                                                                                                                                                                                                                                                                                                Explore Other Products
-                                                                                                                                                                                                                                                                                                                                        </Link>
-                                                                                                                                                                                                                                                                                                                                              </div>
-
-                                                                                                                                                                                                                                                                                                                                                    {/* Footer */}
-                                                                                                                                                                                                                                                                                                                                                          <footer className="mt-16 text-sm text-gray-500 dark:text-gray-400">
-                                                                                                                                                                                                                                                                                                                                                                  © {new Date().getFullYear()} <span className="text-orange-500 font-semibold">Smart Market</span> ·  
-                                                                                                                                                                                                                                                                                                                                                                          Shop Smart. Live Smart. 💫
-                                                                                                                                                                                                                                                                                                                                                                                </footer>
-                                                                                                                                                                                                                                                                                                                                                                                    </div>
-                                                                                                                                                                                                                                                                                                                                                                                      );
-                                                                                                                                                                                                                                                                                                                                                                                      }
+export default NotFound;
