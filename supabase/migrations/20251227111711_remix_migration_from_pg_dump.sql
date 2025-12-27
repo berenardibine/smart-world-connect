@@ -268,42 +268,44 @@ DECLARE
   v_referrer_id uuid;
   v_referrer_type text;
   v_referral_id uuid;
-  v_result jsonb;
 BEGIN
+  -- Normalize the referral code (uppercase, trim)
+  p_referral_code := UPPER(TRIM(p_referral_code));
+  
   -- Find the referrer by code
   SELECT id, user_type INTO v_referrer_id, v_referrer_type
   FROM profiles
-  WHERE referral_code = p_referral_code;
+  WHERE UPPER(referral_code) = p_referral_code;
   
   -- Check if referral code exists
   IF v_referrer_id IS NULL THEN
     INSERT INTO referral_logs (referral_code, status, reason)
     VALUES (p_referral_code, 'invalid', 'Referral code not found');
-    RETURN jsonb_build_object('success', false, 'error', 'Invalid referral code');
+    RETURN jsonb_build_object('success', false, 'error', 'Referral code not found. Please check and try again.');
   END IF;
   
   -- Check if referrer is a seller
   IF v_referrer_type != 'seller' THEN
     INSERT INTO referral_logs (referral_code, status, reason)
     VALUES (p_referral_code, 'invalid', 'Referrer is not a seller');
-    RETURN jsonb_build_object('success', false, 'error', 'Only sellers can refer new users');
+    RETURN jsonb_build_object('success', false, 'error', 'This referral code is not from an active seller.');
   END IF;
   
   -- Check for self-referral
   IF v_referrer_id = p_referred_user_id THEN
     INSERT INTO referral_logs (referral_code, status, reason)
     VALUES (p_referral_code, 'suspected', 'Self-referral detected');
-    RETURN jsonb_build_object('success', false, 'error', 'Self-referral not allowed');
+    RETURN jsonb_build_object('success', false, 'error', 'You cannot use your own referral code.');
   END IF;
   
   -- Check if user already has a referral
   IF EXISTS (SELECT 1 FROM referrals WHERE referred_user_id = p_referred_user_id) THEN
-    RETURN jsonb_build_object('success', false, 'error', 'User already has a referral');
+    RETURN jsonb_build_object('success', true, 'message', 'Referral already applied to your account.');
   END IF;
   
   -- Create the referral
-  INSERT INTO referrals (referrer_id, referred_user_id, referral_code, is_seller_referral, status)
-  VALUES (v_referrer_id, p_referred_user_id, p_referral_code, true, 'active')
+  INSERT INTO referrals (referrer_id, referred_user_id, referral_code, is_seller_referral, status, is_valid)
+  VALUES (v_referrer_id, p_referred_user_id, p_referral_code, true, 'active', true)
   RETURNING id INTO v_referral_id;
   
   -- Update the referred user's profile
@@ -313,7 +315,7 @@ BEGIN
   INSERT INTO referral_logs (referral_id, referral_code, status, reason)
   VALUES (v_referral_id, p_referral_code, 'valid', 'Referral successfully processed');
   
-  RETURN jsonb_build_object('success', true, 'referral_id', v_referral_id);
+  RETURN jsonb_build_object('success', true, 'referral_id', v_referral_id, 'message', 'Referral applied successfully!');
 END;
 $$;
 
@@ -500,6 +502,42 @@ END;
 $$;
 
 
+--
+-- Name: validate_referral_code(text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.validate_referral_code(p_referral_code text) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+DECLARE
+  v_referrer_id uuid;
+  v_referrer_type text;
+  v_referrer_name text;
+BEGIN
+  -- Normalize the referral code
+  p_referral_code := UPPER(TRIM(p_referral_code));
+  
+  -- Find the referrer by code
+  SELECT id, user_type, full_name INTO v_referrer_id, v_referrer_type, v_referrer_name
+  FROM profiles
+  WHERE UPPER(referral_code) = p_referral_code;
+  
+  -- Check if referral code exists
+  IF v_referrer_id IS NULL THEN
+    RETURN jsonb_build_object('valid', false, 'error', 'Referral code not found');
+  END IF;
+  
+  -- Check if referrer is a seller
+  IF v_referrer_type != 'seller' THEN
+    RETURN jsonb_build_object('valid', false, 'error', 'This code is not from an active seller');
+  END IF;
+  
+  RETURN jsonb_build_object('valid', true, 'referrer_name', v_referrer_name);
+END;
+$$;
+
+
 SET default_table_access_method = heap;
 
 --
@@ -612,6 +650,34 @@ CREATE TABLE public.conversations (
     seller_id uuid NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: districts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.districts (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    province_id uuid NOT NULL,
+    name text NOT NULL,
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: link_analytics; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.link_analytics (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    product_id uuid NOT NULL,
+    user_id uuid,
+    source text DEFAULT 'direct'::text,
+    event text DEFAULT 'view'::text NOT NULL,
+    referrer text,
+    user_agent text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -808,6 +874,7 @@ CREATE TABLE public.products (
     contact_call text,
     discount numeric DEFAULT 0,
     discount_expiry timestamp with time zone,
+    shop_id uuid,
     CONSTRAINT products_description_check CHECK ((length(description) <= 1000)),
     CONSTRAINT products_images_check CHECK (((array_length(images, 1) >= 1) AND (array_length(images, 1) <= 5))),
     CONSTRAINT products_price_check CHECK ((price >= (0)::numeric)),
@@ -845,8 +912,24 @@ CREATE TABLE public.profiles (
     verification_notes text,
     last_active timestamp with time zone DEFAULT now(),
     referred_by text,
+    province_id uuid,
+    district_id uuid,
+    sector_id uuid,
+    installed_pwa boolean DEFAULT false,
+    installed_at timestamp with time zone,
     CONSTRAINT profiles_status_check CHECK ((status = ANY (ARRAY['active'::text, 'blocked'::text, 'banned'::text]))),
     CONSTRAINT profiles_user_type_check CHECK ((user_type = ANY (ARRAY['buyer'::text, 'seller'::text])))
+);
+
+
+--
+-- Name: provinces; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.provinces (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    name text NOT NULL,
+    created_at timestamp with time zone DEFAULT now()
 );
 
 
@@ -867,6 +950,32 @@ CREATE VIEW public.public_profiles WITH (security_invoker='true') AS
     created_at,
     referral_code
    FROM public.profiles;
+
+
+--
+-- Name: push_subscriptions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.push_subscriptions (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_id uuid,
+    endpoint text NOT NULL,
+    p256dh text NOT NULL,
+    auth text NOT NULL,
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: pwa_installs_log; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.pwa_installs_log (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_id uuid,
+    event_type text NOT NULL,
+    created_at timestamp with time zone DEFAULT now()
+);
 
 
 --
@@ -902,6 +1011,18 @@ CREATE TABLE public.referrals (
 
 
 --
+-- Name: sectors; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.sectors (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    district_id uuid NOT NULL,
+    name text NOT NULL,
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
 -- Name: seller_activity; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -912,6 +1033,27 @@ CREATE TABLE public.seller_activity (
     updates_this_month integer DEFAULT 0 NOT NULL,
     edits_this_month integer DEFAULT 0 NOT NULL,
     last_reset_date timestamp with time zone DEFAULT date_trunc('month'::text, now()) NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: shops; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.shops (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    seller_id uuid NOT NULL,
+    name text NOT NULL,
+    description text,
+    logo_url text,
+    contact_phone text,
+    contact_email text,
+    province_id uuid,
+    district_id uuid,
+    sector_id uuid,
+    is_active boolean DEFAULT true,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now()
 );
@@ -1070,6 +1212,30 @@ ALTER TABLE ONLY public.conversations
 
 
 --
+-- Name: districts districts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.districts
+    ADD CONSTRAINT districts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: districts districts_province_id_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.districts
+    ADD CONSTRAINT districts_province_id_name_key UNIQUE (province_id, name);
+
+
+--
+-- Name: link_analytics link_analytics_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.link_analytics
+    ADD CONSTRAINT link_analytics_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: marketing_analytics marketing_analytics_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1198,6 +1364,46 @@ ALTER TABLE ONLY public.profiles
 
 
 --
+-- Name: provinces provinces_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.provinces
+    ADD CONSTRAINT provinces_name_key UNIQUE (name);
+
+
+--
+-- Name: provinces provinces_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.provinces
+    ADD CONSTRAINT provinces_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: push_subscriptions push_subscriptions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.push_subscriptions
+    ADD CONSTRAINT push_subscriptions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: push_subscriptions push_subscriptions_user_id_endpoint_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.push_subscriptions
+    ADD CONSTRAINT push_subscriptions_user_id_endpoint_key UNIQUE (user_id, endpoint);
+
+
+--
+-- Name: pwa_installs_log pwa_installs_log_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pwa_installs_log
+    ADD CONSTRAINT pwa_installs_log_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: referral_logs referral_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1222,6 +1428,22 @@ ALTER TABLE ONLY public.referrals
 
 
 --
+-- Name: sectors sectors_district_id_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sectors
+    ADD CONSTRAINT sectors_district_id_name_key UNIQUE (district_id, name);
+
+
+--
+-- Name: sectors sectors_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sectors
+    ADD CONSTRAINT sectors_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: seller_activity seller_activity_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1235,6 +1457,14 @@ ALTER TABLE ONLY public.seller_activity
 
 ALTER TABLE ONLY public.seller_activity
     ADD CONSTRAINT seller_activity_user_id_key UNIQUE (user_id);
+
+
+--
+-- Name: shops shops_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shops
+    ADD CONSTRAINT shops_pkey PRIMARY KEY (id);
 
 
 --
@@ -1375,6 +1605,34 @@ CREATE INDEX idx_comments_seller_id ON public.comments USING btree (seller_id);
 
 
 --
+-- Name: idx_districts_province; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_districts_province ON public.districts USING btree (province_id);
+
+
+--
+-- Name: idx_link_analytics_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_link_analytics_created_at ON public.link_analytics USING btree (created_at);
+
+
+--
+-- Name: idx_link_analytics_product_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_link_analytics_product_id ON public.link_analytics USING btree (product_id);
+
+
+--
+-- Name: idx_link_analytics_source; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_link_analytics_source ON public.link_analytics USING btree (source);
+
+
+--
 -- Name: idx_opportunities_expire_date; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1410,6 +1668,13 @@ CREATE INDEX idx_products_discount ON public.products USING btree (discount) WHE
 
 
 --
+-- Name: idx_profiles_district; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_profiles_district ON public.profiles USING btree (district_id);
+
+
+--
 -- Name: idx_profiles_identity_verified; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1421,6 +1686,27 @@ CREATE INDEX idx_profiles_identity_verified ON public.profiles USING btree (iden
 --
 
 CREATE INDEX idx_profiles_last_active ON public.profiles USING btree (last_active);
+
+
+--
+-- Name: idx_profiles_province; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_profiles_province ON public.profiles USING btree (province_id);
+
+
+--
+-- Name: idx_profiles_sector; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_profiles_sector ON public.profiles USING btree (sector_id);
+
+
+--
+-- Name: idx_sectors_district; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_sectors_district ON public.sectors USING btree (district_id);
 
 
 --
@@ -1487,6 +1773,13 @@ CREATE TRIGGER update_seller_rating_trigger AFTER INSERT ON public.product_ratin
 
 
 --
+-- Name: shops update_shops_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER update_shops_updated_at BEFORE UPDATE ON public.shops FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+
+--
 -- Name: updates update_updates_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -1546,6 +1839,22 @@ ALTER TABLE ONLY public.comments
 
 ALTER TABLE ONLY public.conversations
     ADD CONSTRAINT conversations_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE CASCADE;
+
+
+--
+-- Name: districts districts_province_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.districts
+    ADD CONSTRAINT districts_province_id_fkey FOREIGN KEY (province_id) REFERENCES public.provinces(id) ON DELETE CASCADE;
+
+
+--
+-- Name: link_analytics link_analytics_product_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.link_analytics
+    ADD CONSTRAINT link_analytics_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE CASCADE;
 
 
 --
@@ -1653,11 +1962,59 @@ ALTER TABLE ONLY public.products
 
 
 --
+-- Name: products products_shop_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.products
+    ADD CONSTRAINT products_shop_id_fkey FOREIGN KEY (shop_id) REFERENCES public.shops(id);
+
+
+--
+-- Name: profiles profiles_district_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.profiles
+    ADD CONSTRAINT profiles_district_id_fkey FOREIGN KEY (district_id) REFERENCES public.districts(id);
+
+
+--
 -- Name: profiles profiles_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.profiles
     ADD CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: profiles profiles_province_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.profiles
+    ADD CONSTRAINT profiles_province_id_fkey FOREIGN KEY (province_id) REFERENCES public.provinces(id);
+
+
+--
+-- Name: profiles profiles_sector_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.profiles
+    ADD CONSTRAINT profiles_sector_id_fkey FOREIGN KEY (sector_id) REFERENCES public.sectors(id);
+
+
+--
+-- Name: push_subscriptions push_subscriptions_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.push_subscriptions
+    ADD CONSTRAINT push_subscriptions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+
+
+--
+-- Name: pwa_installs_log pwa_installs_log_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pwa_installs_log
+    ADD CONSTRAINT pwa_installs_log_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id);
 
 
 --
@@ -1685,11 +2042,51 @@ ALTER TABLE ONLY public.referrals
 
 
 --
+-- Name: sectors sectors_district_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sectors
+    ADD CONSTRAINT sectors_district_id_fkey FOREIGN KEY (district_id) REFERENCES public.districts(id) ON DELETE CASCADE;
+
+
+--
 -- Name: seller_activity seller_activity_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.seller_activity
     ADD CONSTRAINT seller_activity_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: shops shops_district_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shops
+    ADD CONSTRAINT shops_district_id_fkey FOREIGN KEY (district_id) REFERENCES public.districts(id);
+
+
+--
+-- Name: shops shops_province_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shops
+    ADD CONSTRAINT shops_province_id_fkey FOREIGN KEY (province_id) REFERENCES public.provinces(id);
+
+
+--
+-- Name: shops shops_sector_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shops
+    ADD CONSTRAINT shops_sector_id_fkey FOREIGN KEY (sector_id) REFERENCES public.sectors(id);
+
+
+--
+-- Name: shops shops_seller_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shops
+    ADD CONSTRAINT shops_seller_id_fkey FOREIGN KEY (seller_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
 
 
 --
@@ -1821,6 +2218,20 @@ CREATE POLICY "Admins can manage ads" ON public.ads USING (public.has_role(auth.
 
 
 --
+-- Name: shops Admins can manage all shops; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Admins can manage all shops" ON public.shops USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
+-- Name: districts Admins can manage districts; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Admins can manage districts" ON public.districts USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
 -- Name: marketing_posts Admins can manage marketing posts; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -1832,6 +2243,20 @@ CREATE POLICY "Admins can manage marketing posts" ON public.marketing_posts USIN
 --
 
 CREATE POLICY "Admins can manage plans" ON public.plans USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
+-- Name: provinces Admins can manage provinces; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Admins can manage provinces" ON public.provinces USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
+-- Name: sectors Admins can manage sectors; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Admins can manage sectors" ON public.sectors USING (public.has_role(auth.uid(), 'admin'::public.app_role));
 
 
 --
@@ -1919,6 +2344,13 @@ CREATE POLICY "Admins can view all admin messages" ON public.admin_messages FOR 
 
 
 --
+-- Name: link_analytics Admins can view all analytics; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Admins can view all analytics" ON public.link_analytics FOR SELECT USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
 -- Name: marketing_analytics Admins can view all analytics; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -1930,6 +2362,13 @@ CREATE POLICY "Admins can view all analytics" ON public.marketing_analytics FOR 
 --
 
 CREATE POLICY "Admins can view all analytics" ON public.product_analytics FOR SELECT USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
+-- Name: pwa_installs_log Admins can view all install logs; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Admins can view all install logs" ON public.pwa_installs_log FOR SELECT USING (public.has_role(auth.uid(), 'admin'::public.app_role));
 
 
 --
@@ -1968,6 +2407,13 @@ CREATE POLICY "Admins can view referral logs" ON public.referral_logs FOR SELECT
 
 
 --
+-- Name: link_analytics Anyone can insert analytics; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Anyone can insert analytics" ON public.link_analytics FOR INSERT WITH CHECK (true);
+
+
+--
 -- Name: product_analytics Anyone can insert analytics; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -1989,6 +2435,13 @@ CREATE POLICY "Anyone can view active ads" ON public.ads FOR SELECT USING (((is_
 
 
 --
+-- Name: shops Anyone can view active shops; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Anyone can view active shops" ON public.shops FOR SELECT USING ((is_active = true));
+
+
+--
 -- Name: comments Anyone can view comments; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -1996,10 +2449,31 @@ CREATE POLICY "Anyone can view comments" ON public.comments FOR SELECT USING (tr
 
 
 --
+-- Name: districts Anyone can view districts; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Anyone can view districts" ON public.districts FOR SELECT USING (true);
+
+
+--
+-- Name: provinces Anyone can view provinces; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Anyone can view provinces" ON public.provinces FOR SELECT USING (true);
+
+
+--
 -- Name: product_ratings Anyone can view ratings; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY "Anyone can view ratings" ON public.product_ratings FOR SELECT USING (true);
+
+
+--
+-- Name: sectors Anyone can view sectors; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Anyone can view sectors" ON public.sectors FOR SELECT USING (true);
 
 
 --
@@ -2101,6 +2575,13 @@ CREATE POLICY "Public can view profiles" ON public.profiles FOR SELECT USING (tr
 
 
 --
+-- Name: shops Sellers can create their own shops; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Sellers can create their own shops" ON public.shops FOR INSERT WITH CHECK ((auth.uid() = seller_id));
+
+
+--
 -- Name: updates Sellers can create their own updates; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -2112,6 +2593,13 @@ CREATE POLICY "Sellers can create their own updates" ON public.updates FOR INSER
 --
 
 CREATE POLICY "Sellers can delete their own products" ON public.products FOR DELETE USING ((auth.uid() = seller_id));
+
+
+--
+-- Name: shops Sellers can delete their own shops; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Sellers can delete their own shops" ON public.shops FOR DELETE USING ((auth.uid() = seller_id));
 
 
 --
@@ -2140,6 +2628,13 @@ CREATE POLICY "Sellers can manage their own marketing posts" ON public.marketing
 --
 
 CREATE POLICY "Sellers can update their own products" ON public.products FOR UPDATE USING ((auth.uid() = seller_id));
+
+
+--
+-- Name: shops Sellers can update their own shops; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Sellers can update their own shops" ON public.shops FOR UPDATE USING ((auth.uid() = seller_id));
 
 
 --
@@ -2175,6 +2670,15 @@ CREATE POLICY "Sellers can view their own referrals" ON public.referrals FOR SEL
 --
 
 CREATE POLICY "Sellers can view their own suggestions" ON public.ai_suggestions FOR SELECT USING ((auth.uid() = seller_id));
+
+
+--
+-- Name: link_analytics Sellers can view their product analytics; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Sellers can view their product analytics" ON public.link_analytics FOR SELECT USING ((EXISTS ( SELECT 1
+   FROM public.products
+  WHERE ((products.id = link_analytics.product_id) AND (products.seller_id = auth.uid())))));
 
 
 --
@@ -2278,10 +2782,24 @@ CREATE POLICY "Users can insert their own browsing history" ON public.user_brows
 
 
 --
+-- Name: pwa_installs_log Users can insert their own install logs; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can insert their own install logs" ON public.pwa_installs_log FOR INSERT WITH CHECK (((auth.uid() = user_id) OR (user_id IS NULL)));
+
+
+--
 -- Name: profiles Users can insert their own profile; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY "Users can insert their own profile" ON public.profiles FOR INSERT WITH CHECK ((auth.uid() = id));
+
+
+--
+-- Name: push_subscriptions Users can manage their own subscriptions; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can manage their own subscriptions" ON public.push_subscriptions USING ((auth.uid() = user_id));
 
 
 --
@@ -2389,6 +2907,13 @@ CREATE POLICY "Users can view their own browsing history" ON public.user_browsin
 
 
 --
+-- Name: pwa_installs_log Users can view their own install logs; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can view their own install logs" ON public.pwa_installs_log FOR SELECT USING ((auth.uid() = user_id));
+
+
+--
 -- Name: notifications Users can view their own notifications; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -2459,6 +2984,18 @@ ALTER TABLE public.contact_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: districts; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.districts ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: link_analytics; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.link_analytics ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: marketing_analytics; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -2525,6 +3062,24 @@ ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: provinces; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.provinces ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: push_subscriptions; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.push_subscriptions ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: pwa_installs_log; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.pwa_installs_log ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: referral_logs; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -2537,10 +3092,22 @@ ALTER TABLE public.referral_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.referrals ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: sectors; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.sectors ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: seller_activity; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.seller_activity ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: shops; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.shops ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: site_settings; Type: ROW SECURITY; Schema: public; Owner: -
