@@ -29,6 +29,7 @@ export default defineConfig(({ mode }) => ({
                 maxEntries: 100,
                 maxAgeSeconds: 60 * 60 * 24, // 24 hours
               },
+              networkTimeoutSeconds: 10,
             },
           },
           {
@@ -43,8 +44,8 @@ export default defineConfig(({ mode }) => ({
             },
           },
         ],
-        navigateFallback: "/offline.html",
-        navigateFallbackDenylist: [/^\/api/],
+        navigateFallback: null,
+        cleanupOutdatedCaches: true,
       },
     }),
   ].filter(Boolean),
