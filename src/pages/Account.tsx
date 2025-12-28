@@ -527,8 +527,12 @@ export default function Account() {
               <FileText className="mr-2 h-4 w-4" />
               Disclaimer
             </Button>
-            <a href="/contact"  variant="ghost" className="hover:text-primary transition-colors,w-full justify-start">Contact Support</a>
-             </CardContent>
+            <Button a href="/contact" className="hover:text-primary transition-colors"
+              variant="ghost" class name="w-full justify-start">
+              <FileText calssName="mr-2 h-4 w-4" />
+                Contact support 
+            </Button>
+          </CardContent>
         </Card>
 
         {/* Logout */}
