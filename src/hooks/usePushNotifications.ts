@@ -1,17 +1,42 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supaseClient";
 
+const VAPID_PUBLIC_KEY = 'placeholder_vapid_key'; // Would need real VAPID key for production
+
 export const usePushNotifications = () => {
   const [permission, setPermission] = useState<NotificationPermission>("default");
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
 
   useEffect(() => {
     if ("Notification" in window) {
       setPermission(Notification.permission);
     }
+    registerServiceWorker();
     checkSubscription();
   }, []);
+
+  const registerServiceWorker = async () => {
+    if (!("serviceWorker" in navigator)) {
+      console.log("Service Worker not supported");
+      return;
+    }
+
+    try {
+      const reg = await navigator.serviceWorker.register('/sw.js', {
+        scope: '/'
+      });
+      console.log("Service Worker registered:", reg);
+      setRegistration(reg);
+      
+      // Wait for the service worker to be ready
+      await navigator.serviceWorker.ready;
+      console.log("Service Worker ready");
+    } catch (error) {
+      console.error("Service Worker registration failed:", error);
+    }
+  };
 
   const checkSubscription = async () => {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
@@ -19,8 +44,8 @@ export const usePushNotifications = () => {
     }
 
     try {
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
+      const reg = await navigator.serviceWorker.ready;
+      const subscription = await reg.pushManager.getSubscription();
       setIsSubscribed(!!subscription);
     } catch (error) {
       console.error("Error checking push subscription:", error);
@@ -57,10 +82,9 @@ export const usePushNotifications = () => {
     }
 
     try {
-      const registration = await navigator.serviceWorker.ready;
+      const reg = await navigator.serviceWorker.ready;
       
-      // For now, we'll just track that user wants notifications
-      // Full VAPID implementation would require server-side keys
+      // Store subscription preference in database
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user?.id) {
@@ -68,8 +92,8 @@ export const usePushNotifications = () => {
         await supabase.from("push_subscriptions").upsert({
           user_id: session.user.id,
           endpoint: "browser_notifications_enabled",
-          p256dh: "placeholder",
-          auth: "placeholder"
+          p256dh: "enabled",
+          auth: "enabled"
         }, {
           onConflict: "user_id,endpoint"
         });
@@ -81,21 +105,53 @@ export const usePushNotifications = () => {
     }
   };
 
+  const unsubscribe = async () => {
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const subscription = await reg.pushManager.getSubscription();
+      
+      if (subscription) {
+        await subscription.unsubscribe();
+      }
+
+      // Remove from database
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        await supabase
+          .from("push_subscriptions")
+          .delete()
+          .eq("user_id", session.user.id);
+      }
+
+      setIsSubscribed(false);
+    } catch (error) {
+      console.error("Error unsubscribing:", error);
+    }
+  };
+
   const showLocalNotification = useCallback((title: string, options?: NotificationOptions) => {
-    if (permission === "granted") {
+    if (permission === "granted" && registration) {
+      registration.showNotification(title, {
+        icon: "/favicon.png",
+        badge: "/favicon.png",
+        ...options
+      });
+    } else if (permission === "granted") {
+      // Fallback to basic notification
       new Notification(title, {
-        icon: "/favicon.ico",
-        badge: "/favicon.ico",
+        icon: "/favicon.png",
+        badge: "/favicon.png",
         ...options
       });
     }
-  }, [permission]);
+  }, [permission, registration]);
 
   return {
     permission,
     isSubscribed,
     loading,
     requestPermission,
+    unsubscribe,
     showLocalNotification,
     isSupported: "Notification" in window && "serviceWorker" in navigator
   };

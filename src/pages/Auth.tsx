@@ -220,16 +220,16 @@ if (data?.user) {
 
         <Card className="border-0 shadow-xl">
           <CardHeader className="space-y-1 text-center">
-            <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary-dark rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl font-bold text-primary-foreground">SM</span>
+            <div className="w-16 h-16 rounded-2xl overflow-hidden mx-auto mb-4 shadow-lg">
+              <img src="/favicon.png" alt="Smart World Connect" className="w-full h-full object-cover" />
             </div>
             <CardTitle className="text-2xl font-bold">
               {isLogin ? "Welcome back" : "Create an account"}
             </CardTitle>
             <CardDescription>
               {isLogin
-                ? "Sign in to your Smart Market account"
-                : "Join Rwanda's premier online marketplace"}
+                ? "Sign in to your Smart World Connect account"
+                : "Join the world's premier online marketplace"}
             </CardDescription>
           </CardHeader>
           <CardContent>

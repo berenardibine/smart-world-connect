@@ -61,11 +61,11 @@ export const Navbar = () => {
           
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 flex-shrink-0 group">
-            <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-glow transition-transform group-hover:scale-105">
-              <ShoppingBag className="h-5 w-5 text-primary-foreground" />
+            <div className="w-9 h-9 rounded-xl overflow-hidden shadow-glow transition-transform group-hover:scale-105">
+              <img src="/favicon.png" alt="Smart World Connect" className="w-full h-full object-cover" />
             </div>
             <span className="hidden sm:block text-xl font-bold text-foreground">
-              Smart<span className="text-primary">Market</span>
+              Smart<span className="text-primary">World</span>
             </span>
           </Link>
 

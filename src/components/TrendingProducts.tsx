@@ -37,7 +37,7 @@ export function TrendingProducts() {
     fetchUserLikes();
   }, []);
 
-  // Auto-scroll every 2 seconds
+  // Auto-scroll every 10 minutes
   useEffect(() => {
     const autoScroll = setInterval(() => {
       if (scrollRef.current) {
@@ -48,7 +48,7 @@ export function TrendingProducts() {
           scrollRef.current.scrollBy({ left: 160, behavior: 'smooth' });
         }
       }
-    }, 2000);
+    }, 10 * 60 * 1000);
     return () => clearInterval(autoScroll);
   }, [products]);
 
