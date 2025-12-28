@@ -30,7 +30,7 @@ export function SmartAdsCarousel() {
     // Auto-rotate every 10 minutes
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % ads.length);
-    }, 10 * 60 * 1000);
+    },3000);
 
     return () => clearInterval(interval);
   }, [ads.length]);
