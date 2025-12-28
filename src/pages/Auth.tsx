@@ -184,7 +184,7 @@ export default function Auth() {
         }
 
         // Redirect to verification pending page (no toast, just redirect)
-        navigate("/verify-email");
+        navigate("/pending-verification");
       }
     } catch (error: any) {
       if (error instanceof z.ZodError) {

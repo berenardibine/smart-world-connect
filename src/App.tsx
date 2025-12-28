@@ -48,9 +48,17 @@ import LinkAnalytics from "./pages/admin/LinkAnalytics";
 import LocationManagement from "./pages/admin/LocationManagement";
 import Shops from "./pages/Shops";
 import ShopDetail from "./pages/ShopDetail";
+import Shop from "./pages/Shop";
 import Community from "./pages/Community";
+import CommunityDetail from "./pages/CommunityDetail";
 import Rewards from "./pages/Rewards";
 import Academy from "./pages/Academy";
+import PendingVerification from "./pages/PendingVerification";
+import CommunityCreate from "./pages/seller/CommunityCreate";
+import RewardsManagement from "./pages/admin/RewardsManagement";
+import LearningManagement from "./pages/admin/LearningManagement";
+import { SellerActivityPage } from "./pages/admin/SellerActivityPage";
+import { PlanRequestsPage } from "./pages/admin/PlanRequestsPage";
 
 const queryClient = new QueryClient();
 
@@ -96,11 +104,16 @@ const App = () => (
           <Route path="/marketing" element={<Marketing />} />
           <Route path="/shops" element={<Shops />} />
           <Route path="/shop/:id" element={<ShopDetail />} />
+          <Route path="/shop" element={<Shop />} />
           <Route path="/community" element={<Community />} />
+          <Route path="/community/:id" element={<CommunityDetail />} />
           <Route path="/rewards" element={<Rewards />} />
           <Route path="/academy" element={<Academy />} />
+          <Route path="/pending-verification" element={<PendingVerification />} />
           <Route path="/post-opportunity" element={<PostOpportunity />} />
           <Route path="/seller/dashboard" element={<SellerDashboard />} />
+          <Route path="/seller/community/create" element={<CommunityCreate />} />
+          <Route path="/seller/community/:id/settings" element={<CommunityCreate />} />
           <Route path="/seller/products" element={<SellerProducts />} />
           <Route path="/seller/shop" element={<SellerShop />} />
           <Route path="/seller/analytics" element={<SellerAnalytics />} />
@@ -122,6 +135,10 @@ const App = () => (
           <Route path="/admin/referrals" element={<ReferralAnalytics />} />
           <Route path="/admin/link-analytics" element={<LinkAnalytics />} />
           <Route path="/admin/locations" element={<LocationManagement />} />
+          <Route path="/admin/rewards" element={<RewardsManagement />} />
+          <Route path="/admin/learning" element={<LearningManagement />} />
+          <Route path="/admin/seller-activity" element={<SellerActivityPage />} />
+          <Route path="/admin/plan-requests" element={<PlanRequestsPage />} />
           <Route path="/contact" element={<ContactUs />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
