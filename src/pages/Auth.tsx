@@ -98,16 +98,16 @@ export default function Auth() {
         });
         if (error) throw error;
 
-        // Check if email is verified - redirect to verify page without toast
-        if (!data.user.email_confirmed_at) {
-          navigate("/verify-email");
-          return;
-        }
-        else (!data.user.email_not_confirmed_at)
-             (!data.user.email_waiting_for_verfication) {
-          navigate("/pending-verfication");
-          return;
-        }
+        // Check Supabase response and handle redirect properly
+if (data?.user) {
+  if (data.user.email_confirmed_at) {
+    // Email confirmed — take user to verify email success page
+    navigate("/verify-email");
+  } else {
+    // Email not confirmed yet — go to pending verification page
+    navigate("/pending-verification");
+  }
+}
 
         // Check user status
         const { data: profile } = await supabase
@@ -251,7 +251,7 @@ export default function Auth() {
                     <Label htmlFor="fullName">Full Name</Label>
                     <Input
                       id="fullName"
-                      placeholder="Jacob rhine"
+                      placeholder="Jacob Rhine"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       required
