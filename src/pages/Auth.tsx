@@ -98,11 +98,13 @@ export default function Auth() {
         });
         if (error) throw error;
 
-        // Check if email is verified - redirect to verify page without toast
-        if (!data.user.email_confirmed_at) {
-          navigate("/verify-email");
-          return;
-        }
+        /// Redirect to pending verification page after Supabase validation
+if (data?.user) {
+  // Wait a short delay to ensure Supabase session is set
+  setTimeout(() => {
+    navigate("/pending-verification");
+  }, 800);
+}
 
         // Check user status
         const { data: profile } = await supabase
