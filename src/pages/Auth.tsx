@@ -248,7 +248,7 @@ if (data?.user) {
                     <Label htmlFor="fullName">Full Name</Label>
                     <Input
                       id="fullName"
-                      placeholder="John Doe"
+                      placeholder="Jacob Rhine"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       required
