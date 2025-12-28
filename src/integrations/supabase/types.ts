@@ -229,9 +229,12 @@ export type Database = {
           description: string | null
           id: string
           is_public: boolean | null
+          join_approval_required: boolean | null
           logo_image: string | null
           member_count: number | null
           name: string
+          posting_permission: string | null
+          rules: string[] | null
           seller_id: string
           updated_at: string
         }
@@ -241,9 +244,12 @@ export type Database = {
           description?: string | null
           id?: string
           is_public?: boolean | null
+          join_approval_required?: boolean | null
           logo_image?: string | null
           member_count?: number | null
           name: string
+          posting_permission?: string | null
+          rules?: string[] | null
           seller_id: string
           updated_at?: string
         }
@@ -253,9 +259,12 @@ export type Database = {
           description?: string | null
           id?: string
           is_public?: boolean | null
+          join_approval_required?: boolean | null
           logo_image?: string | null
           member_count?: number | null
           name?: string
+          posting_permission?: string | null
+          rules?: string[] | null
           seller_id?: string
           updated_at?: string
         }
@@ -378,6 +387,7 @@ export type Database = {
           created_at: string
           id: string
           images: string[] | null
+          is_pinned: boolean | null
           likes_count: number | null
           updated_at: string
           video_url: string | null
@@ -390,6 +400,7 @@ export type Database = {
           created_at?: string
           id?: string
           images?: string[] | null
+          is_pinned?: boolean | null
           likes_count?: number | null
           updated_at?: string
           video_url?: string | null
@@ -402,6 +413,7 @@ export type Database = {
           created_at?: string
           id?: string
           images?: string[] | null
+          is_pinned?: boolean | null
           likes_count?: number | null
           updated_at?: string
           video_url?: string | null
@@ -794,6 +806,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notification_badges: {
+        Row: {
+          badge_type: string
+          count: number | null
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          badge_type: string
+          count?: number | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          badge_type?: string
+          count?: number | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       notifications: {
         Row: {
@@ -1462,6 +1498,7 @@ export type Database = {
       }
       reward_tasks: {
         Row: {
+          category: string | null
           color: string | null
           created_at: string
           created_by: string | null
@@ -1471,12 +1508,14 @@ export type Database = {
           id: string
           is_active: boolean | null
           requirement_count: number | null
+          requires_evidence: boolean | null
           reward_coins: number
           reward_points: number
           task_type: string
           title: string
         }
         Insert: {
+          category?: string | null
           color?: string | null
           created_at?: string
           created_by?: string | null
@@ -1486,12 +1525,14 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           requirement_count?: number | null
+          requires_evidence?: boolean | null
           reward_coins?: number
           reward_points?: number
           task_type: string
           title: string
         }
         Update: {
+          category?: string | null
           color?: string | null
           created_at?: string
           created_by?: string | null
@@ -1501,6 +1542,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           requirement_count?: number | null
+          requires_evidence?: boolean | null
           reward_coins?: number
           reward_points?: number
           task_type?: string
@@ -1825,6 +1867,7 @@ export type Database = {
       }
       user_rewards: {
         Row: {
+          badge: string | null
           coins: number | null
           id: string
           last_login_date: string | null
@@ -1835,6 +1878,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          badge?: string | null
           coins?: number | null
           id?: string
           last_login_date?: string | null
@@ -1845,6 +1889,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          badge?: string | null
           coins?: number | null
           id?: string
           last_login_date?: string | null
@@ -1925,8 +1970,13 @@ export type Database = {
           completed: boolean | null
           completed_at: string | null
           created_at: string
+          evidence_text: string | null
+          evidence_url: string | null
           id: string
           progress: number | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
           task_id: string
           user_id: string
         }
@@ -1936,8 +1986,13 @@ export type Database = {
           completed?: boolean | null
           completed_at?: string | null
           created_at?: string
+          evidence_text?: string | null
+          evidence_url?: string | null
           id?: string
           progress?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
           task_id: string
           user_id: string
         }
@@ -1947,8 +2002,13 @@ export type Database = {
           completed?: boolean | null
           completed_at?: string | null
           created_at?: string
+          evidence_text?: string | null
+          evidence_url?: string | null
           id?: string
           progress?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
           task_id?: string
           user_id?: string
         }
