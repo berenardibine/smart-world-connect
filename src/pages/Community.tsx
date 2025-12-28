@@ -148,23 +148,34 @@ export default function Community() {
 
   const loadPosts = async () => {
     try {
-      const { data, error } = await supabase
+      // First get posts
+      const { data: postsData, error: postsError } = await supabase
         .from("community_posts")
-        .select(`
-          *,
-          profiles:author_id (
-            full_name,
-            profile_image
-          ),
-          communities:community_id (
-            name
-          )
-        `)
+        .select(`*, communities:community_id (name)`)
         .order("created_at", { ascending: false })
         .limit(20);
 
-      if (error) throw error;
-      setPosts(data || []);
+      if (postsError) throw postsError;
+      
+      // Then fetch author profiles separately
+      if (postsData && postsData.length > 0) {
+        const authorIds = [...new Set(postsData.map(p => p.author_id))];
+        const { data: profilesData } = await supabase
+          .from("public_profiles")
+          .select("id, full_name, profile_image")
+          .in("id", authorIds);
+        
+        const profilesMap = new Map(profilesData?.map(p => [p.id, p]) || []);
+        
+        const postsWithProfiles = postsData.map(post => ({
+          ...post,
+          profiles: profilesMap.get(post.author_id) || { full_name: "User", profile_image: null }
+        }));
+        
+        setPosts(postsWithProfiles as CommunityPost[]);
+      } else {
+        setPosts([]);
+      }
     } catch (error) {
       console.error("Error loading posts:", error);
     } finally {

@@ -1,17 +1,42 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Search, Users, Gift, User } from "lucide-react";
+import { Home, Store, Users, Gift, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supaseClient";
 
 const navItems = [
   { path: "/", label: "Home", icon: Home },
-  { path: "/search", label: "Search", icon: Search },
-  { path: "/community", label: "Community", icon: Users },
-  { path: "/rewards", label: "Rewards", icon: Gift },
+  { path: "/shop", label: "Shop", icon: Store },
+  { path: "/community", label: "Community", icon: Users, badgeType: "community" },
+  { path: "/rewards", label: "Rewards", icon: Gift, badgeType: "rewards" },
   { path: "/account", label: "Profile", icon: User },
 ];
 
 export function BottomNav() {
   const location = useLocation();
+  const [badges, setBadges] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    loadBadges();
+  }, []);
+
+  const loadBadges = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      const { data } = await supabase
+        .from("notification_badges")
+        .select("badge_type, count")
+        .eq("user_id", session.user.id);
+      
+      if (data) {
+        const badgeMap: Record<string, number> = {};
+        data.forEach(b => {
+          badgeMap[b.badge_type] = b.count;
+        });
+        setBadges(badgeMap);
+      }
+    }
+  };
 
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
@@ -30,6 +55,7 @@ export function BottomNav() {
         {navItems.map((item) => {
           const active = isActive(item.path);
           const Icon = item.icon;
+          const badgeCount = item.badgeType ? badges[item.badgeType] || 0 : 0;
           
           return (
             <Link
@@ -50,6 +76,11 @@ export function BottomNav() {
                   "h-5 w-5 transition-transform duration-200",
                   active && "scale-110"
                 )} />
+                {badgeCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold bg-destructive text-destructive-foreground rounded-full px-1">
+                    {badgeCount > 99 ? "99+" : badgeCount}
+                  </span>
+                )}
                 {active && (
                   <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
                 )}
