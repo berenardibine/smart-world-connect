@@ -12,9 +12,9 @@ export function DashboardFloatingButton() {
   if (!isAdmin && userType !== "seller") return null;
 
   return (
-    <div className="fixed bottom-20 right-4 z-50 flex flex-col gap-2">
+    <div className="fixed bottom-40 right-4 z-50 flex flex-col gap-2">
       {userType === "seller" && (
-        <Link to="/seller/dashboard">
+        <Link to="/seller/dashboard">t
           <Button 
             size="lg" 
             className="rounded-full shadow-lg gap-2"
@@ -25,7 +25,7 @@ export function DashboardFloatingButton() {
         </Link>
       )}
       {isAdmin && (
-        <Link to="/admin">
+        <Link to="/admin/dashboard">
           <Button 
             size="lg" 
             variant="destructive"
