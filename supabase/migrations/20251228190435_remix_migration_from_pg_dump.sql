@@ -392,6 +392,25 @@ $$;
 
 
 --
+-- Name: update_community_member_count(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.update_community_member_count() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    UPDATE communities SET member_count = member_count + 1 WHERE id = NEW.community_id;
+  ELSIF TG_OP = 'DELETE' THEN
+    UPDATE communities SET member_count = member_count - 1 WHERE id = OLD.community_id;
+  END IF;
+  RETURN NULL;
+END;
+$$;
+
+
+--
 -- Name: update_conversation_timestamp(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -625,6 +644,85 @@ CREATE TABLE public.comments (
 
 
 --
+-- Name: communities; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.communities (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    name text NOT NULL,
+    description text,
+    cover_image text,
+    logo_image text,
+    seller_id uuid NOT NULL,
+    is_public boolean DEFAULT true,
+    member_count integer DEFAULT 0,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    rules text[] DEFAULT '{}'::text[],
+    posting_permission text DEFAULT 'all_members'::text,
+    join_approval_required boolean DEFAULT false
+);
+
+
+--
+-- Name: community_members; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.community_members (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    community_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    role text DEFAULT 'member'::text NOT NULL,
+    joined_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT community_members_role_check CHECK ((role = ANY (ARRAY['admin'::text, 'moderator'::text, 'member'::text])))
+);
+
+
+--
+-- Name: community_post_comments; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.community_post_comments (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    post_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    content text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: community_post_likes; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.community_post_likes (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    post_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: community_posts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.community_posts (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    community_id uuid NOT NULL,
+    author_id uuid NOT NULL,
+    content text NOT NULL,
+    images text[] DEFAULT '{}'::text[],
+    video_url text,
+    likes_count integer DEFAULT 0,
+    comments_count integer DEFAULT 0,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    is_pinned boolean DEFAULT false
+);
+
+
+--
 -- Name: contact_messages; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -662,6 +760,28 @@ CREATE TABLE public.districts (
     province_id uuid NOT NULL,
     name text NOT NULL,
     created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: learning_posts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.learning_posts (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    title text NOT NULL,
+    description text NOT NULL,
+    content text,
+    category text NOT NULL,
+    cover_image text,
+    video_url text,
+    duration_minutes integer,
+    author_id uuid NOT NULL,
+    is_free boolean DEFAULT true,
+    is_published boolean DEFAULT true,
+    view_count integer DEFAULT 0,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -740,6 +860,19 @@ CREATE TABLE public.messages (
     is_read boolean DEFAULT false,
     created_at timestamp with time zone DEFAULT now(),
     delivered_at timestamp with time zone
+);
+
+
+--
+-- Name: notification_badges; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.notification_badges (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_id uuid NOT NULL,
+    badge_type text NOT NULL,
+    count integer DEFAULT 0,
+    updated_at timestamp with time zone DEFAULT now()
 );
 
 
@@ -1011,6 +1144,30 @@ CREATE TABLE public.referrals (
 
 
 --
+-- Name: reward_tasks; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.reward_tasks (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    title text NOT NULL,
+    description text NOT NULL,
+    reward_points integer DEFAULT 0 NOT NULL,
+    reward_coins integer DEFAULT 0 NOT NULL,
+    task_type text NOT NULL,
+    requirement_count integer DEFAULT 1,
+    icon text,
+    color text,
+    expires_at timestamp with time zone,
+    is_active boolean DEFAULT true,
+    created_by uuid,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    requires_evidence boolean DEFAULT false,
+    category text DEFAULT 'general'::text,
+    CONSTRAINT reward_tasks_task_type_check CHECK ((task_type = ANY (ARRAY['daily'::text, 'weekly'::text, 'challenge'::text, 'achievement'::text])))
+);
+
+
+--
 -- Name: sectors; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1127,6 +1284,23 @@ CREATE TABLE public.user_browsing_history (
 
 
 --
+-- Name: user_rewards; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.user_rewards (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_id uuid NOT NULL,
+    coins integer DEFAULT 0,
+    points integer DEFAULT 0,
+    streak_days integer DEFAULT 0,
+    last_login_date date,
+    level integer DEFAULT 1,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    badge text DEFAULT 'Bronze'::text
+);
+
+
+--
 -- Name: user_roles; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1152,6 +1326,28 @@ CREATE TABLE public.user_subscriptions (
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now(),
     CONSTRAINT user_subscriptions_status_check CHECK ((status = ANY (ARRAY['active'::text, 'expired'::text, 'cancelled'::text])))
+);
+
+
+--
+-- Name: user_task_progress; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.user_task_progress (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_id uuid NOT NULL,
+    task_id uuid NOT NULL,
+    progress integer DEFAULT 0,
+    completed boolean DEFAULT false,
+    completed_at timestamp with time zone,
+    claimed boolean DEFAULT false,
+    claimed_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    evidence_url text,
+    evidence_text text,
+    reviewed_at timestamp with time zone,
+    reviewed_by uuid,
+    status text DEFAULT 'pending'::text
 );
 
 
@@ -1196,6 +1392,62 @@ ALTER TABLE ONLY public.comments
 
 
 --
+-- Name: communities communities_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.communities
+    ADD CONSTRAINT communities_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: community_members community_members_community_id_user_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.community_members
+    ADD CONSTRAINT community_members_community_id_user_id_key UNIQUE (community_id, user_id);
+
+
+--
+-- Name: community_members community_members_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.community_members
+    ADD CONSTRAINT community_members_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: community_post_comments community_post_comments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.community_post_comments
+    ADD CONSTRAINT community_post_comments_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: community_post_likes community_post_likes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.community_post_likes
+    ADD CONSTRAINT community_post_likes_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: community_post_likes community_post_likes_post_id_user_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.community_post_likes
+    ADD CONSTRAINT community_post_likes_post_id_user_id_key UNIQUE (post_id, user_id);
+
+
+--
+-- Name: community_posts community_posts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.community_posts
+    ADD CONSTRAINT community_posts_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: contact_messages contact_messages_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1225,6 +1477,14 @@ ALTER TABLE ONLY public.districts
 
 ALTER TABLE ONLY public.districts
     ADD CONSTRAINT districts_province_id_name_key UNIQUE (province_id, name);
+
+
+--
+-- Name: learning_posts learning_posts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.learning_posts
+    ADD CONSTRAINT learning_posts_pkey PRIMARY KEY (id);
 
 
 --
@@ -1265,6 +1525,22 @@ ALTER TABLE ONLY public.marketing_posts
 
 ALTER TABLE ONLY public.messages
     ADD CONSTRAINT messages_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: notification_badges notification_badges_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notification_badges
+    ADD CONSTRAINT notification_badges_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: notification_badges notification_badges_user_id_badge_type_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notification_badges
+    ADD CONSTRAINT notification_badges_user_id_badge_type_key UNIQUE (user_id, badge_type);
 
 
 --
@@ -1428,6 +1704,14 @@ ALTER TABLE ONLY public.referrals
 
 
 --
+-- Name: reward_tasks reward_tasks_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reward_tasks
+    ADD CONSTRAINT reward_tasks_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: sectors sectors_district_id_name_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1524,6 +1808,22 @@ ALTER TABLE ONLY public.user_browsing_history
 
 
 --
+-- Name: user_rewards user_rewards_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_rewards
+    ADD CONSTRAINT user_rewards_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: user_rewards user_rewards_user_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_rewards
+    ADD CONSTRAINT user_rewards_user_id_key UNIQUE (user_id);
+
+
+--
 -- Name: user_roles user_roles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1553,6 +1853,22 @@ ALTER TABLE ONLY public.user_subscriptions
 
 ALTER TABLE ONLY public.user_subscriptions
     ADD CONSTRAINT user_subscriptions_user_id_key UNIQUE (user_id);
+
+
+--
+-- Name: user_task_progress user_task_progress_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_task_progress
+    ADD CONSTRAINT user_task_progress_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: user_task_progress user_task_progress_user_id_task_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_task_progress
+    ADD CONSTRAINT user_task_progress_user_id_task_id_key UNIQUE (user_id, task_id);
 
 
 --
@@ -1731,6 +2047,13 @@ CREATE TRIGGER update_conversation_on_message AFTER INSERT ON public.messages FO
 
 
 --
+-- Name: community_members update_member_count_trigger; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER update_member_count_trigger AFTER INSERT OR DELETE ON public.community_members FOR EACH ROW EXECUTE FUNCTION public.update_community_member_count();
+
+
+--
 -- Name: opportunities update_opportunities_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -1834,6 +2157,78 @@ ALTER TABLE ONLY public.comments
 
 
 --
+-- Name: communities communities_seller_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.communities
+    ADD CONSTRAINT communities_seller_id_fkey FOREIGN KEY (seller_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+
+
+--
+-- Name: community_members community_members_community_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.community_members
+    ADD CONSTRAINT community_members_community_id_fkey FOREIGN KEY (community_id) REFERENCES public.communities(id) ON DELETE CASCADE;
+
+
+--
+-- Name: community_members community_members_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.community_members
+    ADD CONSTRAINT community_members_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: community_post_comments community_post_comments_post_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.community_post_comments
+    ADD CONSTRAINT community_post_comments_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.community_posts(id) ON DELETE CASCADE;
+
+
+--
+-- Name: community_post_comments community_post_comments_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.community_post_comments
+    ADD CONSTRAINT community_post_comments_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: community_post_likes community_post_likes_post_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.community_post_likes
+    ADD CONSTRAINT community_post_likes_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.community_posts(id) ON DELETE CASCADE;
+
+
+--
+-- Name: community_post_likes community_post_likes_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.community_post_likes
+    ADD CONSTRAINT community_post_likes_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: community_posts community_posts_author_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.community_posts
+    ADD CONSTRAINT community_posts_author_id_fkey FOREIGN KEY (author_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: community_posts community_posts_community_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.community_posts
+    ADD CONSTRAINT community_posts_community_id_fkey FOREIGN KEY (community_id) REFERENCES public.communities(id) ON DELETE CASCADE;
+
+
+--
 -- Name: conversations conversations_product_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1847,6 +2242,14 @@ ALTER TABLE ONLY public.conversations
 
 ALTER TABLE ONLY public.districts
     ADD CONSTRAINT districts_province_id_fkey FOREIGN KEY (province_id) REFERENCES public.provinces(id) ON DELETE CASCADE;
+
+
+--
+-- Name: learning_posts learning_posts_author_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.learning_posts
+    ADD CONSTRAINT learning_posts_author_id_fkey FOREIGN KEY (author_id) REFERENCES auth.users(id) ON DELETE CASCADE;
 
 
 --
@@ -2042,6 +2445,14 @@ ALTER TABLE ONLY public.referrals
 
 
 --
+-- Name: reward_tasks reward_tasks_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reward_tasks
+    ADD CONSTRAINT reward_tasks_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id);
+
+
+--
 -- Name: sectors sectors_district_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2138,6 +2549,14 @@ ALTER TABLE ONLY public.user_browsing_history
 
 
 --
+-- Name: user_rewards user_rewards_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_rewards
+    ADD CONSTRAINT user_rewards_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+
+--
 -- Name: user_roles user_roles_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2159,6 +2578,22 @@ ALTER TABLE ONLY public.user_subscriptions
 
 ALTER TABLE ONLY public.user_subscriptions
     ADD CONSTRAINT user_subscriptions_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: user_task_progress user_task_progress_task_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_task_progress
+    ADD CONSTRAINT user_task_progress_task_id_fkey FOREIGN KEY (task_id) REFERENCES public.reward_tasks(id) ON DELETE CASCADE;
+
+
+--
+-- Name: user_task_progress user_task_progress_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_task_progress
+    ADD CONSTRAINT user_task_progress_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
 
 
 --
@@ -2215,6 +2650,20 @@ CREATE POLICY "Admins can insert site settings" ON public.site_settings FOR INSE
 --
 
 CREATE POLICY "Admins can manage ads" ON public.ads USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
+-- Name: communities Admins can manage all communities; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Admins can manage all communities" ON public.communities USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
+-- Name: learning_posts Admins can manage all learning posts; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Admins can manage all learning posts" ON public.learning_posts USING (public.has_role(auth.uid(), 'admin'::public.app_role));
 
 
 --
@@ -2386,6 +2835,13 @@ CREATE POLICY "Admins can view all requests" ON public.subscription_requests FOR
 
 
 --
+-- Name: user_rewards Admins can view all rewards; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Admins can view all rewards" ON public.user_rewards FOR SELECT USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
 -- Name: user_subscriptions Admins can view all subscriptions; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -2435,6 +2891,13 @@ CREATE POLICY "Anyone can view active ads" ON public.ads FOR SELECT USING (((is_
 
 
 --
+-- Name: reward_tasks Anyone can view active reward tasks; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Anyone can view active reward tasks" ON public.reward_tasks FOR SELECT USING ((is_active = true));
+
+
+--
 -- Name: shops Anyone can view active shops; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -2449,6 +2912,27 @@ CREATE POLICY "Anyone can view comments" ON public.comments FOR SELECT USING (tr
 
 
 --
+-- Name: community_post_comments Anyone can view comments; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Anyone can view comments" ON public.community_post_comments FOR SELECT USING (true);
+
+
+--
+-- Name: community_members Anyone can view community members; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Anyone can view community members" ON public.community_members FOR SELECT USING (true);
+
+
+--
+-- Name: community_posts Anyone can view community posts; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Anyone can view community posts" ON public.community_posts FOR SELECT USING (true);
+
+
+--
 -- Name: districts Anyone can view districts; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -2456,10 +2940,31 @@ CREATE POLICY "Anyone can view districts" ON public.districts FOR SELECT USING (
 
 
 --
+-- Name: community_post_likes Anyone can view likes; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Anyone can view likes" ON public.community_post_likes FOR SELECT USING (true);
+
+
+--
 -- Name: provinces Anyone can view provinces; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY "Anyone can view provinces" ON public.provinces FOR SELECT USING (true);
+
+
+--
+-- Name: communities Anyone can view public communities; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Anyone can view public communities" ON public.communities FOR SELECT USING ((is_public = true));
+
+
+--
+-- Name: learning_posts Anyone can view published learning posts; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Anyone can view published learning posts" ON public.learning_posts FOR SELECT USING ((is_published = true));
 
 
 --
@@ -2484,10 +2989,47 @@ CREATE POLICY "Authenticated users can create comments" ON public.comments FOR I
 
 
 --
+-- Name: community_posts Authors can delete their posts; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Authors can delete their posts" ON public.community_posts FOR DELETE USING ((auth.uid() = author_id));
+
+
+--
+-- Name: learning_posts Authors can manage their learning posts; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Authors can manage their learning posts" ON public.learning_posts USING ((auth.uid() = author_id));
+
+
+--
+-- Name: community_posts Authors can update their posts; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Authors can update their posts" ON public.community_posts FOR UPDATE USING ((auth.uid() = author_id));
+
+
+--
 -- Name: conversations Buyers can create conversations; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY "Buyers can create conversations" ON public.conversations FOR INSERT WITH CHECK ((auth.uid() = buyer_id));
+
+
+--
+-- Name: community_members Community owners can manage members; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Community owners can manage members" ON public.community_members USING ((EXISTS ( SELECT 1
+   FROM public.communities c
+  WHERE ((c.id = community_members.community_id) AND (c.seller_id = auth.uid())))));
+
+
+--
+-- Name: communities Community owners can manage their communities; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Community owners can manage their communities" ON public.communities USING ((auth.uid() = seller_id));
 
 
 --
@@ -2509,6 +3051,15 @@ CREATE POLICY "Everyone can view active plans" ON public.plans FOR SELECT USING 
 --
 
 CREATE POLICY "Everyone can view site settings" ON public.site_settings FOR SELECT USING (true);
+
+
+--
+-- Name: community_posts Members can create posts; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Members can create posts" ON public.community_posts FOR INSERT WITH CHECK (((auth.uid() = author_id) AND (EXISTS ( SELECT 1
+   FROM public.community_members cm
+  WHERE ((cm.community_id = community_posts.community_id) AND (cm.user_id = auth.uid()))))));
 
 
 --
@@ -2537,6 +3088,13 @@ CREATE POLICY "Only admins can insert opportunities" ON public.opportunities FOR
 --
 
 CREATE POLICY "Only admins can insert roles" ON public.user_roles FOR INSERT TO authenticated WITH CHECK (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+
+--
+-- Name: reward_tasks Only admins can manage reward tasks; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Only admins can manage reward tasks" ON public.reward_tasks USING (public.has_role(auth.uid(), 'admin'::public.app_role));
 
 
 --
@@ -2705,6 +3263,13 @@ CREATE POLICY "System can insert activity" ON public.seller_activity FOR INSERT 
 
 
 --
+-- Name: notification_badges System can insert badges; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "System can insert badges" ON public.notification_badges FOR INSERT WITH CHECK (true);
+
+
+--
 -- Name: referral_logs System can insert referral logs; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -2747,6 +3312,20 @@ CREATE POLICY "Updates are viewable by everyone" ON public.updates FOR SELECT US
 
 
 --
+-- Name: community_post_comments Users can add comments; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can add comments" ON public.community_post_comments FOR INSERT WITH CHECK ((auth.uid() = user_id));
+
+
+--
+-- Name: community_post_likes Users can add likes; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can add likes" ON public.community_post_likes FOR INSERT WITH CHECK ((auth.uid() = user_id));
+
+
+--
 -- Name: product_likes Users can add their own likes; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -2765,6 +3344,13 @@ CREATE POLICY "Users can create ratings for products they don't own" ON public.p
 --
 
 CREATE POLICY "Users can create their own requests" ON public.subscription_requests FOR INSERT WITH CHECK ((auth.uid() = user_id));
+
+
+--
+-- Name: community_post_comments Users can delete their comments; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can delete their comments" ON public.community_post_comments FOR DELETE USING ((auth.uid() = user_id));
 
 
 --
@@ -2796,10 +3382,31 @@ CREATE POLICY "Users can insert their own profile" ON public.profiles FOR INSERT
 
 
 --
+-- Name: community_members Users can join communities; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can join communities" ON public.community_members FOR INSERT WITH CHECK ((auth.uid() = user_id));
+
+
+--
+-- Name: community_members Users can leave communities; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can leave communities" ON public.community_members FOR DELETE USING ((auth.uid() = user_id));
+
+
+--
 -- Name: push_subscriptions Users can manage their own subscriptions; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY "Users can manage their own subscriptions" ON public.push_subscriptions USING ((auth.uid() = user_id));
+
+
+--
+-- Name: community_post_likes Users can remove their likes; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can remove their likes" ON public.community_post_likes FOR DELETE USING ((auth.uid() = user_id));
 
 
 --
@@ -2833,12 +3440,26 @@ CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING
 
 
 --
+-- Name: user_rewards Users can update own rewards; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can update own rewards" ON public.user_rewards FOR UPDATE USING ((auth.uid() = user_id));
+
+
+--
 -- Name: messages Users can update their messages; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY "Users can update their messages" ON public.messages FOR UPDATE USING ((EXISTS ( SELECT 1
    FROM public.conversations
   WHERE ((conversations.id = messages.conversation_id) AND ((conversations.buyer_id = auth.uid()) OR (conversations.seller_id = auth.uid()))))));
+
+
+--
+-- Name: notification_badges Users can update their own badges; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can update their own badges" ON public.notification_badges FOR UPDATE USING ((auth.uid() = user_id));
 
 
 --
@@ -2860,6 +3481,27 @@ CREATE POLICY "Users can update their own comments" ON public.comments FOR UPDAT
 --
 
 CREATE POLICY "Users can update their own notifications" ON public.notifications FOR UPDATE USING ((auth.uid() = user_id));
+
+
+--
+-- Name: user_task_progress Users can update their own progress; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can update their own progress" ON public.user_task_progress FOR INSERT WITH CHECK ((auth.uid() = user_id));
+
+
+--
+-- Name: user_rewards Users can update their own rewards; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can update their own rewards" ON public.user_rewards FOR INSERT WITH CHECK ((auth.uid() = user_id));
+
+
+--
+-- Name: user_task_progress Users can update their progress; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can update their progress" ON public.user_task_progress FOR UPDATE USING ((auth.uid() = user_id));
 
 
 --
@@ -2900,6 +3542,13 @@ CREATE POLICY "Users can view their own activity" ON public.seller_activity FOR 
 
 
 --
+-- Name: notification_badges Users can view their own badges; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can view their own badges" ON public.notification_badges FOR SELECT USING ((auth.uid() = user_id));
+
+
+--
 -- Name: user_browsing_history Users can view their own browsing history; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -2921,10 +3570,24 @@ CREATE POLICY "Users can view their own notifications" ON public.notifications F
 
 
 --
+-- Name: user_task_progress Users can view their own progress; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can view their own progress" ON public.user_task_progress FOR SELECT USING ((auth.uid() = user_id));
+
+
+--
 -- Name: subscription_requests Users can view their own requests; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY "Users can view their own requests" ON public.subscription_requests FOR SELECT USING ((auth.uid() = user_id));
+
+
+--
+-- Name: user_rewards Users can view their own rewards; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can view their own rewards" ON public.user_rewards FOR SELECT USING ((auth.uid() = user_id));
 
 
 --
@@ -2972,6 +3635,36 @@ ALTER TABLE public.ai_suggestions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: communities; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.communities ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: community_members; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.community_members ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: community_post_comments; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.community_post_comments ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: community_post_likes; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.community_post_likes ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: community_posts; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.community_posts ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: contact_messages; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -2988,6 +3681,12 @@ ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE public.districts ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: learning_posts; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.learning_posts ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: link_analytics; Type: ROW SECURITY; Schema: public; Owner: -
@@ -3012,6 +3711,12 @@ ALTER TABLE public.marketing_posts ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: notification_badges; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.notification_badges ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: notifications; Type: ROW SECURITY; Schema: public; Owner: -
@@ -3092,6 +3797,12 @@ ALTER TABLE public.referral_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.referrals ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: reward_tasks; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.reward_tasks ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: sectors; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -3134,6 +3845,12 @@ ALTER TABLE public.updates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_browsing_history ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: user_rewards; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.user_rewards ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: user_roles; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -3144,6 +3861,12 @@ ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE public.user_subscriptions ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: user_task_progress; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.user_task_progress ENABLE ROW LEVEL SECURITY;
 
 --
 -- PostgreSQL database dump complete
