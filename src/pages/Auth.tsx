@@ -98,13 +98,11 @@ export default function Auth() {
         });
         if (error) throw error;
 
-        /// Redirect to pending verification page after Supabase validation
-if (data?.user) {
-  // Wait a short delay to ensure Supabase session is set
-  setTimeout(() => {
-    navigate("/pending-verification");
-  }, 800);
-}
+        // Check if email is verified - redirect to verify page without toast
+        if (!data.user.email_confirmed_at) {
+          navigate("/verify-email");
+          return;
+        }
 
         // Check user status
         const { data: profile } = await supabase
@@ -248,7 +246,7 @@ if (data?.user) {
                     <Label htmlFor="fullName">Full Name</Label>
                     <Input
                       id="fullName"
-                      placeholder="Jacob Rhine"
+                      placeholder="John Doe"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       required
