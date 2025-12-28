@@ -52,7 +52,7 @@ export function RecommendedProductsSection() {
           scrollRef.current.scrollBy({ left: 160, behavior: 'smooth' });
         }
       }
-    }, 10 * 60 * 1000);
+    },3000);
     return () => clearInterval(autoScroll);
   }, [products]);
 
