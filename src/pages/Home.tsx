@@ -61,12 +61,12 @@ export default function Home() {
   return (
     <>
       <Helmet>
-        <title>Smart Market - Shop Smart. Live Smart.</title>
-        <meta name="description" content="Smart Market — your trusted online marketplace for shopping, marketing, and business in Rwanda. Find the best deals from local sellers." />
-        <meta property="og:title" content="Smart Market - Shop Smart. Live Smart." />
+        <title>Smart World Connect - Shop Smart. Live Smart.</title>
+        <meta name="description" content="Smart World Connect — your trusted online marketplace for shopping, marketing, and business worldwide. Find the best deals from local sellers." />
+        <meta property="og:title" content="Smart World Connect - Shop Smart. Live Smart." />
         <meta property="og:description" content="Your trusted online marketplace for shopping, marketing, and business." />
         <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Smart Market" />
+        <meta property="og:site_name" content="Smart World Connect" />
         <link rel="canonical" href={typeof window !== 'undefined' ? window.location.origin : ''} />
       </Helmet>
 
@@ -216,7 +216,7 @@ export default function Home() {
                 <a href="/privacy" className="hover:text-primary transition-colors">Privacy</a>
               </div>
               <p className="flex items-center gap-1">
-                © 2025 Smart Market. 
+                © 2025 Smart World Connect. 
                 <span className="text-primary font-medium">Shop Smart. Live Smart.</span>
               </p>
             </div>

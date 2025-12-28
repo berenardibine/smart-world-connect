@@ -1,17 +1,17 @@
 {
-  "name": "Smart Market",
-  "short_name": "Smart Market",
-  "description": "Smart Market — your trusted online marketplace for shopping, marketing, and business in Rwanda.",
+  "name": "Smart World Connect",
+  "short_name": "SWC",
+  "description": "Smart World Connect — your trusted online marketplace for shopping, marketing, and business worldwide.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#ff8c00",
+  "theme_color": "#10b981",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/favicon.ico",
+      "src": "/favicon.png",
       "sizes": "64x64",
-      "type": "image/x-icon"
+      "type": "image/png"
     },
     {
       "src": "/icon-192.png",
