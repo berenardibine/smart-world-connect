@@ -103,6 +103,11 @@ export default function Auth() {
           navigate("/verify-email");
           return;
         }
+        else (!data.user.email_not_confirmed_at)
+             (!data.user.email_waiting_for_verfication) {
+          navigate("/pending-verfication");
+          return;
+        }
 
         // Check user status
         const { data: profile } = await supabase
@@ -246,7 +251,7 @@ export default function Auth() {
                     <Label htmlFor="fullName">Full Name</Label>
                     <Input
                       id="fullName"
-                      placeholder="John Doe"
+                      placeholder="Jacob rhine"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       required
