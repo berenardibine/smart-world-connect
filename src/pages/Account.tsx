@@ -527,6 +527,7 @@ export default function Account() {
               <FileText className="mr-2 h-4 w-4" />
               Disclaimer
             </Button>
+            <a href="/contact" className="hover:text-primary transition-colors">Contact support</a>
           </CardContent>
         </Card>
 
