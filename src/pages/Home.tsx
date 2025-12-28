@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { Navbar } from "@/components/Navbar";
-import { DashboardFloatingButton } from "@/components/DashboardFloatingButton";
 import { SmartAdsCarousel } from "@/components/SmartAdsCarousel";
 import { TrendingProducts } from "@/components/TrendingProducts";
 import { RecommendedProductsSection } from "@/components/RecommendedProductsSection";
