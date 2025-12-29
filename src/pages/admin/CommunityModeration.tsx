@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, Users, Shield, Search, Loader2, Trash2, 
   Eye, Ban, CheckCircle, AlertTriangle, MessageSquare,
-  Crown, UserX, MoreHorizontal
+  Crown, UserX, MoreHorizontal, Pin
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,6 +47,7 @@ interface Community {
   member_count: number;
   seller_id: string;
   is_public: boolean;
+  is_pinned_by_admin: boolean;
   created_at: string;
   profiles?: {
     full_name: string;
@@ -80,7 +81,7 @@ interface Report {
   post_id?: string;
 }
 
-export default function AdminCommunityModeration() {
+export default function CommunityModeration() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -107,6 +108,7 @@ export default function AdminCommunityModeration() {
           *,
           profiles:seller_id (full_name, email)
         `)
+        .order("is_pinned_by_admin", { ascending: false })
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -178,6 +180,23 @@ export default function AdminCommunityModeration() {
     } catch (error) {
       console.error("Error deleting community:", error);
       toast({ title: "Error deleting community", variant: "destructive" });
+    }
+  };
+
+  const handlePinCommunity = async (communityId: string, isPinned: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("communities")
+        .update({ is_pinned_by_admin: !isPinned })
+        .eq("id", communityId);
+
+      if (error) throw error;
+
+      toast({ title: isPinned ? "Community unpinned" : "Community pinned" });
+      loadCommunities();
+    } catch (error) {
+      console.error("Error pinning community:", error);
+      toast({ title: "Error pinning community", variant: "destructive" });
     }
   };
 
@@ -338,7 +357,7 @@ export default function AdminCommunityModeration() {
                   </TableHeader>
                   <TableBody>
                     {filteredCommunities.map((community) => (
-                      <TableRow key={community.id}>
+                      <TableRow key={community.id} className={community.is_pinned_by_admin ? "bg-primary/5" : ""}>
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <Avatar className="h-10 w-10">
@@ -346,7 +365,12 @@ export default function AdminCommunityModeration() {
                               <AvatarFallback>{community.name.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="font-medium">{community.name}</p>
+                              <div className="flex items-center gap-2">
+                                <p className="font-medium">{community.name}</p>
+                                {community.is_pinned_by_admin && (
+                                  <Pin className="h-3 w-3 text-primary" />
+                                )}
+                              </div>
                               <p className="text-sm text-muted-foreground line-clamp-1">
                                 {community.description || "No description"}
                               </p>
@@ -378,6 +402,10 @@ export default function AdminCommunityModeration() {
                               <DropdownMenuItem onClick={() => navigate(`/community/${community.id}`)}>
                                 <Eye className="h-4 w-4 mr-2" />
                                 View
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handlePinCommunity(community.id, community.is_pinned_by_admin)}>
+                                <Pin className="h-4 w-4 mr-2" />
+                                {community.is_pinned_by_admin ? "Unpin" : "Pin"} Community
                               </DropdownMenuItem>
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>

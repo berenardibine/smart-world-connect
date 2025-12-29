@@ -224,10 +224,12 @@ export type Database = {
       }
       communities: {
         Row: {
+          allow_member_messaging: boolean | null
           cover_image: string | null
           created_at: string
           description: string | null
           id: string
+          is_pinned_by_admin: boolean | null
           is_public: boolean | null
           join_approval_required: boolean | null
           logo_image: string | null
@@ -239,10 +241,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          allow_member_messaging?: boolean | null
           cover_image?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          is_pinned_by_admin?: boolean | null
           is_public?: boolean | null
           join_approval_required?: boolean | null
           logo_image?: string | null
@@ -254,10 +258,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          allow_member_messaging?: boolean | null
           cover_image?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          is_pinned_by_admin?: boolean | null
           is_public?: boolean | null
           join_approval_required?: boolean | null
           logo_image?: string | null
@@ -310,6 +316,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "community_members_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_messages: {
+        Row: {
+          community_id: string
+          content: string
+          created_at: string
+          id: string
+          is_deleted: boolean | null
+          sender_id: string
+        }
+        Insert: {
+          community_id: string
+          content: string
+          created_at?: string
+          id?: string
+          is_deleted?: boolean | null
+          sender_id: string
+        }
+        Update: {
+          community_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_deleted?: boolean | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_messages_community_id_fkey"
             columns: ["community_id"]
             isOneToOne: false
             referencedRelation: "communities"
