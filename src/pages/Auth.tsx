@@ -98,18 +98,7 @@ export default function Auth() {
         });
         if (error) throw error;
 
-        // Check Supabase response and handle redirect properly
-if (data?.user) {
-  if (data.user.email_confirmed_at) {
-    // Email confirmed — take user to verify email success page
-    navigate("/verify-email");
-  } else {
-    // Email not confirmed yet — go to pending verification page
-    navigate("/pending-verification");
-  }
-}
-
-        // Check user status
+        // Check user profile and status first
         const { data: profile } = await supabase
           .from("profiles")
           .select("user_type, status, blocking_reason")
@@ -121,7 +110,13 @@ if (data?.user) {
           navigate("/blocked", { state: { reason: profile.blocking_reason } });
           return;
         }
-        
+
+        // Check if email is confirmed
+        if (!data.user.email_confirmed_at) {
+          navigate("/pending-verification");
+          return;
+        }
+
         // Check if user is admin
         const { data: roleData } = await supabase
           .from("user_roles")

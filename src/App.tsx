@@ -55,7 +55,9 @@ import Rewards from "./pages/Rewards";
 import Academy from "./pages/Academy";
 import PendingVerification from "./pages/PendingVerification";
 import CommunityCreate from "./pages/seller/CommunityCreate";
+import CommunitySettings from "./pages/seller/CommunitySettings";
 import RewardsManagement from "./pages/admin/RewardsManagement";
+import CommunityModeration from "./pages/admin/CommunityModeration";
 import LearningManagement from "./pages/admin/LearningManagement";
 import { SellerActivityPage } from "./pages/admin/SellerActivityPage";
 import { PlanRequestsPage } from "./pages/admin/PlanRequestsPage";
@@ -113,7 +115,7 @@ const App = () => (
           <Route path="/post-opportunity" element={<PostOpportunity />} />
           <Route path="/seller/dashboard" element={<SellerDashboard />} />
           <Route path="/seller/community/create" element={<CommunityCreate />} />
-          <Route path="/seller/community/:id/settings" element={<CommunityCreate />} />
+          <Route path="/seller/community/:id/settings" element={<CommunitySettings />} />
           <Route path="/seller/products" element={<SellerProducts />} />
           <Route path="/seller/shop" element={<SellerShop />} />
           <Route path="/seller/analytics" element={<SellerAnalytics />} />
@@ -139,6 +141,7 @@ const App = () => (
           <Route path="/admin/learning" element={<LearningManagement />} />
           <Route path="/admin/seller-activity" element={<SellerActivityPage />} />
           <Route path="/admin/plan-requests" element={<PlanRequestsPage />} />
+          <Route path="/admin/community" element={<CommunityModeration />} />
           <Route path="/contact" element={<ContactUs />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
