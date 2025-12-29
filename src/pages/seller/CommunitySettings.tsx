@@ -77,6 +77,7 @@ export default function CommunitySettings() {
     is_public: true,
     join_approval_required: false,
     posting_permission: "all_members",
+    allow_member_messaging: true,
     rules: [] as string[],
   });
   
@@ -118,6 +119,7 @@ export default function CommunitySettings() {
         is_public: data.is_public,
         join_approval_required: data.join_approval_required,
         posting_permission: data.posting_permission || "all_members",
+        allow_member_messaging: data.allow_member_messaging ?? true,
         rules: data.rules || [],
       });
       setLogoPreview(data.logo_image || "");
@@ -217,6 +219,7 @@ export default function CommunitySettings() {
           is_public: formData.is_public,
           join_approval_required: formData.join_approval_required,
           posting_permission: formData.posting_permission,
+          allow_member_messaging: formData.allow_member_messaging,
           rules: formData.rules,
           logo_image: logoUrl,
           cover_image: coverUrl,
@@ -620,6 +623,20 @@ export default function CommunitySettings() {
                   <Switch
                     checked={formData.join_approval_required}
                     onCheckedChange={(checked) => setFormData({ ...formData, join_approval_required: checked })}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Users className="h-5 w-5 text-primary" />
+                    <div>
+                      <p className="font-medium">Allow Member Messaging</p>
+                      <p className="text-sm text-muted-foreground">Members can send messages in the group chat</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={formData.allow_member_messaging}
+                    onCheckedChange={(checked) => setFormData({ ...formData, allow_member_messaging: checked })}
                   />
                 </div>
               </div>

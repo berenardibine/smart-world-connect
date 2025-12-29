@@ -69,7 +69,7 @@ export default function PendingVerification() {
       if (session?.user.email_confirmed_at) {
         toast({
           title: "Email Verified!",
-          description: "Welcome to Smart Market!",
+          description: "Welcome to Smart World Connect!",
         });
         navigate("/");
       } else {
@@ -130,7 +130,7 @@ export default function PendingVerification() {
                 <CheckCircle className="h-5 w-5 text-primary mt-0.5" />
                 <div className="text-sm">
                   <p className="font-medium">Verify & access all features</p>
-                  <p className="text-muted-foreground">Once verified, you'll have full access to Smart Market</p>
+                  <p className="text-muted-foreground">Once verified, you'll have full access to Smart World Connect</p>
                 </div>
               </div>
             </div>
