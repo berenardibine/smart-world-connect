@@ -231,7 +231,9 @@ export type Database = {
           id: string
           is_pinned_by_admin: boolean | null
           is_public: boolean | null
+          is_regional: boolean | null
           join_approval_required: boolean | null
+          location_id: string | null
           logo_image: string | null
           member_count: number | null
           name: string
@@ -248,7 +250,9 @@ export type Database = {
           id?: string
           is_pinned_by_admin?: boolean | null
           is_public?: boolean | null
+          is_regional?: boolean | null
           join_approval_required?: boolean | null
+          location_id?: string | null
           logo_image?: string | null
           member_count?: number | null
           name: string
@@ -265,7 +269,9 @@ export type Database = {
           id?: string
           is_pinned_by_admin?: boolean | null
           is_public?: boolean | null
+          is_regional?: boolean | null
           join_approval_required?: boolean | null
+          location_id?: string | null
           logo_image?: string | null
           member_count?: number | null
           name?: string
@@ -275,6 +281,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "communities_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "communities_seller_id_fkey"
             columns: ["seller_id"]
@@ -651,6 +664,41 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      locations: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          parent_id: string | null
+          slug: string
+          type: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          parent_id?: string | null
+          slug: string
+          type: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          parent_id?: string | null
+          slug?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locations_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
             referencedColumns: ["id"]
           },
         ]
@@ -1132,6 +1180,7 @@ export type Database = {
           is_negotiable: boolean | null
           likes: number | null
           location: string | null
+          location_id: string | null
           price: number
           quantity: number
           rental_rate_type: string | null
@@ -1158,6 +1207,7 @@ export type Database = {
           is_negotiable?: boolean | null
           likes?: number | null
           location?: string | null
+          location_id?: string | null
           price: number
           quantity: number
           rental_rate_type?: string | null
@@ -1184,6 +1234,7 @@ export type Database = {
           is_negotiable?: boolean | null
           likes?: number | null
           location?: string | null
+          location_id?: string | null
           price?: number
           quantity?: number
           rental_rate_type?: string | null
@@ -1197,6 +1248,13 @@ export type Database = {
           views?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "products_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "products_seller_id_fkey"
             columns: ["seller_id"]
@@ -1222,11 +1280,13 @@ export type Database = {
       }
       profiles: {
         Row: {
+          auto_location_enabled: boolean | null
           bio: string | null
           blocking_reason: string | null
           business_name: string | null
           call_number: string | null
           created_at: string | null
+          detected_ip: string | null
           district_id: string | null
           email: string
           full_name: string
@@ -1253,11 +1313,13 @@ export type Database = {
           whatsapp_number: string | null
         }
         Insert: {
+          auto_location_enabled?: boolean | null
           bio?: string | null
           blocking_reason?: string | null
           business_name?: string | null
           call_number?: string | null
           created_at?: string | null
+          detected_ip?: string | null
           district_id?: string | null
           email: string
           full_name: string
@@ -1284,11 +1346,13 @@ export type Database = {
           whatsapp_number?: string | null
         }
         Update: {
+          auto_location_enabled?: boolean | null
           bio?: string | null
           blocking_reason?: string | null
           business_name?: string | null
           call_number?: string | null
           created_at?: string | null
+          detected_ip?: string | null
           district_id?: string | null
           email?: string
           full_name?: string
@@ -1663,6 +1727,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           logo_url: string | null
+          market_center: string | null
           name: string
           province_id: string | null
           sector_id: string | null
@@ -1678,6 +1743,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
+          market_center?: string | null
           name: string
           province_id?: string | null
           sector_id?: string | null
@@ -1693,6 +1759,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
+          market_center?: string | null
           name?: string
           province_id?: string | null
           sector_id?: string | null
@@ -2125,6 +2192,21 @@ export type Database = {
         }[]
       }
       expire_marketing_posts: { Args: never; Returns: undefined }
+      get_child_locations: {
+        Args: { location_uuid: string }
+        Returns: {
+          location_id: string
+        }[]
+      }
+      get_location_hierarchy: {
+        Args: { location_uuid: string }
+        Returns: {
+          location_id: string
+          location_name: string
+          location_slug: string
+          location_type: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

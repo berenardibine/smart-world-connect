@@ -66,17 +66,13 @@ export function AIRecommendedProducts() {
             .limit(8);
 
           if (randomProducts) {
-            // Shuffle products
-            useEffect(() => {
-  const shuffleNow = () => {
-    const shuffled = randomProducts.sort(() => Math.random() - 0.5);
-    setProducts(shuffled.slice(0, 4));
-  };
-
-  shuffleNow(); // ikora rimwe kuri load
-  const interval = setInterval(shuffleNow, 10 * 60 * 1000); // nyuma ya min 10
-  return () => clearInterval(interval);
-}, [randomProducts]);
+            // Shuffle products once on load
+            const shuffled = [...randomProducts].sort(() => Math.random() - 0.5);
+            setProducts(shuffled.slice(0, 4));
+          }
+          setLoading(false);
+          return;
+        }
 
         // Extract categories from browsing history
         const viewedCategories = history
@@ -99,16 +95,9 @@ export function AIRecommendedProducts() {
 
         if (recommendedProducts && recommendedProducts.length > 0) {
           // Shuffle and take 4
-          useEffect(() => {
-  const shuffleNow = () => {
-    const shuffled = randomProducts.sort(() => Math.random() - 0.5);
-    setProducts(shuffled.slice(0, 4));
-  };
-
-  shuffleNow(); // ikora rimwe kuri load
-  const interval = setInterval(shuffleNow, 10 * 60 * 1000); // nyuma ya min 10
-  return () => clearInterval(interval);
-}, [randomProducts]);} else {
+          const shuffled = [...recommendedProducts].sort(() => Math.random() - 0.5);
+          setProducts(shuffled.slice(0, 4));
+        } else {
           // Fallback to random products
           const { data: fallbackProducts } = await supabase
             .from("products")
@@ -121,7 +110,7 @@ export function AIRecommendedProducts() {
             .limit(8);
 
           if (fallbackProducts) {
-            const shuffled = fallbackProducts.sort(() => Math.random() - 0.5);
+            const shuffled = [...fallbackProducts].sort(() => Math.random() - 0.5);
             setProducts(shuffled.slice(0, 4));
           }
         }
