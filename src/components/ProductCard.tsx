@@ -52,7 +52,8 @@ export const ProductCard = ({
   const [likeCount, setLikeCount] = useState(likes);
   const { toast } = useToast();
   const cardRef = useRef<HTMLDivElement>(null);
-
+  const ref = useRef<HTMLDivElement | null>(null);
+  const hasLoggedView = useRef(false);
   const media = [...images];
   if (video) media.push(video);
 
@@ -66,35 +67,48 @@ export const ProductCard = ({
   useEffect(() => {
     if (!cardRef.current || !id) return;
 
-    let timer: NodeJS.Timeout;
+    
+function useProductViewTracker(productId: string) {
+  
+
+  useEffect(() => {
+    if (!ref.current) return;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          timer = setTimeout(async () => {
+        if (entry.isIntersecting && !hasLoggedView.current) {
+          hasLoggedView.current = true;
+
+          const timer = setTimeout(async () => {
             try {
               const { data: { session } } = await supabase.auth.getSession();
               await supabase.from("product_analytics").insert({
-                product_id: id,
+                product_id: productId,
                 viewer_id: session?.user?.id || null,
                 type: "view",
+                viewed_at: new Date().toISOString(),
               });
             } catch (error) {
-              // Silently fail
+              console.error("View tracking failed:", error);
             }
-          }, 2000);
-        } else {
-          clearTimeout(timer);
+          }, 1500);
+
+          return () => clearTimeout(timer);
         }
       },
       { threshold: 0.5 }
     );
 
-    observer.observe(cardRef.current);
+    observer.observe(ref.current);
+
     return () => {
-      clearTimeout(timer);
+      if (ref.current) observer.unobserve(ref.current);
       observer.disconnect();
     };
-  }, [id]);
+  }, [productId]);
+
+  return ref;
+}, [id]);
 
   const nextSlide = (e: React.MouseEvent) => {
     e.preventDefault();
