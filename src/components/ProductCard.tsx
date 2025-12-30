@@ -108,7 +108,7 @@ function useProductViewTracker(productId: string) {
   }, [productId]);
 
   return ref;
-}, [id]);
+}
 
   const nextSlide = (e: React.MouseEvent) => {
     e.preventDefault();
