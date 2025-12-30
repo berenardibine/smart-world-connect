@@ -305,8 +305,8 @@ function useProductViewTracker(productId: string) {
         </Link>
         <ShareButton
           url={shareUrl}
-          title={`${title} - Rwanda Smart Market`}
-          description={`Check out ${title} on Rwanda Smart Market`}
+          title={`${title} - Smart World Connect`}
+          description={`Check out ${title} on Smart World Connect`}
           size="icon"
           variant="outline"
         />
@@ -314,4 +314,3 @@ function useProductViewTracker(productId: string) {
     </Card>
   );
   }
-  export default ProductCard;
