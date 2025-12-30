@@ -63,6 +63,7 @@ import CommunityModeration from "./pages/admin/CommunityModeration";
 import LearningManagement from "./pages/admin/LearningManagement";
 import { SellerActivityPage } from "./pages/admin/SellerActivityPage";
 import { PlanRequestsPage } from "./pages/admin/PlanRequestsPage";
+import RegionalHomePage from "./pages/RegionalHomePage";
 
 const queryClient = new QueryClient();
 
@@ -77,6 +78,7 @@ const App = () => (
           <BrowserRouter>
           <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/region/:type/:slug" element={<RegionalHomePage />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/email-verification" element={<EmailVerification />} />

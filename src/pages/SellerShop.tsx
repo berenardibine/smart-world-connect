@@ -21,6 +21,7 @@ interface Shop {
   province_id: string;
   district_id: string;
   sector_id: string;
+  market_center: string;
   is_active: boolean;
 }
 
@@ -41,6 +42,7 @@ export default function SellerShop() {
   const [provinceId, setProvinceId] = useState("");
   const [districtId, setDistrictId] = useState("");
   const [sectorId, setSectorId] = useState("");
+  const [marketCenter, setMarketCenter] = useState("");
 
   useEffect(() => {
     fetchShop();
@@ -72,6 +74,7 @@ export default function SellerShop() {
         setProvinceId(data.province_id || "");
         setDistrictId(data.district_id || "");
         setSectorId(data.sector_id || "");
+        setMarketCenter(data.market_center || "");
       }
     } catch (error) {
       console.error("Error fetching shop:", error);
@@ -138,6 +141,7 @@ export default function SellerShop() {
         province_id: provinceId,
         district_id: districtId,
         sector_id: sectorId,
+        market_center: marketCenter.trim(),
         is_active: true
       };
 
@@ -274,6 +278,20 @@ export default function SellerShop() {
                 onSectorChange={setSectorId}
                 required
               />
+              
+              {/* Market Center */}
+              <div className="mt-4 space-y-2">
+                <Label htmlFor="marketCenter">Shop Center / Market Name</Label>
+                <Input
+                  id="marketCenter"
+                  placeholder="e.g., Kimironko Market, MTN Center"
+                  value={marketCenter}
+                  onChange={(e) => setMarketCenter(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Enter the name of the market or shopping center where your shop is located
+                </p>
+              </div>
             </div>
 
             {/* Contact Info */}

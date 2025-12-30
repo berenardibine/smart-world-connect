@@ -7,7 +7,6 @@ import { TrendingProducts } from "@/components/TrendingProducts";
 import { RecommendedProductsSection } from "@/components/RecommendedProductsSection";
 import { CategoryTabs } from "@/components/CategoryTabs";
 import { HomeProductGrid } from "@/components/HomeProductGrid";
-import { LocationFilter } from "@/components/LocationFilter";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { AIGreeting } from "@/components/home/AIGreeting";
 import { QuickCategories } from "@/components/home/QuickCategories";
@@ -15,55 +14,24 @@ import { SmartChallenges } from "@/components/home/SmartChallenges";
 import { MotivationBanner } from "@/components/home/MotivationBanner";
 import { SmartAcademy } from "@/components/home/SmartAcademy";
 import { AIChatBox } from "@/components/AIChatBox";
+import { RegionalHeader } from "@/components/RegionalHeader";
+import { RecommendedShops } from "@/components/RecommendedShops";
+import { RegionalProducts } from "@/components/RegionalProducts";
+import { TopRatedSellers } from "@/components/TopRatedSellers";
+import { useRegion } from "@/contexts/RegionContext";
 import { Helmet } from "react-helmet";
-import { supabase } from "@/lib/supaseClient";
-import { Sparkles, TrendingUp, ShoppingBag, Heart, Star, Zap } from "lucide-react";
+import { Sparkles, TrendingUp, ShoppingBag, Heart, Star, Zap, Store, Users } from "lucide-react";
 
 export default function Home() {
   const [activeCategory, setActiveCategory] = useState("All");
-  const [provinceId, setProvinceId] = useState<string>("");
-  const [districtId, setDistrictId] = useState<string>("");
-  const [sectorId, setSectorId] = useState<string>("");
-
-  // Load user's saved location on mount
-  useEffect(() => {
-    const loadUserLocation = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("province_id, district_id, sector_id")
-          .eq("id", session.user.id)
-          .maybeSingle();
-        
-        if (profile) {
-          if (profile.province_id) setProvinceId(profile.province_id);
-          if (profile.district_id) setDistrictId(profile.district_id);
-          if (profile.sector_id) setSectorId(profile.sector_id);
-        }
-      }
-    };
-    loadUserLocation();
-  }, []);
-
-  const handleLocationApply = (pId: string, dId: string, sId: string) => {
-    setProvinceId(pId);
-    setDistrictId(dId);
-    setSectorId(sId);
-  };
-
-  const handleLocationClear = () => {
-    setProvinceId("");
-    setDistrictId("");
-    setSectorId("");
-  };
+  const { currentLocation, getLocationTitle } = useRegion();
 
   return (
     <>
       <Helmet>
-        <title>Smart World Connect - Shop Smart. Live Smart.</title>
-        <meta name="description" content="Smart World Connect — your trusted online marketplace for shopping, marketing, and business worldwide. Find the best deals from local sellers." />
-        <meta property="og:title" content="Smart World Connect - Shop Smart. Live Smart." />
+        <title>{getLocationTitle()} - Shop Smart. Live Smart.</title>
+        <meta name="description" content={`${getLocationTitle()} — your trusted online marketplace for shopping, marketing, and business. Find the best deals from local sellers${currentLocation ? ` in ${currentLocation.name}` : ""}.`} />
+        <meta property="og:title" content={`${getLocationTitle()} - Shop Smart. Live Smart.`} />
         <meta property="og:description" content="Your trusted online marketplace for shopping, marketing, and business." />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Smart World Connect" />
@@ -73,8 +41,13 @@ export default function Home() {
       <div className="min-h-screen bg-gradient-to-b from-background via-background to-secondary/20 pb-24">
         <Navbar />
 
-        <main className="pt-[120px] md:pt-20 space-y-10 sm:space-y-14">
-          {/* AI Greeting Section with Enhanced Design */}
+        {/* Regional Header */}
+        <div className="pt-[120px] md:pt-20">
+          <RegionalHeader />
+        </div>
+
+        <main className="space-y-10 sm:space-y-14 pt-6">
+          {/* AI Greeting Section */}
           <section className="container mx-auto px-4 lg:px-6">
             <AIGreeting />
           </section>
@@ -131,6 +104,33 @@ export default function Home() {
             <QuickCategories />
           </section>
 
+          {/* Recommended Shops - Region Specific */}
+          <section className="container mx-auto px-4 lg:px-6">
+            <div className="flex items-center gap-2 mb-6">
+              <Store className="h-5 w-5 text-primary" />
+              <h2 className="section-header">Recommended Shops Near You</h2>
+            </div>
+            <RecommendedShops />
+          </section>
+
+          {/* Local Products Feed - Region Specific */}
+          <section className="container mx-auto px-4 lg:px-6">
+            <div className="flex items-center gap-2 mb-6">
+              <ShoppingBag className="h-5 w-5 text-primary" />
+              <h2 className="section-header">Local Products</h2>
+            </div>
+            <RegionalProducts />
+          </section>
+
+          {/* Top Rated Sellers - Region Specific */}
+          <section className="container mx-auto px-4 lg:px-6">
+            <div className="flex items-center gap-2 mb-6">
+              <Users className="h-5 w-5 text-primary" />
+              <h2 className="section-header">Top Rated Sellers</h2>
+            </div>
+            <TopRatedSellers />
+          </section>
+
           {/* Recommended Products - Personalized */}
           <section className="container mx-auto px-4 lg:px-6">
             <div className="flex items-center gap-2 mb-6">
@@ -175,17 +175,10 @@ export default function Home() {
               <div>
                 <h2 className="section-header flex items-center gap-2">
                   <ShoppingBag className="h-6 w-6 text-primary" />
-                  Browse Products
+                  Browse All Products
                 </h2>
                 <p className="section-subheader">Discover amazing deals from verified sellers</p>
               </div>
-              <LocationFilter
-                provinceId={provinceId}
-                districtId={districtId}
-                sectorId={sectorId}
-                onApply={handleLocationApply}
-                onClear={handleLocationClear}
-              />
             </div>
             
             {/* Category Filter */}
@@ -200,9 +193,6 @@ export default function Home() {
             <HomeProductGrid 
               category={activeCategory === "All" ? undefined : activeCategory}
               limit={120000}
-              provinceId={provinceId}
-              districtId={districtId}
-              sectorId={sectorId}
             />
           </section>
 

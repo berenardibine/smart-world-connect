@@ -36,25 +36,9 @@ export function RecommendedProductsSection() {
   useEffect(() => {
     fetchRecommendedProducts();
     fetchUserLikes();
-    
-    const interval = setInterval(fetchRecommendedProducts, 5 * 60 * 1000);
-    return () => clearInterval(interval);
   }, []);
 
-  // Auto-scroll every 10 minutes
-  useEffect(() => {
-    const autoScroll = setInterval(() => {
-      if (scrollRef.current) {
-        const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-        if (scrollLeft + clientWidth >= scrollWidth - 10) {
-          scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
-        } else {
-          scrollRef.current.scrollBy({ left: 160, behavior: 'smooth' });
-        }
-      }
-    },3000);
-    return () => clearInterval(autoScroll);
-  }, [products]);
+  // No auto-scroll - products display randomly once per page load
 
   const fetchUserLikes = async () => {
     const { data: { session } } = await supabase.auth.getSession();
