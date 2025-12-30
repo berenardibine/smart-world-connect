@@ -313,4 +313,5 @@ function useProductViewTracker(productId: string) {
       </CardFooter>
     </Card>
   );
-}
+  }
+  export default ProductCard;
