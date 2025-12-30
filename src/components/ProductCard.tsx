@@ -313,4 +313,4 @@ function useProductViewTracker(productId: string) {
       </CardFooter>
     </Card>
   );
-};
+}
