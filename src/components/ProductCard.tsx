@@ -81,7 +81,7 @@ export const ProductCard = ({
             } catch (error) {
               // Silently fail
             }
-          }, 2000000);
+          }, 2000);
         } else {
           clearTimeout(timer);
         }
