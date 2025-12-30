@@ -80,9 +80,9 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/region/:type/:slug" element={<RegionalHomePage />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/email-verification" element={<EmailVerification />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/blocked" element={<BlockedAccount />} />
           <Route path="/identity-verification" element={<IdentityVerification />} />
           

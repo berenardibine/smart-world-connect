@@ -26,12 +26,12 @@ const NotFound = () => {
                                                                                                   </div>
 
                                                                                                         {/* Headline */}
-                                                                                                              <h2 className="text-[80px] sm:text-[100px] font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-amber-400 to-yellow-400 drop-shadow-lg">
-                                                                                                                      SMART WORLD CONNECT
-                                                                                                                            </h2>
+                                                                                                              <h1 className="text-[80px] sm:text-[100px] font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-amber-400 to-yellow-400 drop-shadow-lg">
+                                                                                                                      SMART MARKET
+                                                                                                                            </h1>
 
                                                                                                                                   <h2 className="text-2xl sm:text-3xl font-semibold mt-2 text-gray-700 dark:text-gray-200">
-                                                                                                                                          Page under construction 
+                                                                                                                                          Page under construction 🚧
                                                                                                                                                 </h2>
 
                                                                                                                                                       {/* Subtext */}
