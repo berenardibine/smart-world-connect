@@ -67,13 +67,6 @@ export const ProductCard = ({
   useEffect(() => {
     if (!cardRef.current || !id) return;
 
-    
-function useProductViewTracker(productId: string) {
-  
-
-  useEffect(() => {
-    if (!ref.current) return;
-
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !hasLoggedView.current) {
@@ -83,10 +76,9 @@ function useProductViewTracker(productId: string) {
             try {
               const { data: { session } } = await supabase.auth.getSession();
               await supabase.from("product_analytics").insert({
-                product_id: productId,
+                product_id: id,
                 viewer_id: session?.user?.id || null,
                 type: "view",
-                viewed_at: new Date().toISOString(),
               });
             } catch (error) {
               console.error("View tracking failed:", error);
@@ -99,16 +91,13 @@ function useProductViewTracker(productId: string) {
       { threshold: 0.5 }
     );
 
-    observer.observe(ref.current);
+    observer.observe(cardRef.current);
 
     return () => {
-      if (ref.current) observer.unobserve(ref.current);
+      if (cardRef.current) observer.unobserve(cardRef.current);
       observer.disconnect();
     };
-  }, [productId]);
-
-  return ref;
-}
+  }, [id]);
 
   const nextSlide = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -313,4 +302,6 @@ function useProductViewTracker(productId: string) {
       </CardFooter>
     </Card>
   );
-  }
+};
+
+export default ProductCard;
