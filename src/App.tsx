@@ -64,6 +64,9 @@ import LearningManagement from "./pages/admin/LearningManagement";
 import { SellerActivityPage } from "./pages/admin/SellerActivityPage";
 import { PlanRequestsPage } from "./pages/admin/PlanRequestsPage";
 import RegionalHomePage from "./pages/RegionalHomePage";
+import Videos from "./pages/Videos";
+import Messages from "./pages/Messages";
+import Contacts from "./pages/Contacts";
 
 const queryClient = new QueryClient();
 
@@ -117,6 +120,8 @@ const App = () => (
           <Route path="/community/:id" element={<CommunityDetail />} />
           <Route path="/rewards" element={<Rewards />} />
           <Route path="/academy" element={<Academy />} />
+          <Route path="/videos" element={<Videos />} />
+          <Route path="/contacts" element={<Contacts />} />
           <Route path="/pending-verification" element={<PendingVerification />} />
           <Route path="/post-opportunity" element={<PostOpportunity />} />
           <Route path="/seller/dashboard" element={<SellerDashboard />} />

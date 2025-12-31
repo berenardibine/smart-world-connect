@@ -38,6 +38,7 @@ interface Community {
   is_public: boolean;
   seller_id: string;
   posting_permission: string;
+  posting_mode: string;
   rules: string[];
 }
 
@@ -72,6 +73,9 @@ export default function CommunityDetail() {
   const [newPost, setNewPost] = useState("");
   const [posting, setPosting] = useState(false);
   const [joining, setJoining] = useState(false);
+  const [privateReply, setPrivateReply] = useState("");
+  const [showPrivateReplyBox, setShowPrivateReplyBox] = useState(false);
+  const [sendingPrivateReply, setSendingPrivateReply] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -278,7 +282,39 @@ export default function CommunityDetail() {
     }
   };
 
-  const canPost = isMember || isOwner || community?.posting_permission === "all_members";
+  const handleSendPrivateReply = async (postId?: string) => {
+    if (!privateReply.trim() || !currentUserId || !id) return;
+
+    setSendingPrivateReply(true);
+    try {
+      const { error } = await supabase
+        .from("community_private_replies")
+        .insert({
+          community_id: id,
+          post_id: postId || null,
+          sender_id: currentUserId,
+          content: privateReply.trim(),
+        });
+
+      if (error) throw error;
+
+      setPrivateReply("");
+      setShowPrivateReplyBox(false);
+      toast({ title: "Reply sent!", description: "The community owner will see your message." });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setSendingPrivateReply(false);
+    }
+  };
+
+  // Determine if user can post publicly
+  const isAdminOnlyMode = community?.posting_mode === "admin_only";
+  const canPost = isOwner || (!isAdminOnlyMode && (isMember || community?.posting_permission === "all_members"));
 
   if (loading) {
     return (
@@ -377,6 +413,53 @@ export default function CommunityDetail() {
         )}
 
         <Separator className="my-4" />
+
+        {/* Admin-only mode notice + private reply option */}
+        {isAdminOnlyMode && !isOwner && isMember && currentUserId && (
+          <Card className="mb-4 border-primary/20 bg-primary/5">
+            <CardContent className="p-4">
+              <p className="text-sm text-muted-foreground mb-3">
+                This is a broadcast channel. Only admins can post publicly. You can send a private reply to the admin.
+              </p>
+              {showPrivateReplyBox ? (
+                <div className="space-y-3">
+                  <Textarea
+                    placeholder="Send a private message to the admin..."
+                    value={privateReply}
+                    onChange={(e) => setPrivateReply(e.target.value)}
+                    className="min-h-16"
+                  />
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setShowPrivateReplyBox(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      size="sm"
+                      onClick={() => handleSendPrivateReply()}
+                      disabled={!privateReply.trim() || sendingPrivateReply}
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      {sendingPrivateReply ? "Sending..." : "Send"}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowPrivateReplyBox(true)}
+                >
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Send Private Reply
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Create Post */}
         {canPost && currentUserId && (

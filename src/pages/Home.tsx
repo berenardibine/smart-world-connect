@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { Navbar } from "@/components/Navbar";
+import { HorizontalNav } from "@/components/home/HorizontalNav";
 import { DashboardFloatingButton } from "@/components/DashboardFloatingButton";
 import { SmartAdsCarousel } from "@/components/SmartAdsCarousel";
 import { TrendingProducts } from "@/components/TrendingProducts";
@@ -40,9 +41,10 @@ export default function Home() {
 
       <div className="min-h-screen bg-gradient-to-b from-background via-background to-secondary/20 pb-24">
         <Navbar />
+        <HorizontalNav />
 
         {/* Regional Header */}
-        <div className="pt-[120px] md:pt-20">
+        <div className="pt-[120px] md:pt-[140px]">
           <RegionalHeader />
         </div>
 

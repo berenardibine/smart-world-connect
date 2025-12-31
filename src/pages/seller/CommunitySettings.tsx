@@ -58,6 +58,7 @@ interface Community {
   is_public: boolean;
   join_approval_required: boolean;
   posting_permission: string;
+  posting_mode: string;
   rules: string[];
 }
 
@@ -77,6 +78,7 @@ export default function CommunitySettings() {
     is_public: true,
     join_approval_required: false,
     posting_permission: "all_members",
+    posting_mode: "all_members",
     allow_member_messaging: true,
     rules: [] as string[],
   });
@@ -119,6 +121,7 @@ export default function CommunitySettings() {
         is_public: data.is_public,
         join_approval_required: data.join_approval_required,
         posting_permission: data.posting_permission || "all_members",
+        posting_mode: data.posting_mode || "all_members",
         allow_member_messaging: data.allow_member_messaging ?? true,
         rules: data.rules || [],
       });
