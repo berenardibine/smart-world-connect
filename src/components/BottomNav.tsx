@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Store, Users, Gift, User } from "lucide-react";
+import { Home, Store, Globe, UsersRound, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supaseClient";
@@ -7,8 +7,8 @@ import { supabase } from "@/lib/supaseClient";
 const navItems = [
   { path: "/", label: "Home", icon: Home },
   { path: "/shop", label: "Shop", icon: Store },
-  { path: "/community", label: "Community", icon: Users, badgeType: "community" },
-  { path: "/rewards", label: "Rewards", icon: Gift, badgeType: "rewards" },
+  { path: "/community", label: "Community", icon: Globe, badgeType: "community" },
+  { path: "/groups", label: "Groups", icon: UsersRound, badgeType: "groups" },
   { path: "/account", label: "Profile", icon: User },
 ];
 

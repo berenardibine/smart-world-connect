@@ -67,6 +67,7 @@ import RegionalHomePage from "./pages/RegionalHomePage";
 import Videos from "./pages/Videos";
 import Messages from "./pages/Messages";
 import Contacts from "./pages/Contacts";
+import Groups from "./pages/Groups";
 
 const queryClient = new QueryClient();
 
@@ -122,6 +123,7 @@ const App = () => (
           <Route path="/academy" element={<Academy />} />
           <Route path="/videos" element={<Videos />} />
           <Route path="/contacts" element={<Contacts />} />
+          <Route path="/groups" element={<Groups />} />
           <Route path="/pending-verification" element={<PendingVerification />} />
           <Route path="/post-opportunity" element={<PostOpportunity />} />
           <Route path="/seller/dashboard" element={<SellerDashboard />} />
