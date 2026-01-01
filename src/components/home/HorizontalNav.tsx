@@ -13,8 +13,8 @@ export function HorizontalNav() {
   const location = useLocation();
 
   return (
-    <div className="bg-background/80 backdrop-blur-md border-b border-border sticky top-[60px] md:top-[72px] z-40">
-      <div className="container mx-auto px-2">
+    <div className="bg-background/95 backdrop-blur-md border-b border-border/50 sticky top-[56px] md:top-[64px] z-40 shadow-sm">
+      <div className="container mx-auto px-4">
         <nav className="flex items-center gap-1 overflow-x-auto scrollbar-hide py-2">
           {navItems.map((item) => {
             const Icon = item.icon;

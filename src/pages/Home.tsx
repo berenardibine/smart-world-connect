@@ -39,12 +39,12 @@ export default function Home() {
         <link rel="canonical" href={typeof window !== 'undefined' ? window.location.origin : ''} />
       </Helmet>
 
-      <div className="min-h-screen bg-gradient-to-b from-background via-background to-secondary/20 pb-24">
+      <div className="min-h-screen bg-gradient-to-b from-background via-background to-secondary/20 pb-24 pt-[110px] md:pt-[120px]">
         <Navbar />
         <HorizontalNav />
 
         {/* Regional Header */}
-        <div className="pt-[120px] md:pt-[140px]">
+        <div className="pt-4">
           <RegionalHeader />
         </div>
 
