@@ -122,6 +122,7 @@ const App = () => (
           <Route path="/rewards" element={<Rewards />} />
           <Route path="/academy" element={<Academy />} />
           <Route path="/videos" element={<Videos />} />
+          <Route path="/messages" element={<Messages />} />
           <Route path="/contacts" element={<Contacts />} />
           <Route path="/groups" element={<Groups />} />
           <Route path="/pending-verification" element={<PendingVerification />} />
