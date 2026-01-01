@@ -67,7 +67,7 @@ export default function Home() {
                 <a href="/privacy" className="hover:text-primary transition-colors">Privacy</a>
               </div>
               <p className="flex items-center gap-1">
-                © 2025 Smart World Connect. 
+                © 2026 Smart World Connect. 
                 <span className="text-primary font-medium">Connect. Learn. Grow.</span>
               </p>
             </div>
