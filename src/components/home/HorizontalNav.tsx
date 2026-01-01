@@ -32,7 +32,7 @@ export function HorizontalNav() {
                 )}
               >
                 <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                {item.label}
+                <span className="hidden xs:inline sm:inline">{item.label}</span>
               </Link>
             );
           })}
