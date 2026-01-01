@@ -1,17 +1,23 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
-  Search, Store, Filter, TrendingUp, Sparkles, ShoppingBag,
-  X, Loader2, Tag, MapPin, ChevronRight
+  Search, Store, TrendingUp, Sparkles, ShoppingBag,
+  X, Loader2, Tag, ChevronRight, Star, Users
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Navbar } from "@/components/Navbar";
 import { BottomNav } from "@/components/BottomNav";
 import { CategoryTabs } from "@/components/CategoryTabs";
 import { HomeProductGrid } from "@/components/HomeProductGrid";
 import { LocationFilter } from "@/components/LocationFilter";
+import { SmartAdsCarousel } from "@/components/SmartAdsCarousel";
+import { QuickCategories } from "@/components/home/QuickCategories";
+import { RecommendedShops } from "@/components/RecommendedShops";
+import { RegionalProducts } from "@/components/RegionalProducts";
+import { TopRatedSellers } from "@/components/TopRatedSellers";
+import { RecommendedProductsSection } from "@/components/RecommendedProductsSection";
+import { TrendingProducts } from "@/components/TrendingProducts";
 import { Helmet } from "react-helmet";
 import { supabase } from "@/lib/supaseClient";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -146,26 +152,17 @@ export default function Shop() {
     setSectorId("");
   };
 
-  const categories = [
-    { name: "Electronics", icon: "💻", color: "from-blue-500/20 to-blue-600/10" },
-    { name: "Fashion", icon: "👗", color: "from-pink-500/20 to-pink-600/10" },
-    { name: "Agriculture Product", icon: "🌾", color: "from-green-500/20 to-green-600/10" },
-    { name: "Equipment for Lent", icon: "🔧", color: "from-orange-500/20 to-orange-600/10" },
-    { name: "Food & Beverages", icon: "🍔", color: "from-yellow-500/20 to-yellow-600/10" },
-    { name: "Health & Beauty", icon: "💄", color: "from-purple-500/20 to-purple-600/10" },
-  ];
-
   return (
     <>
       <Helmet>
-        <title>Shop - Smart Market</title>
-        <meta name="description" content="Browse products, shops, and sellers on Smart Market. Find the best deals in Rwanda." />
+        <title>Shop - Smart World Connect</title>
+        <meta name="description" content="Browse products, shops, and sellers on Smart World Connect. Find the best deals." />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-b from-background via-background to-secondary/20 pb-24">
         <Navbar />
 
-        <main className="pt-[120px] md:pt-20 space-y-6">
+        <main className="pt-20 space-y-8">
           <div className="container mx-auto px-4 lg:px-6">
             {/* Header */}
             <div className="flex items-center gap-3 mb-6">
@@ -249,40 +246,77 @@ export default function Shop() {
                 </div>
               )}
             </div>
+          </div>
 
-            {/* Quick Categories */}
-            <div className="mb-8">
-              <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                <Tag className="h-4 w-4 text-primary" />
-                Popular Categories
-              </h2>
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-                {categories.map((cat) => (
-                  <button
-                    key={cat.name}
-                    onClick={() => setActiveCategory(cat.name)}
-                    className={`p-3 rounded-2xl flex flex-col items-center gap-2 transition-all hover:scale-105 ${
-                      activeCategory === cat.name 
-                        ? "bg-primary/10 border-2 border-primary/30" 
-                        : "bg-gradient-to-br " + cat.color + " border border-border/50"
-                    }`}
-                  >
-                    <span className="text-2xl">{cat.icon}</span>
-                    <span className="text-xs font-medium text-center text-foreground line-clamp-1">
-                      {cat.name.split(" ")[0]}
-                    </span>
-                  </button>
-                ))}
+          {/* Smart Ads Carousel */}
+          <section className="container mx-auto px-4 lg:px-6">
+            <SmartAdsCarousel />
+          </section>
+
+          {/* Quick Categories */}
+          <section className="container mx-auto px-4 lg:px-6">
+            <QuickCategories />
+          </section>
+
+          {/* Recommended Shops */}
+          <section className="container mx-auto px-4 lg:px-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Store className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold text-foreground">Recommended Shops</h2>
+            </div>
+            <RecommendedShops />
+          </section>
+
+          {/* Local Products */}
+          <section className="container mx-auto px-4 lg:px-6">
+            <div className="flex items-center gap-2 mb-4">
+              <ShoppingBag className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold text-foreground">Local Products</h2>
+            </div>
+            <RegionalProducts />
+          </section>
+
+          {/* Top Rated Sellers */}
+          <section className="container mx-auto px-4 lg:px-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Users className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold text-foreground">Top Rated Sellers</h2>
+            </div>
+            <TopRatedSellers />
+          </section>
+
+          {/* Recommended For You */}
+          <section className="container mx-auto px-4 lg:px-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold text-foreground">Recommended For You</h2>
+            </div>
+            <RecommendedProductsSection />
+          </section>
+
+          {/* Trending Products */}
+          <section>
+            <div className="container mx-auto px-4 lg:px-6 mb-4">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-destructive" />
+                <h2 className="text-lg font-semibold text-foreground">Trending Now</h2>
+                <span className="px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-xs font-semibold animate-pulse">
+                  🔥 HOT
+                </span>
               </div>
             </div>
+            <TrendingProducts />
+          </section>
 
-            {/* Filters Row */}
+          {/* Browse All Products */}
+          <section className="container mx-auto px-4 lg:px-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-              <div className="flex-1">
-                <CategoryTabs 
-                  activeCategory={activeCategory} 
-                  onCategoryChange={setActiveCategory} 
-                />
+              <div>
+                <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <ShoppingBag className="h-5 w-5 text-primary" />
+                  Browse All Products
+                </h2>
+                <p className="text-sm text-muted-foreground">Discover amazing deals from verified sellers</p>
               </div>
               <LocationFilter
                 provinceId={provinceId}
@@ -292,8 +326,14 @@ export default function Shop() {
                 onClear={handleLocationClear}
               />
             </div>
-
-            {/* Products Grid */}
+            
+            <div className="mb-6">
+              <CategoryTabs 
+                activeCategory={activeCategory} 
+                onCategoryChange={setActiveCategory} 
+              />
+            </div>
+            
             <HomeProductGrid 
               category={activeCategory === "All" ? undefined : activeCategory}
               limit={100}
@@ -301,7 +341,7 @@ export default function Shop() {
               districtId={districtId}
               sectorId={sectorId}
             />
-          </div>
+          </section>
         </main>
 
         <BottomNav />
