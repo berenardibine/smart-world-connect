@@ -70,7 +70,7 @@ export function AIGreeting() {
               <span className="inline-block ml-2 animate-bounce">👋</span>
             </h2>
             <p className="text-base sm:text-lg text-muted-foreground mt-1">
-              Smart World Connect | Connect, Share, and Explore the Smart Way
+              Discover amazing deals and connect with local sellers today.
             </p>
           </div>
         </div>
