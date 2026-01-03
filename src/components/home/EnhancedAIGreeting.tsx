@@ -88,31 +88,7 @@ export function EnhancedAIGreeting({ onCreatePost }: { onCreatePost?: () => void
         
         <p className="text-primary-foreground/80 text-base sm:text-lg mb-6 ml-1">
           {subtext}
-        </p>
-
-        {/* Quick Action Buttons */}
-        <div className="flex flex-wrap gap-2 sm:gap-3">
-          <Button
-            onClick={onCreatePost}
-            className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground border-0 backdrop-blur-sm rounded-full px-4 py-2 h-auto"
-          >
-            <PenLine className="h-4 w-4 mr-2" />
-            Create Post
-          </Button>
-          <Button
-            onClick={onCreatePost}
-            className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground border-0 backdrop-blur-sm rounded-full px-4 py-2 h-auto"
-          >
-            <Camera className="h-4 w-4 mr-2" />
-            Add Photo/Video
-          </Button>
-          <Button
-            className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground border-0 backdrop-blur-sm rounded-full px-4 py-2 h-auto"
-          >
-            <Brain className="h-4 w-4 mr-2" />
-            Smart Thoughts
-          </Button>
-        </div>
+            </p>
       </div>
     </div>
   );
