@@ -33,9 +33,6 @@ export default function Home() {
         <link rel="canonical" href={typeof window !== 'undefined' ? window.location.origin : ''} />
       </Helmet>
 
-      <div className="min-h-screen bg-gradient-to-b from-background via-background to-secondary/20 pb-24 pt-[110px] md:pt-[120px]">
-        <Navbar />
-        <HorizontalNav />
 
         <main className="container mx-auto px-4 lg:px-6">
           {/* Three-column layout for desktop */}
@@ -54,10 +51,6 @@ export default function Home() {
                 <EnhancedAIGreeting onCreatePost={handlePostCreated} />
               </section>
 
-              {/* Status Hearts */}
-              <section className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
-                <StatusHearts />
-              </section>
 
               {/* Daily Motivation */}
               <section className="animate-fade-in" style={{ animationDelay: "0.2s" }}>
