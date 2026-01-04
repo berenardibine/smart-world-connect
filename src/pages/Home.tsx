@@ -12,7 +12,7 @@ import { EnhancedMotivation } from "@/components/home/EnhancedMotivation";
 import { PostCreator } from "@/components/home/PostCreator";
 import { SocialFeed } from "@/components/home/SocialFeed";
 import { TrendingVideos } from "@/components/home/TrendingVideos";
-import { TrendingSection, CreatorSpotlight, AISuggestion } from "@/components/home/FeedInsights";
+import { InnovationHome } from "@/components/home/InnovationHome";
 
 export default function Home() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -24,10 +24,10 @@ export default function Home() {
   return (
     <>
       <Helmet>
-        <title>Smart World Connect - Connect. Share. Inspire.</title>
-        <meta name="description" content="Smart World Connect — your trusted platform for community, friendship, connection, and inspiration. Share moments, discover trends, and connect with amazing people." />
-        <meta property="og:title" content="Smart World Connect - Connect. Share. Inspire." />
-        <meta property="og:description" content="Your trusted platform for community, friendship, and inspiration." />
+        <title>Smart World Connect - Think. Connect. Create.</title>
+        <meta name="description" content="Smart World Connect — your global hub for innovation, research collaboration, and knowledge sharing. Share ideas, build projects, and connect with innovators." />
+        <meta property="og:title" content="Smart World Connect - Think. Connect. Create." />
+        <meta property="og:description" content="Your global hub for innovation, research collaboration, and knowledge sharing." />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Smart World Connect" />
         <link rel="canonical" href={typeof window !== 'undefined' ? window.location.origin : ''} />
@@ -41,11 +41,9 @@ export default function Home() {
           {/* Three-column layout for desktop */}
           <div className="lg:grid lg:grid-cols-12 lg:gap-6 pt-4">
             
-            {/* Left Sidebar - Desktop Only */}
+            {/* Left Sidebar - Innovation Hub (Desktop Only) */}
             <aside className="hidden lg:block lg:col-span-3 space-y-4 sticky top-[140px] self-start">
-              <TrendingSection />
-              <CreatorSpotlight />
-              <AISuggestion />
+              <InnovationHome />
             </aside>
 
             {/* Main Feed - Center Column */}
@@ -96,6 +94,7 @@ export default function Home() {
                   <a href="/privacy" className="hover:text-primary transition-colors">Privacy</a>
                 </div>
                 <p>© 2026 Smart World Connect</p>
+                <p className="text-primary font-medium">Think. Connect. Create.</p>
               </div>
             </aside>
 
@@ -112,7 +111,7 @@ export default function Home() {
               </div>
               <p className="text-center">
                 © 2026 Smart World Connect. 
-                <span className="text-primary font-medium ml-1">Connect. Learn. Grow.</span>
+                <span className="text-primary font-medium ml-1">Think. Connect. Create.</span>
               </p>
             </div>
           </footer>

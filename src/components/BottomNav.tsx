@@ -1,14 +1,15 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Store, Globe, UsersRound } from "lucide-react";
+import { Home, Lightbulb, Cog, Building2, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supaseClient";
 
 const navItems = [
   { path: "/", label: "Home", icon: Home, badgeType: "home" },
-  { path: "/shop", label: "Shop", icon: Store },
-  { path: "/community", label: "Community", icon: Globe, badgeType: "community" },
-  { path: "/groups", label: "Groups", icon: UsersRound, badgeType: "groups" },
+  { path: "/ideas", label: "Ideas", icon: Lightbulb, badgeType: "ideas" },
+  { path: "/projects", label: "Projects", icon: Cog, badgeType: "projects" },
+  { path: "/institutions", label: "Institutions", icon: Building2 },
+  { path: "/challenges", label: "Challenges", icon: Trophy, badgeType: "challenges" },
 ];
 
 export function BottomNav() {
@@ -68,7 +69,7 @@ export function BottomNav() {
     <nav className="fixed bottom-0 left-0 right-0 z-50 safe-area-bottom">
       {/* Glassmorphism background */}
       <div className="mx-2 mb-2 sm:mx-4 sm:mb-3 bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl shadow-float">
-        <div className="flex justify-around items-center h-16 px-2 max-w-lg mx-auto">
+        <div className="flex justify-around items-center h-16 px-1 max-w-lg mx-auto">
           {navItems.map((item) => {
             const active = isActive(item.path);
             const Icon = item.icon;
@@ -86,7 +87,7 @@ export function BottomNav() {
                 )}
               >
                 <div className={cn(
-                  "relative p-2 rounded-xl transition-all duration-300",
+                  "relative p-1.5 sm:p-2 rounded-xl transition-all duration-300",
                   active && "bg-primary/10 shadow-sm animate-scale-in"
                 )}>
                   <Icon className={cn(
@@ -108,7 +109,7 @@ export function BottomNav() {
                 </div>
                 
                 <span className={cn(
-                  "text-xs mt-1 font-medium transition-all duration-300",
+                  "text-[10px] sm:text-xs mt-0.5 font-medium transition-all duration-300 truncate max-w-[60px] text-center",
                   active ? "text-primary" : "text-muted-foreground"
                 )}>
                   {item.label}
