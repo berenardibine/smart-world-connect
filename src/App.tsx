@@ -68,6 +68,10 @@ import Videos from "./pages/Videos";
 import Messages from "./pages/Messages";
 import Contacts from "./pages/Contacts";
 import Groups from "./pages/Groups";
+import Ideas from "./pages/Ideas";
+import Projects from "./pages/Projects";
+import Institutions from "./pages/Institutions";
+import Challenges from "./pages/Challenges";
 
 const queryClient = new QueryClient();
 
@@ -125,6 +129,10 @@ const App = () => (
           <Route path="/messages" element={<Messages />} />
           <Route path="/contacts" element={<Contacts />} />
           <Route path="/groups" element={<Groups />} />
+          <Route path="/ideas" element={<Ideas />} />
+          <Route path="/projects" element={<Projects />} />
+          <Route path="/institutions" element={<Institutions />} />
+          <Route path="/challenges" element={<Challenges />} />
           <Route path="/pending-verification" element={<PendingVerification />} />
           <Route path="/post-opportunity" element={<PostOpportunity />} />
           <Route path="/seller/dashboard" element={<SellerDashboard />} />

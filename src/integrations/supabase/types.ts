@@ -167,6 +167,50 @@ export type Database = {
           },
         ]
       }
+      challenge_submissions: {
+        Row: {
+          challenge_id: string
+          created_at: string
+          description: string | null
+          files: string[] | null
+          id: string
+          is_winner: boolean | null
+          score: number | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          created_at?: string
+          description?: string | null
+          files?: string[] | null
+          id?: string
+          is_winner?: boolean | null
+          score?: number | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          created_at?: string
+          description?: string | null
+          files?: string[] | null
+          id?: string
+          is_winner?: boolean | null
+          score?: number | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_submissions_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "innovation_challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           comment: string
@@ -595,6 +639,33 @@ export type Database = {
           },
         ]
       }
+      daily_motivations: {
+        Row: {
+          author: string | null
+          category: string | null
+          created_at: string
+          display_date: string | null
+          id: string
+          quote: string
+        }
+        Insert: {
+          author?: string | null
+          category?: string | null
+          created_at?: string
+          display_date?: string | null
+          id?: string
+          quote: string
+        }
+        Update: {
+          author?: string | null
+          category?: string | null
+          created_at?: string
+          display_date?: string | null
+          id?: string
+          quote?: string
+        }
+        Relationships: []
+      }
       districts: {
         Row: {
           created_at: string | null
@@ -623,6 +694,340 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      idea_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          idea_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          idea_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          idea_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "idea_comments_idea_id_fkey"
+            columns: ["idea_id"]
+            isOneToOne: false
+            referencedRelation: "innovation_ideas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      idea_library: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          downloads_count: number | null
+          file_url: string | null
+          id: string
+          tags: string[] | null
+          title: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          downloads_count?: number | null
+          file_url?: string | null
+          id?: string
+          tags?: string[] | null
+          title: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          downloads_count?: number | null
+          file_url?: string | null
+          id?: string
+          tags?: string[] | null
+          title?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "idea_library_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "idea_library_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      idea_likes: {
+        Row: {
+          created_at: string
+          id: string
+          idea_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          idea_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          idea_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "idea_likes_idea_id_fkey"
+            columns: ["idea_id"]
+            isOneToOne: false
+            referencedRelation: "innovation_ideas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      innovation_challenges: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          deadline: string | null
+          description: string
+          id: string
+          is_featured: boolean | null
+          participants_count: number | null
+          reward_cash: number | null
+          reward_points: number | null
+          status: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          deadline?: string | null
+          description: string
+          id?: string
+          is_featured?: boolean | null
+          participants_count?: number | null
+          reward_cash?: number | null
+          reward_points?: number | null
+          status?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          deadline?: string | null
+          description?: string
+          id?: string
+          is_featured?: boolean | null
+          participants_count?: number | null
+          reward_cash?: number | null
+          reward_points?: number | null
+          status?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "innovation_challenges_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "innovation_challenges_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      innovation_ideas: {
+        Row: {
+          category: string
+          comments_count: number | null
+          created_at: string
+          description: string
+          files: string[] | null
+          id: string
+          is_featured: boolean | null
+          likes_count: number | null
+          status: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          comments_count?: number | null
+          created_at?: string
+          description: string
+          files?: string[] | null
+          id?: string
+          is_featured?: boolean | null
+          likes_count?: number | null
+          status?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          comments_count?: number | null
+          created_at?: string
+          description?: string
+          files?: string[] | null
+          id?: string
+          is_featured?: boolean | null
+          likes_count?: number | null
+          status?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "innovation_ideas_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "innovation_ideas_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      innovation_projects: {
+        Row: {
+          created_at: string
+          creator_id: string
+          description: string
+          files: string[] | null
+          id: string
+          is_featured: boolean | null
+          members: string[] | null
+          objective: string | null
+          progress: number | null
+          status: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          description: string
+          files?: string[] | null
+          id?: string
+          is_featured?: boolean | null
+          members?: string[] | null
+          objective?: string | null
+          progress?: number | null
+          status?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          description?: string
+          files?: string[] | null
+          id?: string
+          is_featured?: boolean | null
+          members?: string[] | null
+          objective?: string | null
+          progress?: number | null
+          status?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "innovation_projects_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "innovation_projects_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      institutions: {
+        Row: {
+          contact_email: string | null
+          country: string | null
+          created_at: string
+          description: string | null
+          focus_areas: string[] | null
+          id: string
+          is_verified: boolean | null
+          logo_url: string | null
+          name: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          contact_email?: string | null
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          focus_areas?: string[] | null
+          id?: string
+          is_verified?: boolean | null
+          logo_url?: string | null
+          name: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          contact_email?: string | null
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          focus_areas?: string[] | null
+          id?: string
+          is_verified?: boolean | null
+          logo_url?: string | null
+          name?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
       }
       learning_posts: {
         Row: {
@@ -1553,6 +1958,38 @@ export type Database = {
           },
         ]
       }
+      project_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          project_id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          project_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          project_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_messages_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "innovation_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       provinces: {
         Row: {
           created_at: string | null
@@ -2020,6 +2457,36 @@ export type Database = {
           twitter_url?: string | null
           updated_at?: string | null
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      smart_wallet: {
+        Row: {
+          balance: number | null
+          created_at: string
+          id: string
+          total_earned: number | null
+          total_spent: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number | null
+          created_at?: string
+          id?: string
+          total_earned?: number | null
+          total_spent?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number | null
+          created_at?: string
+          id?: string
+          total_earned?: number | null
+          total_spent?: number | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -2509,6 +2976,41 @@ export type Database = {
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wallet_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          type: string
+          wallet_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          type: string
+          wallet_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          type?: string
+          wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_transactions_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "smart_wallet"
             referencedColumns: ["id"]
           },
         ]
