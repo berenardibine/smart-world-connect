@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/lib/supaseClient";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Eye, EyeOff, Gift } from "lucide-react";
@@ -15,8 +16,8 @@ const authSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters").max(100),
   fullName: z.string().trim().min(2, "Name must be at least 2 characters").max(100).optional(),
   phoneNumber: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number").optional(),
-  whatsappNumber: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Invalid WhatsApp number").optional().or(z.literal("")),
-  callNumber: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Invalid call number").optional().or(z.literal("")),
+  whatsappNumber: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Invalid WhatsApp number").optional(),
+  callNumber: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Invalid call number").optional(),
 });
 
 export default function Auth() {
@@ -28,6 +29,7 @@ export default function Auth() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [callNumber, setCallNumber] = useState("");
+  const [userType, setUserType] = useState("buyer");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [referralCode, setReferralCode] = useState("");
@@ -81,8 +83,10 @@ export default function Auth() {
       if (!isLogin) {
         validationData.fullName = fullName;
         validationData.phoneNumber = phoneNumber;
-        validationData.whatsappNumber = whatsappNumber || undefined;
-        validationData.callNumber = callNumber || undefined;
+        if (userType === "seller") {
+          validationData.whatsappNumber = whatsappNumber;
+          validationData.callNumber = callNumber;
+        }
       }
       
       const validated = authSchema.parse(validationData);
@@ -97,7 +101,7 @@ export default function Auth() {
         // Check user profile and status first
         const { data: profile } = await supabase
           .from("profiles")
-          .select("status, blocking_reason")
+          .select("user_type, status, blocking_reason")
           .eq("id", data.user.id)
           .single();
 
@@ -128,7 +132,12 @@ export default function Auth() {
         }
 
         toast({ title: "Welcome back!" });
-        navigate("/");
+        
+        if (profile?.user_type === "seller") {
+          navigate("/seller/dashboard");
+        } else {
+          navigate("/");
+        }
       } else {
         // Validate location is selected for signup
         if (!provinceId || !districtId || !sectorId) {
@@ -147,10 +156,10 @@ export default function Auth() {
           options: {
             data: {
               full_name: validated.fullName,
-              user_type: "user", // All users are equal now
+              user_type: userType,
               phone_number: validated.phoneNumber,
-              whatsapp_number: validated.whatsappNumber || null,
-              call_number: validated.callNumber || null,
+              whatsapp_number: validated.whatsappNumber,
+              call_number: validated.callNumber,
             },
             emailRedirectTo: `${window.location.origin}/`,
           },
@@ -210,12 +219,12 @@ export default function Auth() {
               <img src="/favicon.png" alt="Smart World Connect" className="w-full h-full object-cover" />
             </div>
             <CardTitle className="text-2xl font-bold">
-              {isLogin ? "Welcome back" : "Join the Innovation Hub"}
+              {isLogin ? "Welcome back" : "Create an account"}
             </CardTitle>
             <CardDescription>
               {isLogin
-                ? "Sign in to Smart World Connect"
-                : "Connect with innovators, share ideas, build projects"}
+                ? "Sign in to your Smart World Connect account"
+                : "Join the world's premier online marketplace"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -237,7 +246,7 @@ export default function Auth() {
                     <Label htmlFor="fullName">Full Name</Label>
                     <Input
                       id="fullName"
-                      placeholder="Your full name"
+                      placeholder="Jacob Rhine"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       required
@@ -258,37 +267,59 @@ export default function Auth() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label htmlFor="whatsappNumber">WhatsApp (Optional)</Label>
-                      <Input
-                        id="whatsappNumber"
-                        type="tel"
-                        placeholder="+250780000000"
-                        value={whatsappNumber}
-                        onChange={(e) => setWhatsappNumber(e.target.value)}
-                        className="h-12"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="callNumber">Call Number (Optional)</Label>
-                      <Input
-                        id="callNumber"
-                        type="tel"
-                        placeholder="+250780000000"
-                        value={callNumber}
-                        onChange={(e) => setCallNumber(e.target.value)}
-                        className="h-12"
-                      />
-                    </div>
+                  <div className="space-y-2">
+                    <Label>I want to</Label>
+                    <RadioGroup value={userType} onValueChange={setUserType} className="flex gap-4">
+                      <div className="flex items-center space-x-2 flex-1 p-3 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                        <RadioGroupItem value="buyer" id="buyer" />
+                        <Label htmlFor="buyer" className="font-normal cursor-pointer flex-1">
+                          Buy products
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2 flex-1 p-3 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                        <RadioGroupItem value="seller" id="seller" />
+                        <Label htmlFor="seller" className="font-normal cursor-pointer flex-1">
+                          Sell products
+                        </Label>
+                      </div>
+                    </RadioGroup>
                   </div>
+
+                  {userType === "seller" && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="whatsappNumber">WhatsApp</Label>
+                        <Input
+                          id="whatsappNumber"
+                          type="tel"
+                          placeholder="+250780000000"
+                          value={whatsappNumber}
+                          onChange={(e) => setWhatsappNumber(e.target.value)}
+                          required
+                          className="h-12"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="callNumber">Call Number</Label>
+                        <Input
+                          id="callNumber"
+                          type="tel"
+                          placeholder="+250780000000"
+                          value={callNumber}
+                          onChange={(e) => setCallNumber(e.target.value)}
+                          required
+                          className="h-12"
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   {/* Location Selection - Required */}
                   <div className="space-y-2 p-4 bg-muted/50 rounded-lg">
                     <p className="text-sm font-medium text-foreground mb-2">Your Location *</p>
                     <p className="text-xs text-muted-foreground mb-3">
-                      Connect with innovators in your region
+                      We'll show you shops and products near you
                     </p>
                     <LocationSelector
                       provinceId={provinceId}

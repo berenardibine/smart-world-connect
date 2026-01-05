@@ -12,7 +12,7 @@ import { EnhancedMotivation } from "@/components/home/EnhancedMotivation";
 import { PostCreator } from "@/components/home/PostCreator";
 import { SocialFeed } from "@/components/home/SocialFeed";
 import { TrendingVideos } from "@/components/home/TrendingVideos";
-import { InnovationHome } from "@/components/home/InnovationHome";
+import { TrendingSection, CreatorSpotlight, AISuggestion } from "@/components/home/FeedInsights";
 
 export default function Home() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -24,23 +24,28 @@ export default function Home() {
   return (
     <>
       <Helmet>
-        <title>Smart World Connect - Think. Connect. Create.</title>
-        <meta name="description" content="Smart World Connect — your global hub for innovation, research collaboration, and knowledge sharing. Share ideas, build projects, and connect with innovators." />
-        <meta property="og:title" content="Smart World Connect - Think. Connect. Create." />
-        <meta property="og:description" content="Your global hub for innovation, research collaboration, and knowledge sharing." />
+        <title>Smart World Connect - Connect. Share. Inspire.</title>
+        <meta name="description" content="Smart World Connect — your trusted platform for community, friendship, connection, and inspiration. Share moments, discover trends, and connect with amazing people." />
+        <meta property="og:title" content="Smart World Connect - Connect. Share. Inspire." />
+        <meta property="og:description" content="Your trusted platform for community, friendship, and inspiration." />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Smart World Connect" />
         <link rel="canonical" href={typeof window !== 'undefined' ? window.location.origin : ''} />
       </Helmet>
 
+      <div className="min-h-screen bg-gradient-to-b from-background via-background to-secondary/20 pb-24 pt-[110px] md:pt-[120px]">
+        <Navbar />
+        <HorizontalNav />
 
         <main className="container mx-auto px-4 lg:px-6">
           {/* Three-column layout for desktop */}
           <div className="lg:grid lg:grid-cols-12 lg:gap-6 pt-4">
             
-            {/* Left Sidebar - Innovation Hub (Desktop Only) */}
+            {/* Left Sidebar - Desktop Only */}
             <aside className="hidden lg:block lg:col-span-3 space-y-4 sticky top-[140px] self-start">
-              <InnovationHome />
+              <TrendingSection />
+              <CreatorSpotlight />
+              <AISuggestion />
             </aside>
 
             {/* Main Feed - Center Column */}
@@ -51,6 +56,10 @@ export default function Home() {
                 <EnhancedAIGreeting onCreatePost={handlePostCreated} />
               </section>
 
+              {/* Status Hearts */}
+              <section className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
+                <StatusHearts />
+              </section>
 
               {/* Daily Motivation */}
               <section className="animate-fade-in" style={{ animationDelay: "0.2s" }}>
@@ -87,7 +96,6 @@ export default function Home() {
                   <a href="/privacy" className="hover:text-primary transition-colors">Privacy</a>
                 </div>
                 <p>© 2026 Smart World Connect</p>
-                <p className="text-primary font-medium">Think. Connect. Create.</p>
               </div>
             </aside>
 
@@ -104,7 +112,7 @@ export default function Home() {
               </div>
               <p className="text-center">
                 © 2026 Smart World Connect. 
-                <span className="text-primary font-medium ml-1">Think. Connect. Create.</span>
+                <span className="text-primary font-medium ml-1">Connect. Learn. Grow.</span>
               </p>
             </div>
           </footer>

@@ -2,17 +2,17 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supaseClient";
 
 interface UserRole {
+  userType: "buyer" | "seller" | null;
   isAdmin: boolean;
   isLoading: boolean;
   userId: string | null;
-  userName: string | null;
 }
 
 export function useUserRole(): UserRole {
+  const [userType, setUserType] = useState<"buyer" | "seller" | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
-  const [userName, setUserName] = useState<string | null>(null);
 
   useEffect(() => {
     const checkUserRole = async () => {
@@ -25,15 +25,15 @@ export function useUserRole(): UserRole {
 
       setUserId(session.user.id);
 
-      // Get user profile
+      // Check profile for user type
       const { data: profile } = await supabase
         .from("profiles")
-        .select("full_name")
+        .select("user_type")
         .eq("id", session.user.id)
         .single();
 
       if (profile) {
-        setUserName(profile.full_name);
+        setUserType(profile.user_type as "buyer" | "seller");
       }
 
       // Check if admin
@@ -57,5 +57,5 @@ export function useUserRole(): UserRole {
     return () => subscription.unsubscribe();
   }, []);
 
-  return { isAdmin, isLoading, userId, userName };
+  return { userType, isAdmin, isLoading, userId };
 }
